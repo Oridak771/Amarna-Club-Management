@@ -3,9 +3,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/activity.dart';
 import '../models/asset.dart';
-import '../models/incident.dart';
+import '../models/work_ticket.dart';
 import '../models/inventory_item.dart';
-import '../models/maintenance_task.dart';
 import '../models/checklist_item.dart';
 
 final isarProvider = Provider<Isar>((ref) {
@@ -19,9 +18,8 @@ class DatabaseService {
       [
         ActivitySchema,
         AssetSchema,
-        IncidentSchema,
+        WorkTicketSchema,
         InventoryItemSchema,
-        MaintenanceTaskSchema,
         ChecklistItemSchema,
       ],
       directory: dir.path,
@@ -76,18 +74,20 @@ class DatabaseService {
             ),
           );
 
-          // Seed Padel Maintenance Task
-          await isar.maintenanceTasks.put(
-            MaintenanceTask(
+          // Seed Padel Work Ticket
+          await isar.workTickets.put(
+            WorkTicket(
               id: 'maint-003',
               title: 'Remplacement filet court 3',
               description: 'Le filet de padel présente des déchirures importantes au milieu.',
               assetId: 'asset-padel-net-03',
               assetName: 'Filet Padel Court 3',
               activityId: 'padel',
-              type: MaintenanceType.corrective,
-              priority: IncidentPriority.low,
-              status: MaintenanceStatus.todo,
+              activityName: 'Terrains de Padel',
+              type: TicketType.corrective,
+              priority: TicketPriority.low,
+              status: TicketStatus.open,
+              dateCreated: DateTime.now().subtract(const Duration(days: 1)),
               dateDue: DateTime.now().add(const Duration(days: 4)),
               assignedTechnician: 'Mourad (Technicien)',
             ),
@@ -258,43 +258,97 @@ class DatabaseService {
     ];
     await isar.assets.putAll(assets);
 
-    // 3. Seed Incidents
-    final incidents = [
-      Incident(
+    // 3. Seed Work Tickets
+    final tickets = [
+      WorkTicket(
         id: 'inc-001',
         title: 'Fuite filtre pompe 2',
         description: 'Une fuite mineure a été détectée sur le raccord d\'aspiration de la pompe de filtration 2.',
         activityId: 'pool',
         activityName: 'Piscine',
-        priority: IncidentPriority.medium,
-        status: IncidentStatus.inProgress,
+        assetId: 'asset-pool-pump-02',
+        assetName: 'Pompe de Filtration 2',
+        type: TicketType.anomaly,
+        priority: TicketPriority.medium,
+        status: TicketStatus.inProgress,
         dateCreated: now.subtract(const Duration(hours: 4)),
         assignedTechnician: 'Karim (Technicien)',
       ),
-      Incident(
+      WorkTicket(
         id: 'inc-002',
         title: 'Sangle selle déchirée',
         description: 'La sangle de la selle de "Tornado" est fissurée et présente un risque de rupture.',
         activityId: 'horses',
         activityName: 'Équitation',
-        priority: IncidentPriority.high,
-        status: IncidentStatus.open,
+        assetId: 'asset-horse-saddle-1',
+        assetName: 'Selle Cuir Tornade',
+        type: TicketType.anomaly,
+        priority: TicketPriority.high,
+        status: TicketStatus.open,
         dateCreated: now.subtract(const Duration(hours: 1)),
         assignedTechnician: 'Mourad (Technicien)',
       ),
-      Incident(
+      WorkTicket(
         id: 'inc-003',
         title: 'Ventilation stand de tir HS',
         description: 'L\'extracteur d\'air principal ne démarre plus. Forte concentration de gaz. Fermeture obligatoire.',
         activityId: 'shooting',
         activityName: 'Stand de Tir',
-        priority: IncidentPriority.critical,
-        status: IncidentStatus.open,
+        assetId: 'asset-shoot-vent-02',
+        assetName: 'Extracteur Air Standard',
+        type: TicketType.anomaly,
+        priority: TicketPriority.critical,
+        status: TicketStatus.open,
         dateCreated: now.subtract(const Duration(minutes: 30)),
         assignedTechnician: 'Sami (Électricien)',
       ),
+      WorkTicket(
+        id: 'maint-001',
+        title: 'Nettoyage des filtres à sable',
+        description: 'Effectuer le lavage à contre-courant du filtre principal A.',
+        assetId: 'asset-pool-filter-01',
+        assetName: 'Filtre Principal A',
+        activityId: 'pool',
+        activityName: 'Piscine',
+        type: TicketType.preventive,
+        priority: TicketPriority.medium,
+        status: TicketStatus.open,
+        dateCreated: now.subtract(const Duration(days: 2)),
+        dateDue: now.add(const Duration(days: 1)),
+        assignedTechnician: 'Karim (Technicien)',
+      ),
+      WorkTicket(
+        id: 'maint-002',
+        title: 'Changement extracteur ventilation stand de tir',
+        description: 'Remplacer le moteur électrique grillé de la hotte d\'aspiration.',
+        assetId: 'asset-shoot-vent-02',
+        assetName: 'Extracteur Air Standard',
+        activityId: 'shooting',
+        activityName: 'Stand de Tir',
+        type: TicketType.corrective,
+        priority: TicketPriority.critical,
+        status: TicketStatus.inProgress,
+        dateCreated: now.subtract(const Duration(days: 3)),
+        dateDue: now.subtract(const Duration(days: 1)),
+        assignedTechnician: 'Sami (Électricien)',
+      ),
+      WorkTicket(
+        id: 'maint-003',
+        title: 'Remplacement filet court 3',
+        description: 'Le filet de padel présente des déchirures importantes au milieu.',
+        assetId: 'asset-padel-net-03',
+        assetName: 'Filet Padel Court 3',
+        activityId: 'padel',
+        activityName: 'Terrains de Padel',
+        type: TicketType.corrective,
+        priority: TicketPriority.low,
+        status: TicketStatus.open,
+        dateCreated: now.subtract(const Duration(days: 1)),
+        dateDue: now.add(const Duration(days: 4)),
+        assignedTechnician: 'Mourad (Technicien)',
+      ),
     ];
-    await isar.incidents.putAll(incidents);
+    await isar.workTickets.putAll(tickets);
 
     // 4. Seed Inventory Items
     final inventory = [
@@ -382,49 +436,7 @@ class DatabaseService {
     ];
     await isar.inventoryItems.putAll(inventory);
 
-    // 5. Seed Maintenance Tasks
-    final maintenance = [
-      MaintenanceTask(
-        id: 'maint-001',
-        title: 'Nettoyage des filtres à sable',
-        description: 'Effectuer le lavage à contre-courant du filtre principal A.',
-        assetId: 'asset-pool-filter-01',
-        assetName: 'Filtre Principal A',
-        activityId: 'pool',
-        type: MaintenanceType.preventive,
-        priority: IncidentPriority.medium,
-        status: MaintenanceStatus.todo,
-        dateDue: now.add(const Duration(days: 1)),
-        assignedTechnician: 'Karim (Technicien)',
-      ),
-      MaintenanceTask(
-        id: 'maint-002',
-        title: 'Changement extracteur ventilation stand de tir',
-        description: 'Remplacer le moteur électrique grillé de la hotte d\'aspiration.',
-        assetId: 'asset-shoot-vent-02',
-        assetName: 'Extracteur Air Standard',
-        activityId: 'shooting',
-        type: MaintenanceType.corrective,
-        priority: IncidentPriority.critical,
-        status: MaintenanceStatus.inProgress,
-        dateDue: now.subtract(const Duration(days: 1)),
-        assignedTechnician: 'Sami (Électricien)',
-      ),
-      MaintenanceTask(
-        id: 'maint-003',
-        title: 'Remplacement filet court 3',
-        description: 'Le filet de padel présente des déchirures importantes au milieu.',
-        assetId: 'asset-padel-net-03',
-        assetName: 'Filet Padel Court 3',
-        activityId: 'padel',
-        type: MaintenanceType.corrective,
-        priority: IncidentPriority.low,
-        status: MaintenanceStatus.todo,
-        dateDue: now.add(const Duration(days: 4)),
-        assignedTechnician: 'Mourad (Technicien)',
-      ),
-    ];
-    await isar.maintenanceTasks.putAll(maintenance);
+    // 5. Consolidated into tickets above
 
     // 6. Seed Checklist Items
     final checklists = [

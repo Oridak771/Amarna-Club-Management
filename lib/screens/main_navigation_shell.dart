@@ -29,6 +29,7 @@ class MainNavigationShell extends StatelessWidget {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => _onTap(context, index),
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -41,14 +42,9 @@ class MainNavigationShell extends StatelessWidget {
             label: 'Activités',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.build_outlined),
-            activeIcon: Icon(Icons.build),
-            label: 'Maintenance',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.warning_amber_outlined),
-            activeIcon: Icon(Icons.warning),
-            label: 'Incidents',
+            icon: Icon(Icons.assignment_outlined),
+            activeIcon: Icon(Icons.assignment),
+            label: 'Tickets',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.more_horiz_outlined),

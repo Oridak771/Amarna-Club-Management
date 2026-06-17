@@ -2,58 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:amarna_club/models/incident.dart';
-import 'package:amarna_club/providers/incidents_provider.dart';
-import 'package:amarna_club/theme/app_theme.dart';
-import 'package:amarna_club/widgets/app_filter_chip.dart';
-import 'package:amarna_club/widgets/offline_banner.dart';
-import 'package:amarna_club/widgets/priority_indicator.dart';
+import '../models/work_ticket.dart';
+import '../providers/tickets_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_filter_chip.dart';
+import '../widgets/offline_banner.dart';
+import '../widgets/priority_indicator.dart';
 
-/// Écran liste des incidents avec filtres et indicateurs de priorité.
-class IncidentsListScreen extends ConsumerStatefulWidget {
-  const IncidentsListScreen({super.key});
+/// Écran liste des tickets consolidés (Anomalies et Interventions de maintenance).
+class TicketsListScreen extends ConsumerStatefulWidget {
+  const TicketsListScreen({super.key});
 
   @override
-  ConsumerState<IncidentsListScreen> createState() =>
-      _IncidentsListScreenState();
+  ConsumerState<TicketsListScreen> createState() => _TicketsListScreenState();
 }
 
-class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
+class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
   String _selectedFilter = 'Tout';
 
   static const List<String> _filters = [
     'Tout',
-    'Ouvert',
+    'Anomalies',
+    'Maintenances',
     'En cours',
-    'Résolu',
-    'Critique',
+    'Résolus',
   ];
 
-  /// Filters the incident list based on the currently selected chip.
-  List<Incident> _applyFilter(List<Incident> incidents) {
+  List<WorkTicket> _applyFilter(List<WorkTicket> tickets) {
     switch (_selectedFilter) {
-      case 'Ouvert':
-        return incidents
-            .where((i) => i.status == IncidentStatus.open)
-            .toList();
+      case 'Anomalies':
+        return tickets.where((t) => t.type == TicketType.anomaly).toList();
+      case 'Maintenances':
+        return tickets.where((t) => t.type == TicketType.preventive || t.type == TicketType.corrective).toList();
       case 'En cours':
-        return incidents
-            .where((i) => i.status == IncidentStatus.inProgress)
-            .toList();
-      case 'Résolu':
-        return incidents
-            .where((i) => i.status == IncidentStatus.resolved)
-            .toList();
-      case 'Critique':
-        return incidents
-            .where((i) => i.priority == IncidentPriority.critical)
-            .toList();
+        return tickets.where((t) => t.status == TicketStatus.inProgress).toList();
+      case 'Résolus':
+        return tickets.where((t) => t.status == TicketStatus.resolved).toList();
       default:
-        return incidents;
+        return tickets;
     }
   }
 
-  /// Returns a human-readable French relative time string.
   String _relativeTime(DateTime dateCreated) {
     final diff = DateTime.now().difference(dateCreated);
 
@@ -73,12 +62,12 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allIncidents = ref.watch(incidentsProvider);
-    final filteredIncidents = _applyFilter(allIncidents);
+    final allTickets = ref.watch(ticketsProvider);
+    final filteredTickets = _applyFilter(allTickets);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Incidents'),
+        title: const Text('Tickets d\'intervention'),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -94,13 +83,12 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
       ),
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 1000),
           child: Column(
             children: [
-              // ── Offline banner ────────────────────────────────
               const OfflineBanner(),
 
-              // ── Report button ─────────────────────────────────
+              // Create Ticket Button
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: SizedBox(
@@ -108,23 +96,23 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                   height: 52,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
+                      backgroundColor: AppColors.accentPrimary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.warning_amber_rounded, size: 22),
+                    icon: const Icon(Icons.add_circle_outline, size: 22),
                     label: const Text(
-                      'Signaler un incident',
+                      'Créer un ticket',
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
-                    onPressed: () => context.push('/incidents/nouveau'),
+                    onPressed: () => context.push('/tickets/nouveau'),
                   ),
                 ),
               ),
 
-              // ── Filter chips ──────────────────────────────────
+              // Filter chips
               SizedBox(
                 height: 48,
                 child: ListView.separated(
@@ -145,9 +133,9 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
 
               const SizedBox(height: 8),
 
-              // ── Incident list ─────────────────────────────────
+              // Tickets list/grid
               Expanded(
-                child: filteredIncidents.isEmpty
+                child: filteredTickets.isEmpty
                     ? _buildEmptyState()
                     : LayoutBuilder(
                         builder: (context, constraints) {
@@ -159,22 +147,22 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
-                                childAspectRatio: 2.5,
+                                childAspectRatio: 2.6,
                               ),
-                              itemCount: filteredIncidents.length,
+                              itemCount: filteredTickets.length,
                               itemBuilder: (context, index) {
-                                final incident = filteredIncidents[index];
-                                return _buildIncidentCard(incident);
+                                final ticket = filteredTickets[index];
+                                return _buildTicketCard(ticket);
                               },
                             );
                           } else {
                             return ListView.separated(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              itemCount: filteredIncidents.length,
+                              itemCount: filteredTickets.length,
                               separatorBuilder: (_, __) => const SizedBox(height: 12),
                               itemBuilder: (context, index) {
-                                final incident = filteredIncidents[index];
-                                return _buildIncidentCard(incident);
+                                final ticket = filteredTickets[index];
+                                return _buildTicketCard(ticket);
                               },
                             );
                           }
@@ -188,7 +176,6 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
     );
   }
 
-  // ── Empty state ───────────────────────────────────────────
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -203,7 +190,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Aucun incident en cours — Tout va bien! 🌟',
+              'Aucun ticket trouvé — Tout fonctionne! 🌟',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textSecondary,
@@ -216,12 +203,11 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
     );
   }
 
-  // ── Incident card ─────────────────────────────────────────
-  Widget _buildIncidentCard(Incident incident) {
+  Widget _buildTicketCard(WorkTicket ticket) {
     return GestureDetector(
-      onTap: () => context.push('/incidents/${incident.id}'),
+      onTap: () => context.push('/tickets/${ticket.id}'),
       child: PriorityIndicator(
-        priority: incident.priority,
+        priority: ticket.priority,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
@@ -232,7 +218,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      incident.title,
+                      ticket.title,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 15,
@@ -243,45 +229,44 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _buildPriorityBadge(incident),
+                  _buildPriorityBadge(ticket),
                 ],
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
 
-              // Row 2: activity name • time ago
+              // Row 2: Type badge • Activity name
               Row(
                 children: [
-                  // Activity color dot
                   Container(
-                    width: 8,
-                    height: 8,
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.getActivityColor(incident.activityId),
+                      color: ticket.typeColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      ticket.typeTextFrench,
+                      style: TextStyle(
+                        color: ticket.typeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.getActivityColor(ticket.activityId),
                       shape: BoxShape.circle,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    incident.activityName,
+                    ticket.activityName,
                     style: const TextStyle(
                       color: AppColors.textSecondary,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    '•',
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _relativeTime(incident.dateCreated),
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -290,10 +275,36 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
 
               const SizedBox(height: 6),
 
-              // Row 3: technician + sync icon
+              // Row 3: asset details or date info
               Row(
                 children: [
-                  if (incident.assignedTechnician != null) ...[
+                  Expanded(
+                    child: Text(
+                      ticket.assetName != null ? 'Équipement : ${ticket.assetName}' : 'Général',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    _relativeTime(ticket.dateCreated),
+                    style: const TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 6),
+
+              // Row 4: technician + status badge + sync icon
+              Row(
+                children: [
+                  if (ticket.assignedTechnician != null) ...[
                     const Icon(
                       Icons.person_outline,
                       size: 14,
@@ -302,7 +313,7 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
-                        incident.assignedTechnician!,
+                        ticket.assignedTechnician!,
                         style: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
@@ -322,10 +333,8 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
                         ),
                       ),
                     ),
-                  // Status badge
-                  _buildStatusChip(incident),
-                  // Sync pending indicator
-                  if (incident.syncPending) ...[
+                  _buildStatusChip(ticket),
+                  if (ticket.syncPending) ...[
                     const SizedBox(width: 8),
                     Tooltip(
                       message: 'En attente de synchronisation',
@@ -345,22 +354,21 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
     );
   }
 
-  // ── Priority badge chip ───────────────────────────────────
-  Widget _buildPriorityBadge(Incident incident) {
+  Widget _buildPriorityBadge(WorkTicket ticket) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: incident.priorityColor.withValues(alpha: 0.15),
+        color: ticket.priorityColor.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: incident.priorityColor.withValues(alpha: 0.4),
+          color: ticket.priorityColor.withValues(alpha: 0.4),
           width: 1,
         ),
       ),
       child: Text(
-        incident.priorityTextFrench,
+        ticket.priorityTextFrench,
         style: TextStyle(
-          color: incident.priorityColor,
+          color: ticket.priorityColor,
           fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
@@ -368,18 +376,17 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
     );
   }
 
-  // ── Status chip ───────────────────────────────────────────
-  Widget _buildStatusChip(Incident incident) {
+  Widget _buildStatusChip(WorkTicket ticket) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: incident.statusColor.withValues(alpha: 0.12),
+        color: ticket.statusColor.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        incident.statusTextFrench,
+        ticket.statusTextFrench,
         style: TextStyle(
-          color: incident.statusColor,
+          color: ticket.statusColor,
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),

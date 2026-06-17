@@ -10,7 +10,7 @@ class HelpScreen extends StatelessWidget {
     final faqs = [
       _FAQ(
         question: 'Comment fonctionne le mode hors-ligne ?',
-        answer: 'L\'application stocke localement toutes vos modifications (incidents créés, relevés de piscine, checklist cochées). Dès que votre appareil détecte du réseau, les données sont synchronisées automatiquement. Vous pouvez suivre l\'état des fichiers en attente ou forcer une synchronisation dans le menu "Plus" -> "Mode hors-ligne".',
+        answer: 'L\'application stocke localement toutes vos modifications (tickets créés, relevés de piscine, checklist cochées). Dès que votre appareil détecte du réseau, les données sont synchronisées automatiquement. Vous pouvez suivre l\'état des fichiers en attente ou forcer une synchronisation dans le menu "Plus" -> "Mode hors-ligne".',
       ),
       _FAQ(
         question: 'Comment scanner un équipement ?',
@@ -18,7 +18,7 @@ class HelpScreen extends StatelessWidget {
       ),
       _FAQ(
         question: 'Que faire en cas d\'incident critique ?',
-        answer: 'Pour tout incident critique (danger immédiat, blessure grave, défaillance technique majeure), créez immédiatement un incident via le bouton "Signaler un incident" de l\'onglet Incidents. Marquez la priorité comme "Critique". Cela affichera une alerte clignotante rouge sur le tableau de bord de tous les managers.',
+        answer: 'Pour tout incident critique (danger immédiat, blessure grave, défaillance technique majeure), créez immédiatement un ticket via le bouton "Créer un ticket" de l\'onglet Tickets. Marquez la priorité comme "Critique". Cela affichera une alerte clignotante rouge sur le tableau de bord de tous les managers.',
       ),
       _FAQ(
         question: 'Comment valider le contrôle quotidien d\'une activité ?',

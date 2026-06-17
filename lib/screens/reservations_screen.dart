@@ -122,6 +122,22 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list_rounded),
+            tooltip: 'Filtrer par activité',
+            onPressed: () {},
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/plus/reservations/nouvelle'),
+        backgroundColor: AppColors.accentPrimary,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Nouvelle réservation',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
       ),
       body: Column(
         children: [

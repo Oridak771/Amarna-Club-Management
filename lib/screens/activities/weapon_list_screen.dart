@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/priority_indicator.dart';
-import '../../models/incident.dart';
+import '../../models/work_ticket.dart';
 
 class Weapon {
   final String id;
@@ -83,21 +83,21 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
           final weapon = weapons[index];
           
           Color statusColor;
-          IncidentPriority priority;
+          TicketPriority priority;
           if (weapon.status == 'Disponible') {
             statusColor = AppColors.success;
-            priority = IncidentPriority.low;
+            priority = TicketPriority.low;
           } else if (weapon.status == 'En utilisation') {
             statusColor = AppColors.warning;
-            priority = IncidentPriority.medium;
+            priority = TicketPriority.medium;
           } else {
             statusColor = AppColors.danger;
-            priority = IncidentPriority.critical;
+            priority = TicketPriority.critical;
           }
 
           final bool needsCleaning = DateTime.now().difference(weapon.lastCleaned).inDays > 7;
-          if (needsCleaning && priority == IncidentPriority.low) {
-            priority = IncidentPriority.high; // bump priority if it needs cleaning
+          if (needsCleaning && priority == TicketPriority.low) {
+            priority = TicketPriority.high; // bump priority if it needs cleaning
           }
 
           return PriorityIndicator(

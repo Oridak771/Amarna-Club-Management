@@ -3,12 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:amarna_club/models/activity.dart';
-import 'package:amarna_club/models/incident.dart';
-import 'package:amarna_club/models/maintenance_task.dart';
+import 'package:amarna_club/models/work_ticket.dart';
 import 'package:amarna_club/providers/activities_provider.dart';
-import 'package:amarna_club/providers/incidents_provider.dart';
+import 'package:amarna_club/providers/tickets_provider.dart';
 import 'package:amarna_club/providers/inventory_provider.dart';
-import 'package:amarna_club/providers/maintenance_provider.dart';
 import 'package:amarna_club/theme/app_theme.dart';
 import 'package:amarna_club/widgets/kpi_tile.dart';
 import 'package:amarna_club/widgets/offline_banner.dart';
@@ -20,16 +18,18 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activities = ref.watch(activitiesProvider);
-    final incidents = ref.watch(incidentsProvider);
-    final maintenanceTasks = ref.watch(maintenanceProvider);
+    final tickets = ref.watch(ticketsProvider);
     final inventoryItems = ref.watch(inventoryProvider);
 
     // Compute metrics
     final openActivitiesCount = activities.where((a) => a.status == ActivityStatus.open).length;
-    final activeIncidentsCount = incidents.where((i) => i.status != IncidentStatus.resolved).length;
+    final activeAnomaliesCount = tickets.where((t) => t.type == TicketType.anomaly && t.status != TicketStatus.resolved).length;
     final now = DateTime.now();
-    final overdueMaintenanceCount = maintenanceTasks.where((t) =>
-        t.status != MaintenanceStatus.done && t.dateDue.isBefore(now)).length;
+    final overdueMaintenanceCount = tickets.where((t) =>
+        t.type != TicketType.anomaly &&
+        t.status != TicketStatus.resolved &&
+        t.dateDue != null &&
+        t.dateDue!.isBefore(now)).length;
     final lowStockItemsCount = inventoryItems.where((item) => item.isLowStock).length;
 
     return Scaffold(
@@ -91,8 +91,8 @@ class DashboardScreen extends ConsumerWidget {
                           KPITile(
                             icon: Icons.warning_amber_rounded,
                             iconColor: AppColors.danger,
-                            value: '$activeIncidentsCount',
-                            title: 'Incidents en cours',
+                            value: '$activeAnomaliesCount',
+                            title: 'Anomalies actives',
                           ),
                           KPITile(
                             icon: Icons.build_outlined,

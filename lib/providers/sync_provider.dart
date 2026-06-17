@@ -2,10 +2,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import '../services/database_service.dart';
-import '../models/incident.dart';
-import '../models/maintenance_task.dart';
-import 'incidents_provider.dart';
-import 'maintenance_provider.dart';
+import '../models/work_ticket.dart';
+import 'tickets_provider.dart';
 
 class SyncState {
   final bool isOnline;
@@ -93,53 +91,35 @@ class SyncNotifier extends StateNotifier<SyncState> {
     
     // Perform database sync updates
     await isar.writeTxn(() async {
-      // 1. Sync incidents
-      final pendingIncidents = await isar.incidents.filter().syncPendingEqualTo(true).findAll();
-      for (final incident in pendingIncidents) {
-        final updated = Incident(
-          isarId: incident.isarId,
-          id: incident.id,
-          title: incident.title,
-          description: incident.description,
-          activityId: incident.activityId,
-          activityName: incident.activityName,
-          priority: incident.priority,
-          status: incident.status,
-          dateCreated: incident.dateCreated,
-          imageUrl: incident.imageUrl,
-          voiceNoteUrl: incident.voiceNoteUrl,
-          assignedTechnician: incident.assignedTechnician,
+      // Sync pending work tickets
+      final pendingTickets = await isar.workTickets.filter().syncPendingEqualTo(true).findAll();
+      for (final ticket in pendingTickets) {
+        final updated = WorkTicket(
+          isarId: ticket.isarId,
+          id: ticket.id,
+          title: ticket.title,
+          description: ticket.description,
+          activityId: ticket.activityId,
+          activityName: ticket.activityName,
+          assetId: ticket.assetId,
+          assetName: ticket.assetName,
+          type: ticket.type,
+          priority: ticket.priority,
+          status: ticket.status,
+          dateCreated: ticket.dateCreated,
+          dateDue: ticket.dateDue,
+          dateCompleted: ticket.dateCompleted,
+          imageUrl: ticket.imageUrl,
+          voiceNoteUrl: ticket.voiceNoteUrl,
+          assignedTechnician: ticket.assignedTechnician,
           syncPending: false,
         );
-        await isar.incidents.put(updated);
-      }
-
-      // 2. Sync maintenance tasks
-      final pendingTasks = await isar.maintenanceTasks.filter().syncPendingEqualTo(true).findAll();
-      for (final task in pendingTasks) {
-        final updated = MaintenanceTask(
-          isarId: task.isarId,
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          assetId: task.assetId,
-          assetName: task.assetName,
-          activityId: task.activityId,
-          type: task.type,
-          priority: task.priority,
-          status: task.status,
-          dateDue: task.dateDue,
-          dateCompleted: task.dateCompleted,
-          assignedTechnician: task.assignedTechnician,
-          syncPending: false,
-        );
-        await isar.maintenanceTasks.put(updated);
+        await isar.workTickets.put(updated);
       }
     });
 
     // Refresh providers to reflect synced state
-    _ref.read(incidentsProvider.notifier).loadIncidents();
-    _ref.read(maintenanceProvider.notifier).loadTasks();
+    _ref.read(ticketsProvider.notifier).loadTickets();
 
     newLogs.add('Synchronisation avec Odoo ERP réussie. Base locale à jour.');
     state = state.copyWith(

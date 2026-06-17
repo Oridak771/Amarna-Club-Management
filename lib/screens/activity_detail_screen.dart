@@ -4,11 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:amarna_club/models/activity.dart';
-import 'package:amarna_club/models/maintenance_task.dart';
+import 'package:amarna_club/models/work_ticket.dart';
 import 'package:amarna_club/providers/activities_provider.dart';
-import 'package:amarna_club/providers/incidents_provider.dart';
+import 'package:amarna_club/providers/tickets_provider.dart';
 import 'package:amarna_club/providers/inventory_provider.dart';
-import 'package:amarna_club/providers/maintenance_provider.dart';
 import 'package:amarna_club/providers/assets_provider.dart';
 import 'package:amarna_club/theme/app_theme.dart';
 import 'package:amarna_club/widgets/inventory_stepper.dart';
@@ -42,7 +41,7 @@ class ActivityDetailScreen extends ConsumerWidget {
     final activityColor = AppColors.getActivityColor(activity.id);
 
     return DefaultTabController(
-      length: 5,
+      length: 4,
       child: Scaffold(
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
@@ -165,7 +164,7 @@ class ActivityDetailScreen extends ConsumerWidget {
 
                     // Quick Actions Row (Horizontal Scroll)
                     SizedBox(
-                      height: 80,
+                      height: 96,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -185,8 +184,7 @@ class ActivityDetailScreen extends ConsumerWidget {
                         Tab(text: "Vue d'ensemble"),
                         Tab(text: "Inventaire"),
                         Tab(text: "Équipement"),
-                        Tab(text: "Maintenance"),
-                        Tab(text: "Incidents"),
+                        Tab(text: "Tickets"),
                       ],
                     ),
                   ],
@@ -199,8 +197,7 @@ class ActivityDetailScreen extends ConsumerWidget {
               _buildOverviewTab(context, activity),
               _buildInventoryTab(context, ref, activity.id),
               _buildEquipmentTab(context, ref, activity.id),
-              _buildMaintenanceTab(context, ref, activity.id),
-              _buildIncidentsTab(context, ref, activity.id),
+              _buildTicketsTab(context, ref, activity.id),
             ],
           ),
         ),
@@ -290,19 +287,20 @@ class ActivityDetailScreen extends ConsumerWidget {
     actions.add(
       QuickActionButton(
         icon: Icons.warning_amber_rounded,
-        label: 'Incident',
+        label: 'Signaler Panne',
         color: AppColors.danger,
-        onTap: () => context.push('/incidents/nouveau'),
+        onTap: () => context.push('/tickets/nouveau'),
       ),
     );
-    actions.add(const SizedBox(width: 12));
 
+    // Also add a quick reservation shortcut
+    actions.add(const SizedBox(width: 12));
     actions.add(
       QuickActionButton(
-        icon: Icons.build_outlined,
-        label: 'Maintenance',
-        color: AppColors.warning,
-        onTap: () => context.push('/maintenance/nouveau'),
+        icon: Icons.calendar_month_outlined,
+        label: 'Réservation',
+        color: AppColors.accentPrimary,
+        onTap: () => context.push('/plus/reservations'),
       ),
     );
 
@@ -584,31 +582,32 @@ class ActivityDetailScreen extends ConsumerWidget {
     );
   }
 
-  // ── Tab 4: Maintenance ─────────────────────────────────────
-  Widget _buildMaintenanceTab(BuildContext context, WidgetRef ref, String activityId) {
-    final tasks = ref.watch(maintenanceProvider);
-    final activityTasks = tasks.where((t) => t.activityId == activityId).toList();
+  // ── Tab 4: Tickets ─────────────────────────────────────────
+  Widget _buildTicketsTab(BuildContext context, WidgetRef ref, String activityId) {
+    final allTickets = ref.watch(ticketsProvider);
+    final activityTickets = allTickets.where((t) => t.activityId == activityId).toList();
 
-    if (activityTasks.isEmpty) {
+    if (activityTickets.isEmpty) {
       return _buildEmptyState(
-        Icons.build_circle_outlined,
-        'Aucune tâche de maintenance pour cette activité.',
+        Icons.assignment_outlined,
+        'Aucun ticket (anomalie ou maintenance) pour cette activité.',
       );
     }
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
-      itemCount: activityTasks.length,
+      itemCount: activityTickets.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
-        final task = activityTasks[index];
-        final now = DateTime.now();
-        final isOverdue = task.status != MaintenanceStatus.done && task.dateDue.isBefore(now);
+        final ticket = activityTickets[index];
+        final isOverdue = ticket.status != TicketStatus.resolved &&
+            ticket.dateDue != null &&
+            ticket.dateDue!.isBefore(DateTime.now());
 
         return GestureDetector(
-          onTap: () => context.push('/maintenance/${task.id}'),
+          onTap: () => context.push('/tickets/${ticket.id}'),
           child: PriorityIndicator(
-            priority: task.priority,
+            priority: ticket.priority,
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: Column(
@@ -619,7 +618,7 @@ class ActivityDetailScreen extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          task.title,
+                          ticket.title,
                           style: const TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 14,
@@ -631,9 +630,9 @@ class ActivityDetailScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        task.statusTextFrench,
+                        ticket.statusTextFrench,
                         style: TextStyle(
-                          color: task.statusColor,
+                          color: ticket.statusColor,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -641,97 +640,53 @@ class ActivityDetailScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    'Asset: ${task.assetName}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                  const SizedBox(height: 6),
                   Row(
                     children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 13,
-                        color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: ticket.typeColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          ticket.typeTextFrench,
+                          style: TextStyle(color: ticket.typeColor, fontSize: 9, fontWeight: FontWeight.bold),
+                        ),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        DateFormat('dd/MM/yyyy').format(task.dateDue),
-                        style: TextStyle(
+                      if (ticket.assetName != null) ...[
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Équipement: ${ticket.assetName}',
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (ticket.dateDue != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 13,
                           color: isOverdue ? AppColors.danger : AppColors.textMuted,
-                          fontSize: 11,
-                          fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Tab 5: Incidents ───────────────────────────────────────
-  Widget _buildIncidentsTab(BuildContext context, WidgetRef ref, String activityId) {
-    final allIncidents = ref.watch(incidentsProvider);
-    final activityIncidents = allIncidents.where((i) => i.activityId == activityId).toList();
-
-    if (activityIncidents.isEmpty) {
-      return _buildEmptyState(
-        Icons.warning_amber_rounded,
-        'Aucun incident signalé pour cette activité.',
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: activityIncidents.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final incident = activityIncidents[index];
-
-        return GestureDetector(
-          onTap: () => context.push('/incidents/${incident.id}'),
-          child: PriorityIndicator(
-            priority: incident.priority,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          incident.title,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 4),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(ticket.dateDue!),
+                          style: TextStyle(
+                            color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                            fontSize: 11,
+                            fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        incident.statusTextFrench,
-                        style: TextStyle(
-                          color: incident.statusColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Priorité: ${incident.priorityTextFrench}',
-                    style: TextStyle(color: incident.priorityColor, fontSize: 12, fontWeight: FontWeight.w600),
-                  ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../models/incident.dart';
-import '../models/maintenance_task.dart';
+import '../models/work_ticket.dart';
 import '../providers/activities_provider.dart';
-import '../providers/incidents_provider.dart';
+import '../providers/tickets_provider.dart';
 import '../providers/inventory_provider.dart';
-import '../providers/maintenance_provider.dart';
 import '../theme/app_theme.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
@@ -23,22 +21,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     final activities = ref.watch(activitiesProvider);
-    final incidents = ref.watch(incidentsProvider);
-    final maintenanceTasks = ref.watch(maintenanceProvider);
+    final tickets = ref.watch(ticketsProvider);
     final inventoryItems = ref.watch(inventoryProvider);
 
     // Filter by activity if not 'all'
-    final filteredIncidents = incidents.where((i) => _selectedActivity == 'all' || i.activityId == _selectedActivity).toList();
-    final filteredMaintenance = maintenanceTasks.where((t) => _selectedActivity == 'all' || t.activityId == _selectedActivity).toList();
+    final filteredTickets = tickets.where((t) => _selectedActivity == 'all' || t.activityId == _selectedActivity).toList();
     final filteredInventory = inventoryItems.where((item) => _selectedActivity == 'all' || item.activityId == _selectedActivity).toList();
 
-    // Calculations
-    final totalIncidents = filteredIncidents.length;
-    final resolvedIncidents = filteredIncidents.where((i) => i.status == IncidentStatus.resolved).length;
-    final incidentResolutionRate = totalIncidents > 0 ? (resolvedIncidents / totalIncidents) : 0.0;
+    // Separate calculations for anomalies (incidents) and planned maintenances
+    final anomalies = filteredTickets.where((t) => t.type == TicketType.anomaly).toList();
+    final totalAnomalies = anomalies.length;
+    final resolvedAnomalies = anomalies.where((a) => a.status == TicketStatus.resolved).length;
+    final anomalyResolutionRate = totalAnomalies > 0 ? (resolvedAnomalies / totalAnomalies) : 0.0;
 
-    final totalMaintenance = filteredMaintenance.length;
-    final completedMaintenance = filteredMaintenance.where((t) => t.status == MaintenanceStatus.done).length;
+    final maintenances = filteredTickets.where((t) => t.type != TicketType.anomaly).toList();
+    final totalMaintenance = maintenances.length;
+    final completedMaintenance = maintenances.where((m) => m.status == TicketStatus.resolved).length;
     final maintenanceRate = totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) : 0.0;
 
     final lowStockCount = filteredInventory.where((i) => i.isLowStock).length;
@@ -139,9 +137,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       childAspectRatio: isWide ? 1.6 : 3,
                       children: [
                         _buildKPICard(
-                          'Incidents Résolus',
-                          '$resolvedIncidents / $totalIncidents',
-                          'Taux : ${(incidentResolutionRate * 100).toInt()}%',
+                          'Anomalies Résolues',
+                          '$resolvedAnomalies / $totalAnomalies',
+                          'Taux : ${(anomalyResolutionRate * 100).toInt()}%',
                           AppColors.danger,
                         ),
                         _buildKPICard(
@@ -170,14 +168,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(child: _buildIncidentsChart(incidentResolutionRate)),
+                              Expanded(child: _buildAnomaliesChart(anomalyResolutionRate)),
                               const SizedBox(width: 16),
                               Expanded(child: _buildMaintenanceChart(maintenanceRate)),
                             ],
                           )
                         : Column(
                             children: [
-                              _buildIncidentsChart(incidentResolutionRate),
+                              _buildAnomaliesChart(anomalyResolutionRate),
                               const SizedBox(height: 16),
                               _buildMaintenanceChart(maintenanceRate),
                             ],
@@ -232,7 +230,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     );
   }
 
-  Widget _buildIncidentsChart(double rate) {
+  Widget _buildAnomaliesChart(double rate) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -245,7 +243,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Résolution d\'Incidents',
+              'Résolution d\'Anomalies',
               style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
             ),
           ),
@@ -278,7 +276,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Taux d\'incidents clôturés',
+            'Taux d\'anomalies résolues',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
           ),
         ],

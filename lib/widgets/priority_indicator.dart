@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/incident.dart'; // Reuse IncidentPriority
+import '../models/work_ticket.dart';
 import '../theme/app_theme.dart';
 
 class PriorityIndicator extends StatefulWidget {
-  final IncidentPriority priority;
+  final TicketPriority priority;
   final Widget child;
 
   const PriorityIndicator({
@@ -36,7 +36,7 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
       ),
     );
 
-    if (widget.priority == IncidentPriority.critical) {
+    if (widget.priority == TicketPriority.critical) {
       _controller.repeat(reverse: true);
     }
   }
@@ -44,7 +44,7 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
   @override
   void didUpdateWidget(covariant PriorityIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.priority == IncidentPriority.critical) {
+    if (widget.priority == TicketPriority.critical) {
       if (!_controller.isAnimating) {
         _controller.repeat(reverse: true);
       }
@@ -63,16 +63,16 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
   Widget build(BuildContext context) {
     Color indicatorColor;
     switch (widget.priority) {
-      case IncidentPriority.low:
+      case TicketPriority.low:
         indicatorColor = AppColors.priorityLow;
         break;
-      case IncidentPriority.medium:
+      case TicketPriority.medium:
         indicatorColor = AppColors.priorityMedium;
         break;
-      case IncidentPriority.high:
+      case TicketPriority.high:
         indicatorColor = AppColors.priorityHigh;
         break;
-      case IncidentPriority.critical:
+      case TicketPriority.critical:
         indicatorColor = AppColors.priorityCritical;
         break;
     }
@@ -81,14 +81,14 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final double glowAlpha = widget.priority == IncidentPriority.critical
+        final double glowAlpha = widget.priority == TicketPriority.critical
             ? _animation.value
             : 0.0;
 
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            boxShadow: widget.priority == IncidentPriority.critical
+            boxShadow: widget.priority == TicketPriority.critical
                 ? [
                     BoxShadow(
                       color: indicatorColor.withValues(alpha: glowAlpha * 0.3),
@@ -103,10 +103,10 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
               color: AppColors.backgroundSecondary,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: widget.priority == IncidentPriority.critical
+                color: widget.priority == TicketPriority.critical
                     ? indicatorColor.withValues(alpha: glowAlpha)
                     : AppColors.border,
-                width: widget.priority == IncidentPriority.critical ? 1.5 : 1,
+                width: widget.priority == TicketPriority.critical ? 1.5 : 1,
               ),
             ),
             child: ClipRRect(

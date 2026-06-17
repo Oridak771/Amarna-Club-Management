@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../models/asset.dart';
+import '../models/work_ticket.dart';
 import '../providers/assets_provider.dart';
-import '../providers/incidents_provider.dart';
-import '../providers/maintenance_provider.dart';
+import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 
 class AssetProfileScreen extends ConsumerWidget {
@@ -69,35 +69,21 @@ class AssetProfileScreen extends ConsumerWidget {
       );
     }
 
-    // Load related incidents & maintenance tasks
-    final incidents = ref.watch(incidentsProvider);
-    final assetIncidents = incidents.where((i) => i.title.contains(asset.name) || i.description.contains(asset.name) || i.description.contains(asset.serialNumber)).toList();
-
-    final maintenanceTasks = ref.watch(maintenanceProvider);
-    final assetMaintenances = maintenanceTasks.where((t) => t.assetId == asset.id || t.assetName == asset.name).toList();
+    // Load related tickets
+    final tickets = ref.watch(ticketsProvider);
+    final assetTickets = tickets.where((t) => t.assetId == asset.id || t.assetName == asset.name || t.title.contains(asset.name) || t.description.contains(asset.name)).toList();
 
     // Create a combined chronological history timeline
     final List<TimelineEvent> events = [];
     
-    for (final inc in assetIncidents) {
+    for (final ticket in assetTickets) {
       events.add(TimelineEvent(
-        date: inc.dateCreated,
-        title: 'Incident signalé : ${inc.title}',
-        description: inc.description,
-        type: TimelineEventType.incident,
-        statusLabel: inc.statusTextFrench,
-        color: inc.statusColor,
-      ));
-    }
-
-    for (final maint in assetMaintenances) {
-      events.add(TimelineEvent(
-        date: maint.dateDue.subtract(const Duration(days: 2)), // Simulated actual action date
-        title: 'Maintenance : ${maint.title}',
-        description: maint.description,
-        type: TimelineEventType.maintenance,
-        statusLabel: maint.statusTextFrench,
-        color: maint.statusColor,
+        date: ticket.dateCreated,
+        title: '${ticket.typeTextFrench} : ${ticket.title}',
+        description: ticket.description,
+        type: ticket.type == TicketType.anomaly ? TimelineEventType.incident : TimelineEventType.maintenance,
+        statusLabel: ticket.statusTextFrench,
+        color: ticket.statusColor,
       ));
     }
 
@@ -312,7 +298,7 @@ class AssetProfileScreen extends ConsumerWidget {
                           AppColors.danger,
                           width: isWide ? (constraints.maxWidth - 24) / 3 : double.infinity,
                           onPressed: () {
-                            context.push('/incidents/nouveau', extra: {'prefilledAssetId': asset.id, 'prefilledAssetName': asset.name});
+                            context.push('/tickets/nouveau', extra: {'prefilledAssetId': asset.id, 'prefilledAssetName': asset.name});
                           },
                         ),
                         _buildActionButton(
@@ -322,7 +308,7 @@ class AssetProfileScreen extends ConsumerWidget {
                           AppColors.info,
                           width: isWide ? (constraints.maxWidth - 24) / 3 : double.infinity,
                           onPressed: () {
-                            context.push('/maintenance/nouveau', extra: {'prefilledAssetId': asset.id, 'prefilledAssetName': asset.name});
+                            context.push('/tickets/nouveau', extra: {'prefilledAssetId': asset.id, 'prefilledAssetName': asset.name});
                           },
                         ),
                         _buildActionButton(

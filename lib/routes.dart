@@ -4,14 +4,11 @@ import 'screens/main_navigation_shell.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/activities_grid_screen.dart';
-import 'screens/maintenance_list_screen.dart';
-import 'screens/incidents_list_screen.dart';
+import 'screens/tickets_list_screen.dart';
 import 'screens/plus_menu_screen.dart';
 import 'screens/activity_detail_screen.dart';
-import 'screens/create_maintenance_screen.dart';
-import 'screens/maintenance_detail_screen.dart';
-import 'screens/quick_incident_report_screen.dart';
-import 'screens/incident_detail_screen.dart';
+import 'screens/create_ticket_screen.dart';
+import 'screens/ticket_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/offline_dashboard_screen.dart';
@@ -23,6 +20,7 @@ import 'screens/qr_scan_screen.dart';
 import 'screens/asset_profile_screen.dart';
 import 'screens/global_inventory_screen.dart';
 import 'screens/reservations_screen.dart';
+import 'screens/create_reservation_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/profile_screen.dart';
@@ -40,8 +38,7 @@ import 'screens/activities/padel_courts_screen.dart';
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _accueilNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'accueil');
 final GlobalKey<NavigatorState> _activitesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'activites');
-final GlobalKey<NavigatorState> _maintenanceNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'maintenance');
-final GlobalKey<NavigatorState> _incidentsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'incidents');
+final GlobalKey<NavigatorState> _ticketsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'tickets');
 final GlobalKey<NavigatorState> _plusNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'plus');
 
 final GoRouter appRouter = GoRouter(
@@ -174,47 +171,23 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
 
-        // Tab 3: Maintenance
+        // Tab 3: Tickets
         StatefulShellBranch(
-          navigatorKey: _maintenanceNavigatorKey,
+          navigatorKey: _ticketsNavigatorKey,
           routes: <RouteBase>[
             GoRoute(
-              path: '/maintenance',
-              builder: (BuildContext context, GoRouterState state) => const MaintenanceListScreen(),
+              path: '/tickets',
+              builder: (BuildContext context, GoRouterState state) => const TicketsListScreen(),
               routes: [
                 GoRoute(
                   path: 'nouveau',
-                  builder: (BuildContext context, GoRouterState state) => const CreateMaintenanceScreen(),
+                  builder: (BuildContext context, GoRouterState state) => const CreateTicketScreen(),
                 ),
                 GoRoute(
                   path: ':id',
                   builder: (BuildContext context, GoRouterState state) {
                     final id = state.pathParameters['id'] ?? '';
-                    return MaintenanceDetailScreen(id: id);
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-
-        // Tab 4: Incidents
-        StatefulShellBranch(
-          navigatorKey: _incidentsNavigatorKey,
-          routes: <RouteBase>[
-            GoRoute(
-              path: '/incidents',
-              builder: (BuildContext context, GoRouterState state) => const IncidentsListScreen(),
-              routes: [
-                GoRoute(
-                  path: 'nouveau',
-                  builder: (BuildContext context, GoRouterState state) => const QuickIncidentReportScreen(),
-                ),
-                GoRoute(
-                  path: ':id',
-                  builder: (BuildContext context, GoRouterState state) {
-                    final id = state.pathParameters['id'] ?? '';
-                    return IncidentDetailScreen(id: id);
+                    return TicketDetailScreen(id: id);
                   },
                 ),
               ],
@@ -236,7 +209,15 @@ final GoRouter appRouter = GoRouter(
                 ),
                 GoRoute(
                   path: 'reservations',
-                  builder: (BuildContext context, GoRouterState state) => const ReservationsScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const ReservationsScreen(),
+                  routes: [
+                    GoRoute(
+                      path: 'nouvelle',
+                      builder: (BuildContext context, GoRouterState state) =>
+                          const CreateReservationScreen(),
+                    ),
+                  ],
                 ),
                 GoRoute(
                   path: 'rapports',

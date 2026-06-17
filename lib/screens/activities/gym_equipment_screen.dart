@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/priority_indicator.dart';
-import '../../models/incident.dart';
+import '../../models/work_ticket.dart';
 
 class GymMachine {
   final String id;
@@ -114,7 +114,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
 
           return PriorityIndicator(
             priority:
-                machine.isBroken ? IncidentPriority.high : IncidentPriority.low,
+                machine.isBroken ? TicketPriority.high : TicketPriority.low,
             child: Card(
               color: AppColors.backgroundSecondary,
               elevation: 0,
