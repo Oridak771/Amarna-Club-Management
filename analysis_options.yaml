@@ -1,0 +1,17 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - always_declare_return_types
+    - avoid_print
+    - camel_case_types
+    - file_names
+    - library_names
+    - non_constant_identifier_names

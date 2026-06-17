@@ -1,0 +1,47 @@
+name: amarna_club
+description: Application mobile de gestion opérationnelle pour les employés et superviseurs du club Amarna.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Navigation & State Management
+  go_router: ^14.2.0
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Local Storage & Database (Offline cache)
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+
+  # Hardware integrations
+  mobile_scanner: ^5.1.1
+  nfc_manager: ^3.3.0
+
+  # Utilities & Styling
+  path_provider: ^2.1.3
+  google_fonts: ^6.2.1
+  flutter_secure_storage: ^9.2.2
+  intl: ^0.19.0
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  build_runner: ^2.4.11
+  riverpod_generator: ^2.4.0
+  isar_generator: ^3.1.0+1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/activities/
+    - assets/icons/

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  # Service to manage Flutter tasks inside a container
+  flutter:
+    image: ghcr.io/cirruslabs/flutter:3.22.1
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - PUB_CACHE=/app/.pub-cache
+    command: flutter doctor
