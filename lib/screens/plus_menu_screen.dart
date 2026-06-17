@@ -83,19 +83,44 @@ class PlusMenuScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
-            onPressed: () {
-              // TODO: navigate to notifications
-            },
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        itemCount: _menuItems.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final item = _menuItems[index];
-          return _buildMenuItem(context, item);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+          if (isWide) {
+            return Center(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 900),
+                padding: const EdgeInsets.all(16.0),
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 3.5,
+                  ),
+                  itemCount: _menuItems.length,
+                  itemBuilder: (context, index) {
+                    final item = _menuItems[index];
+                    return _buildMenuItem(context, item);
+                  },
+                ),
+              ),
+            );
+          } else {
+            return ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              itemCount: _menuItems.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final item = _menuItems[index];
+                return _buildMenuItem(context, item);
+              },
+            );
+          }
         },
       ),
     );

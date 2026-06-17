@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'screens/main_navigation_shell.dart';
-import 'screens/stub_screens.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/activities_grid_screen.dart';
@@ -16,6 +15,18 @@ import 'screens/incident_detail_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/offline_dashboard_screen.dart';
+
+// Concrete screens
+import 'screens/checklist_swipe_screen.dart';
+import 'screens/checklist_summary_screen.dart';
+import 'screens/qr_scan_screen.dart';
+import 'screens/asset_profile_screen.dart';
+import 'screens/global_inventory_screen.dart';
+import 'screens/reservations_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/help_screen.dart';
+import 'screens/profile_screen.dart';
+import 'screens/notification_center_screen.dart';
 
 // Activity specific screens
 import 'screens/activities/pool_gauges_screen.dart';
@@ -66,6 +77,13 @@ final GoRouter appRouter = GoRouter(
         final id = state.pathParameters['id'] ?? '';
         return AssetProfileScreen(id: id);
       },
+    ),
+
+    // Notification center (Global route)
+    GoRoute(
+      parentNavigatorKey: _rootNavigatorKey,
+      path: '/notifications',
+      builder: (BuildContext context, GoRouterState state) => const NotificationCenterScreen(),
     ),
 
     // Main persistent shell navigation layout
@@ -137,11 +155,17 @@ final GoRouter appRouter = GoRouter(
                     // Checklists inside activity
                     GoRoute(
                       path: 'checklist',
-                      builder: (context, state) => const ChecklistSwipeScreen(),
+                      builder: (context, state) {
+                        final activityId = state.pathParameters['id'] ?? '';
+                        return ChecklistSwipeScreen(activityId: activityId);
+                      },
                     ),
                     GoRoute(
                       path: 'checklist-summary',
-                      builder: (context, state) => const ChecklistSummaryScreen(),
+                      builder: (context, state) {
+                        final activityId = state.pathParameters['id'] ?? '';
+                        return ChecklistSummaryScreen(activityId: activityId);
+                      },
                     ),
                   ],
                 ),
@@ -238,3 +262,4 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
+

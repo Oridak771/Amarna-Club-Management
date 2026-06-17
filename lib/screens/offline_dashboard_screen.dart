@@ -106,7 +106,7 @@ class _OfflineDashboardScreenState
                     ),
                     Switch.adaptive(
                       value: syncState.isOnline,
-                      activeColor: AppColors.success,
+                      activeThumbColor: AppColors.success,
                       activeTrackColor:
                           AppColors.success.withValues(alpha: 0.3),
                       inactiveThumbColor: AppColors.warning,

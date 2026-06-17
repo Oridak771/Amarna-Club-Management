@@ -44,9 +44,7 @@ class DashboardScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
-            onPressed: () {
-              // TODO: navigate to notification center
-            },
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
@@ -55,11 +53,14 @@ class DashboardScreen extends ConsumerWidget {
           const OfflineBanner(),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Section: Key Performance Indicators (KPIs)
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section: Key Performance Indicators (KPIs)
                   const Text(
                     'Tableau de bord',
                     style: TextStyle(
@@ -209,7 +210,9 @@ class DashboardScreen extends ConsumerWidget {
                     },
                   ),
                   const SizedBox(height: 20),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

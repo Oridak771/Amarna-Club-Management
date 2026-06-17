@@ -67,209 +67,224 @@ class _MaintenanceListScreenState extends ConsumerState<MaintenanceListScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
-            onPressed: () {
-              // TODO: navigate to notification center
-            },
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const OfflineBanner(),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            children: [
+              const OfflineBanner(),
 
-          // Filter chips
-          Container(
-            height: 48,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final label = _filters[index];
-                return AppFilterChip(
-                  label: label,
-                  isSelected: _selectedFilter == label,
-                  onTap: () => setState(() => _selectedFilter = label),
-                );
-              },
-            ),
+              // Filter chips
+              Container(
+                height: 48,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final label = _filters[index];
+                    return AppFilterChip(
+                      label: label,
+                      isSelected: _selectedFilter == label,
+                      onTap: () => setState(() => _selectedFilter = label),
+                    );
+                  },
+                ),
+              ),
+
+              // Task list
+              Expanded(
+                child: filteredTasks.isEmpty
+                    ? _buildEmptyState()
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth > 600;
+                          if (isWide) {
+                            return GridView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 2.2,
+                              ),
+                              itemCount: filteredTasks.length,
+                              itemBuilder: (context, index) {
+                                final task = filteredTasks[index];
+                                final isOverdue = task.status != MaintenanceStatus.done &&
+                                    task.dateDue.isBefore(now);
+                                return _buildMaintenanceCard(context, task, isOverdue);
+                              },
+                            );
+                          } else {
+                            return ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              itemCount: filteredTasks.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final task = filteredTasks[index];
+                                final isOverdue = task.status != MaintenanceStatus.done &&
+                                    task.dateDue.isBefore(now);
+                                return _buildMaintenanceCard(context, task, isOverdue);
+                              },
+                            );
+                          }
+                        },
+                      ),
+              ),
+            ],
           ),
-
-          // Task list
-          Expanded(
-            child: filteredTasks.isEmpty
-                ? _buildEmptyState()
-                : ListView.separated(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemCount: filteredTasks.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final task = filteredTasks[index];
-                      final isOverdue = task.status != MaintenanceStatus.done &&
-                          task.dateDue.isBefore(now);
-
-                      return GestureDetector(
-                        onTap: () => context.push('/maintenance/${task.id}'),
-                        child: PriorityIndicator(
-                          priority: task.priority,
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Title & Type badge
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        task.title,
-                                        style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    _buildTypeBadge(task.type),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                // Asset name
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.layers_outlined,
-                                      size: 14,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        task.assetName,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 13,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                // Due date & Assignee & Status badge
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // Date
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_today_outlined,
-                                          size: 14,
-                                          color: isOverdue
-                                              ? AppColors.danger
-                                              : AppColors.textMuted,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          DateFormat('dd/MM/yyyy')
-                                              .format(task.dateDue),
-                                          style: TextStyle(
-                                            color: isOverdue
-                                                ? AppColors.danger
-                                                : AppColors.textMuted,
-                                            fontSize: 12,
-                                            fontWeight: isOverdue
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                        if (isOverdue) ...[
-                                          const SizedBox(width: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 6, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.danger
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(4),
-                                            ),
-                                            child: const Text(
-                                              'RETARD',
-                                              style: TextStyle(
-                                                color: AppColors.danger,
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ],
-                                    ),
-                                    // Assignee
-                                    if (task.assignedTechnician != null)
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.person_outline,
-                                            size: 14,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            task.assignedTechnician!.split(
-                                                ' ')[0], // First name only
-                                            style: const TextStyle(
-                                              color: AppColors.textSecondary,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    // Status Badge
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: task.statusColor
-                                            .withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        task.statusTextFrench,
-                                        style: TextStyle(
-                                          color: task.statusColor,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.accentPrimary,
         foregroundColor: AppColors.textOnAccent,
         onPressed: () => context.push('/maintenance/nouveau'),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildMaintenanceCard(BuildContext context, MaintenanceTask task, bool isOverdue) {
+    return GestureDetector(
+      onTap: () => context.push('/maintenance/${task.id}'),
+      child: PriorityIndicator(
+        priority: task.priority,
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title & Type badge
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _buildTypeBadge(task.type),
+                ],
+              ),
+              const SizedBox(height: 6),
+              // Asset name
+              Row(
+                children: [
+                  const Icon(
+                    Icons.layers_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      task.assetName,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Due date & Assignee & Status badge
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Date
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        DateFormat('dd/MM/yyyy').format(task.dateDue),
+                        style: TextStyle(
+                          color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                          fontSize: 12,
+                          fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      if (isOverdue) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.danger.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'RETARD',
+                            style: TextStyle(
+                              color: AppColors.danger,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  // Assignee
+                  if (task.assignedTechnician != null)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.person_outline,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          task.assignedTechnician!.split(' ')[0], // First name only
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  // Status Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: task.statusColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      task.statusTextFrench,
+                      style: TextStyle(
+                        color: task.statusColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

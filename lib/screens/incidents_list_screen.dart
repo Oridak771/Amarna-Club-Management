@@ -88,78 +88,102 @@ class _IncidentsListScreenState extends ConsumerState<IncidentsListScreen> {
           IconButton(
             icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
-            onPressed: () {
-              // TODO: navigate to notifications
-            },
+            onPressed: () => context.push('/notifications'),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // ── Offline banner ────────────────────────────────
-          const OfflineBanner(),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: Column(
+            children: [
+              // ── Offline banner ────────────────────────────────
+              const OfflineBanner(),
 
-          // ── Report button ─────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.danger,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              // ── Report button ─────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.danger,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.warning_amber_rounded, size: 22),
+                    label: const Text(
+                      'Signaler un incident',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () => context.push('/incidents/nouveau'),
                   ),
                 ),
-                icon: const Icon(Icons.warning_amber_rounded, size: 22),
-                label: const Text(
-                  'Signaler un incident',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                onPressed: () => context.push('/incidents/nouveau'),
               ),
-            ),
-          ),
 
-          // ── Filter chips ──────────────────────────────────
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: _filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final label = _filters[index];
-                return AppFilterChip(
-                  label: label,
-                  isSelected: _selectedFilter == label,
-                  onTap: () => setState(() => _selectedFilter = label),
-                );
-              },
-            ),
-          ),
+              // ── Filter chips ──────────────────────────────────
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _filters.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final label = _filters[index];
+                    return AppFilterChip(
+                      label: label,
+                      isSelected: _selectedFilter == label,
+                      onTap: () => setState(() => _selectedFilter = label),
+                    );
+                  },
+                ),
+              ),
 
-          const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-          // ── Incident list ─────────────────────────────────
-          Expanded(
-            child: filteredIncidents.isEmpty
-                ? _buildEmptyState()
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
-                    itemCount: filteredIncidents.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final incident = filteredIncidents[index];
-                      return _buildIncidentCard(incident);
-                    },
-                  ),
+              // ── Incident list ─────────────────────────────────
+              Expanded(
+                child: filteredIncidents.isEmpty
+                    ? _buildEmptyState()
+                    : LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isWide = constraints.maxWidth > 600;
+                          if (isWide) {
+                            return GridView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 2.5,
+                              ),
+                              itemCount: filteredIncidents.length,
+                              itemBuilder: (context, index) {
+                                final incident = filteredIncidents[index];
+                                return _buildIncidentCard(incident);
+                              },
+                            );
+                          } else {
+                            return ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              itemCount: filteredIncidents.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final incident = filteredIncidents[index];
+                                return _buildIncidentCard(incident);
+                              },
+                            );
+                          }
+                        },
+                      ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
