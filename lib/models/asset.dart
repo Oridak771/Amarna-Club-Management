@@ -6,10 +6,10 @@ import '../theme/app_theme.dart';
 part 'asset.g.dart';
 
 enum AssetStatus {
-  available,   // Disponible (green)
-  inUse,       // En utilisation (blue)
+  available, // Disponible (green)
+  inUse, // En utilisation (blue)
   maintenance, // En maintenance (orange)
-  broken,      // En panne / Hors-service (red)
+  broken, // En panne / Hors-service (red)
 }
 
 @collection
@@ -20,12 +20,13 @@ class Asset {
   final String id;
   final String serialNumber;
   final String name;
-  final String category; // e.g. "Equipement Piscine", "Arme de poing", "Machine de musculation"
+  final String
+      category; // e.g. "Equipement Piscine", "Arme de poing", "Machine de musculation"
   final String activityId;
-  
+
   @enumerated
   final AssetStatus status;
-  
+
   final DateTime? lastMaintenance;
   final DateTime? nextMaintenance;
   final String? imageUrl;
@@ -45,7 +46,8 @@ class Asset {
     Map<String, String>? technicalSpecs,
     String? technicalSpecsJson,
   })  : _technicalSpecs = technicalSpecs,
-        technicalSpecsJson = technicalSpecsJson ?? (technicalSpecs != null ? jsonEncode(technicalSpecs) : null);
+        technicalSpecsJson = technicalSpecsJson ??
+            (technicalSpecs != null ? jsonEncode(technicalSpecs) : null);
 
   @ignore
   final Map<String, String>? _technicalSpecs;

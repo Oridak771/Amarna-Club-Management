@@ -81,13 +81,12 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        final double glowAlpha = widget.priority == TicketPriority.critical
-            ? _animation.value
-            : 0.0;
+        final double glowAlpha =
+            widget.priority == TicketPriority.critical ? _animation.value : 0.0;
 
         return Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: widget.priority == TicketPriority.critical
                 ? [
                     BoxShadow(
@@ -101,7 +100,7 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: widget.priority == TicketPriority.critical
                     ? indicatorColor.withValues(alpha: glowAlpha)
@@ -110,7 +109,7 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               child: Row(
                 children: [
                   // Left color bar indicator

@@ -45,7 +45,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text('Scanner Code QR / NFC', style: TextStyle(color: Colors.white)),
+        title: const Text('Scanner Code QR / NFC',
+            style: TextStyle(color: Colors.white)),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
@@ -65,7 +66,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
           ),
           IconButton(
             icon: Icon(
-              _scannerController.facing == CameraFacing.front ? Icons.camera_rear : Icons.camera_front,
+              _scannerController.facing == CameraFacing.front
+                  ? Icons.camera_rear
+                  : Icons.camera_front,
               color: Colors.white,
             ),
             onPressed: () {
@@ -94,7 +97,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.videocam_off, color: AppColors.danger, size: 48),
+                        const Icon(Icons.videocam_off,
+                            color: AppColors.danger, size: 48),
                         const SizedBox(height: 16),
                         const Text(
                           'Caméra non disponible',
@@ -109,7 +113,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                           'Utilisez la saisie manuelle ci-dessous ou configurez les permissions de la caméra.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.8),
                             fontSize: 13,
                           ),
                         ),
@@ -149,14 +154,18 @@ class _QRScanScreenState extends State<QRScanScreen> {
             right: 20,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text(
                   'Alignez le code QR dans le cadre',
-                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -189,7 +198,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       // Simulate NFC Tap
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Simulation NFC : Badge détecté (ASSET-001)'),
+                          content: Text(
+                              'Simulation NFC : Badge détecté (ASSET-001)'),
                           duration: Duration(seconds: 1),
                         ),
                       );
@@ -206,7 +216,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.contactless, color: AppColors.accentSecondary, size: 28),
+                          Icon(Icons.contactless,
+                              color: AppColors.accentSecondary, size: 28),
                           SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,7 +250,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     SizedBox(
                       height: 48,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.keyboard, color: AppColors.accentPrimary),
+                        icon: const Icon(Icons.keyboard,
+                            color: AppColors.accentPrimary),
                         label: const Text(
                           'Saisir le code manuellement',
                           style: TextStyle(
@@ -264,20 +276,25 @@ class _QRScanScreenState extends State<QRScanScreen> {
                               child: TextField(
                                 controller: _manualInputController,
                                 autofocus: true,
-                                style: const TextStyle(color: AppColors.textPrimary),
+                                style: const TextStyle(
+                                    color: AppColors.textPrimary),
                                 decoration: InputDecoration(
                                   hintText: 'Ex: ASSET-001, horse_01...',
-                                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                                  hintStyle: const TextStyle(
+                                      color: AppColors.textMuted),
                                   filled: true,
                                   fillColor: AppColors.surface,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 12),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: AppColors.border),
+                                    borderSide: const BorderSide(
+                                        color: AppColors.border),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: AppColors.accentPrimary),
+                                    borderSide: const BorderSide(
+                                        color: AppColors.accentPrimary),
                                   ),
                                 ),
                                 onSubmitted: (val) {
@@ -299,7 +316,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  final text = _manualInputController.text.trim();
+                                  final text =
+                                      _manualInputController.text.trim();
                                   if (text.isNotEmpty) {
                                     _navigateToAsset(text);
                                   }
@@ -318,7 +336,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
                           },
                           child: const Text(
                             'Annuler la saisie manuelle',
-                            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            style: TextStyle(
+                                color: AppColors.textSecondary, fontSize: 13),
                           ),
                         ),
                       ],
@@ -342,16 +361,20 @@ class _QRScanScreenState extends State<QRScanScreen> {
           decoration: BoxDecoration(
             color: Colors.transparent,
             border: Border(
-              top: alignment == Alignment.topLeft || alignment == Alignment.topRight
+              top: alignment == Alignment.topLeft ||
+                      alignment == Alignment.topRight
                   ? const BorderSide(color: AppColors.accentPrimary, width: 4)
                   : BorderSide.none,
-              bottom: alignment == Alignment.bottomLeft || alignment == Alignment.bottomRight
+              bottom: alignment == Alignment.bottomLeft ||
+                      alignment == Alignment.bottomRight
                   ? const BorderSide(color: AppColors.accentPrimary, width: 4)
                   : BorderSide.none,
-              left: alignment == Alignment.topLeft || alignment == Alignment.bottomLeft
+              left: alignment == Alignment.topLeft ||
+                      alignment == Alignment.bottomLeft
                   ? const BorderSide(color: AppColors.accentPrimary, width: 4)
                   : BorderSide.none,
-              right: alignment == Alignment.topRight || alignment == Alignment.bottomRight
+              right: alignment == Alignment.topRight ||
+                      alignment == Alignment.bottomRight
                   ? const BorderSide(color: AppColors.accentPrimary, width: 4)
                   : BorderSide.none,
             ),

@@ -10,23 +10,28 @@ class HelpScreen extends StatelessWidget {
     final faqs = [
       _FAQ(
         question: 'Comment fonctionne le mode hors-ligne ?',
-        answer: 'L\'application stocke localement toutes vos modifications (tickets créés, relevés de piscine, checklist cochées). Dès que votre appareil détecte du réseau, les données sont synchronisées automatiquement. Vous pouvez suivre l\'état des fichiers en attente ou forcer une synchronisation dans le menu "Plus" -> "Mode hors-ligne".',
+        answer:
+            'L\'application stocke localement toutes vos modifications (tickets créés, relevés de piscine, checklist cochées). Dès que votre appareil détecte du réseau, les données sont synchronisées automatiquement. Vous pouvez suivre l\'état des fichiers en attente ou forcer une synchronisation dans le menu "Plus" -> "Mode hors-ligne".',
       ),
       _FAQ(
         question: 'Comment scanner un équipement ?',
-        answer: 'Appuyez sur l\'icône de scanner photo (en haut à droite de la plupart des écrans). Cadrez le code QR de la machine ou de la pièce. Si votre appareil photo présente un dysfonctionnement, utilisez le bouton "Saisir le code manuellement" pour insérer le code d\'identification de l\'équipement.',
+        answer:
+            'Appuyez sur l\'icône de scanner photo (en haut à droite de la plupart des écrans). Cadrez le code QR de la machine ou de la pièce. Si votre appareil photo présente un dysfonctionnement, utilisez le bouton "Saisir le code manuellement" pour insérer le code d\'identification de l\'équipement.',
       ),
       _FAQ(
         question: 'Que faire en cas d\'incident critique ?',
-        answer: 'Pour tout incident critique (danger immédiat, blessure grave, défaillance technique majeure), créez immédiatement un ticket via le bouton "Créer un ticket" de l\'onglet Tickets. Marquez la priorité comme "Critique". Cela affichera une alerte clignotante rouge sur le tableau de bord de tous les managers.',
+        answer:
+            'Pour tout incident critique (danger immédiat, blessure grave, défaillance technique majeure), créez immédiatement un ticket via le bouton "Créer un ticket" de l\'onglet Tickets. Marquez la priorité comme "Critique". Cela affichera une alerte clignotante rouge sur le tableau de bord de tous les managers.',
       ),
       _FAQ(
         question: 'Comment valider le contrôle quotidien d\'une activité ?',
-        answer: 'Allez dans l\'onglet "Activités", choisissez l\'activité concernée, et appuyez sur le bouton "Lancer le contrôle". Répondez aux points requis en swipant les cartes (Droite pour Validé, Gauche pour Problème). Validez à la fin pour enregistrer le rapport.',
+        answer:
+            'Allez dans l\'onglet "Activités", choisissez l\'activité concernée, et appuyez sur le bouton "Lancer le contrôle". Répondez aux points requis en swipant les cartes (Droite pour Validé, Gauche pour Problème). Validez à la fin pour enregistrer le rapport.',
       ),
       _FAQ(
         question: 'Où trouver les rapports de statistiques ?',
-        answer: 'Les rapports détaillés de maintenance et d\'incidents sont réservés aux superviseurs et directeurs. Ils se trouvent dans l\'onglet "Plus" -> "Rapports". Si vous n\'avez pas les droits requis, cette option n\'apparaît pas dans votre menu.',
+        answer:
+            'Les rapports détaillés de maintenance et d\'incidents sont réservés aux superviseurs et directeurs. Ils se trouvent dans l\'onglet "Plus" -> "Rapports". Si vous n\'avez pas les droits requis, cette option n\'apparaît pas dans votre menu.',
       ),
     ];
 
@@ -59,11 +64,14 @@ class HelpScreen extends StatelessWidget {
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.accentPrimary.withValues(alpha: 0.3), width: 1.5),
+                    border: Border.all(
+                        color: AppColors.accentPrimary.withValues(alpha: 0.3),
+                        width: 1.5),
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.help_center_outlined, color: AppColors.accentPrimary, size: 48),
+                      const Icon(Icons.help_center_outlined,
+                          color: AppColors.accentPrimary, size: 48),
                       const SizedBox(height: 12),
                       const Text(
                         'Besoin d\'une assistance directe ?',
@@ -94,10 +102,13 @@ class HelpScreen extends StatelessWidget {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.accentPrimary,
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
                                 ),
                                 icon: const Icon(Icons.phone),
-                                label: const Text('Appeler', style: TextStyle(fontWeight: FontWeight.bold)),
+                                label: const Text('Appeler',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
                                 onPressed: () {
                                   // Action simulation
                                 },
@@ -110,11 +121,17 @@ class HelpScreen extends StatelessWidget {
                               height: 48,
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: AppColors.border),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  side:
+                                      const BorderSide(color: AppColors.border),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: const Icon(Icons.mail_outline, color: AppColors.textPrimary),
-                                label: const Text('Email', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+                                icon: const Icon(Icons.mail_outline,
+                                    color: AppColors.textPrimary),
+                                label: const Text('Email',
+                                    style: TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.bold)),
                                 onPressed: () {
                                   // Action simulation
                                 },
@@ -144,11 +161,13 @@ class HelpScreen extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: faqs.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final faq = faqs[index];
                     return Theme(
-                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      data: Theme.of(context)
+                          .copyWith(dividerColor: Colors.transparent),
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppColors.backgroundSecondary,

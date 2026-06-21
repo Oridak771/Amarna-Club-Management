@@ -16,23 +16,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<Map<String, dynamic>> _slides = [
     {
       'icon': Icons.space_dashboard_outlined,
-      'title': 'Gestion Simplifiée',
+      'title': 'Gestion Simplifiee',
       'description':
-          'Suivez l\'état d\'occupation, les KPIs critiques et les tâches en cours d\'Amarna Club en temps réel.',
+          "Suivez l'etat d'occupation, les KPIs critiques et les taches en cours d'Amarna Club en temps reel.",
       'color': AppColors.accentPrimary,
     },
     {
       'icon': Icons.qr_code_scanner_outlined,
       'title': 'Scanner QR & NFC',
       'description':
-          'Scannez instantanément les équipements pour consulter leur historique, signaler des pannes ou lancer des tâches.',
+          'Scannez instantanement les equipements pour consulter leur historique, signaler des pannes ou lancer des taches.',
       'color': AppColors.pool,
     },
     {
       'icon': Icons.wifi_off_rounded,
       'title': 'Mode Hors-ligne',
       'description':
-          'Travaillez sans interruption même sans réseau. Vos modifications se synchronisent automatiquement avec Odoo ERP dès reconnexion.',
+          'Travaillez sans interruption meme sans reseau. Vos modifications se synchronisent automatiquement avec Odoo ERP des reconnexion.',
       'color': AppColors.warning,
     },
   ];
@@ -110,7 +110,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           slide['title'] as String,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppColors.textPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),

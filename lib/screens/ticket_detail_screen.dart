@@ -30,15 +30,20 @@ class TicketDetailScreen extends ConsumerWidget {
       ),
     );
 
-    final String createdDateStr = DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated);
-    final String? dueDateStr = ticket.dateDue != null ? DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateDue!) : null;
+    final String createdDateStr =
+        DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated);
+    final String? dueDateStr = ticket.dateDue != null
+        ? DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateDue!)
+        : null;
     final bool isOverdue = ticket.status != TicketStatus.resolved &&
         ticket.dateDue != null &&
         ticket.dateDue!.isBefore(DateTime.now());
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(ticket.type == TicketType.anomaly ? 'Détail Anomalie' : 'Détail Maintenance'),
+        title: Text(ticket.type == TicketType.anomaly
+            ? 'Détail Anomalie'
+            : 'Détail Maintenance'),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_scanner),
@@ -108,7 +113,10 @@ class TicketDetailScreen extends ConsumerWidget {
                   // Detail section
                   const Text(
                     'Détails du ticket',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -124,12 +132,18 @@ class TicketDetailScreen extends ConsumerWidget {
                       children: [
                         const Text(
                           'Description',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          style: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12),
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          ticket.description.isNotEmpty ? ticket.description : 'Aucune description fournie.',
-                          style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, height: 1.4),
+                          ticket.description.isNotEmpty
+                              ? ticket.description
+                              : 'Aucune description fournie.',
+                          style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              height: 1.4),
                         ),
                         const Divider(height: 24, color: AppColors.border),
                         Row(
@@ -140,16 +154,22 @@ class TicketDetailScreen extends ConsumerWidget {
                                 children: [
                                   const Text(
                                     'Date de création',
-                                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                    style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12),
                                   ),
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                                      const Icon(Icons.calendar_today,
+                                          size: 14,
+                                          color: AppColors.textSecondary),
                                       const SizedBox(width: 6),
                                       Text(
                                         createdDateStr,
-                                        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                                        style: const TextStyle(
+                                            color: AppColors.textPrimary,
+                                            fontSize: 13),
                                       ),
                                     ],
                                   ),
@@ -164,7 +184,9 @@ class TicketDetailScreen extends ConsumerWidget {
                                     Text(
                                       'Échéance',
                                       style: TextStyle(
-                                        color: isOverdue ? AppColors.danger : AppColors.textSecondary,
+                                        color: isOverdue
+                                            ? AppColors.danger
+                                            : AppColors.textSecondary,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -174,15 +196,21 @@ class TicketDetailScreen extends ConsumerWidget {
                                         Icon(
                                           Icons.access_alarm,
                                           size: 14,
-                                          color: isOverdue ? AppColors.danger : AppColors.textSecondary,
+                                          color: isOverdue
+                                              ? AppColors.danger
+                                              : AppColors.textSecondary,
                                         ),
                                         const SizedBox(width: 6),
                                         Text(
                                           dueDateStr,
                                           style: TextStyle(
-                                            color: isOverdue ? AppColors.danger : AppColors.textPrimary,
+                                            color: isOverdue
+                                                ? AppColors.danger
+                                                : AppColors.textPrimary,
                                             fontSize: 13,
-                                            fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                                            fontWeight: isOverdue
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
                                           ),
                                         ),
                                       ],
@@ -195,19 +223,25 @@ class TicketDetailScreen extends ConsumerWidget {
                         const Divider(height: 24, color: AppColors.border),
                         const Text(
                           'Technicien assigné',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                          style: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 12),
                         ),
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(Icons.person_outline, size: 16, color: AppColors.textSecondary),
+                            const Icon(Icons.person_outline,
+                                size: 16, color: AppColors.textSecondary),
                             const SizedBox(width: 8),
                             Text(
                               ticket.assignedTechnician ?? 'Non assigné',
                               style: TextStyle(
-                                color: ticket.assignedTechnician != null ? AppColors.textPrimary : AppColors.textMuted,
+                                color: ticket.assignedTechnician != null
+                                    ? AppColors.textPrimary
+                                    : AppColors.textMuted,
                                 fontSize: 14,
-                                fontStyle: ticket.assignedTechnician != null ? FontStyle.normal : FontStyle.italic,
+                                fontStyle: ticket.assignedTechnician != null
+                                    ? FontStyle.normal
+                                    : FontStyle.italic,
                               ),
                             ),
                           ],
@@ -219,10 +253,14 @@ class TicketDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Media attachments (photos / voice)
-                  if (ticket.imageUrl != null || ticket.voiceNoteUrl != null) ...[
+                  if (ticket.imageUrl != null ||
+                      ticket.voiceNoteUrl != null) ...[
                     const Text(
                       'Pièces jointes',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     Container(
@@ -244,7 +282,8 @@ class TicketDetailScreen extends ConsumerWidget {
                                 width: double.infinity,
                                 decoration: const BoxDecoration(
                                   image: DecorationImage(
-                                    image: AssetImage('assets/images/placeholder_pool.jpg'),
+                                    image: AssetImage(
+                                        'assets/images/placeholder_pool.jpg'),
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -262,11 +301,14 @@ class TicketDetailScreen extends ConsumerWidget {
                               child: Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.play_circle_outline, color: AppColors.success, size: 32),
+                                    icon: const Icon(Icons.play_circle_outline,
+                                        color: AppColors.success, size: 32),
                                     onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(
-                                          content: Text('Lecture de la note vocale...'),
+                                          content: Text(
+                                              'Lecture de la note vocale...'),
                                           duration: Duration(seconds: 1),
                                         ),
                                       );
@@ -275,11 +317,18 @@ class TicketDetailScreen extends ConsumerWidget {
                                   const SizedBox(width: 8),
                                   const Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text('Note vocale.mp3', style: TextStyle(color: AppColors.textPrimary, fontSize: 13)),
+                                        Text('Note vocale.mp3',
+                                            style: TextStyle(
+                                                color: AppColors.textPrimary,
+                                                fontSize: 13)),
                                         SizedBox(height: 4),
-                                        Text('Durée : 0:14', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                                        Text('Durée : 0:14',
+                                            style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 11)),
                                       ],
                                     ),
                                   ),
@@ -304,14 +353,22 @@ class TicketDetailScreen extends ConsumerWidget {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.warning,
                                   foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
                                 ),
                                 icon: const Icon(Icons.play_arrow),
-                                label: const Text('Prendre en charge', style: TextStyle(fontWeight: FontWeight.bold)),
+                                label: const Text('Prendre en charge',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
                                 onPressed: () {
-                                  ref.read(ticketsProvider.notifier).updateTicketStatus(ticket.id, TicketStatus.inProgress);
+                                  ref
+                                      .read(ticketsProvider.notifier)
+                                      .updateTicketStatus(
+                                          ticket.id, TicketStatus.inProgress);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Ticket pris en charge (En cours) ✓')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Ticket pris en charge (En cours) ✓')),
                                   );
                                 },
                               ),
@@ -325,14 +382,25 @@ class TicketDetailScreen extends ConsumerWidget {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.success,
                                   foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
                                 ),
                                 icon: const Icon(Icons.check),
-                                label: Text(ticket.type == TicketType.anomaly ? 'Résoudre' : 'Terminer', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                label: Text(
+                                    ticket.type == TicketType.anomaly
+                                        ? 'Résoudre'
+                                        : 'Terminer',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold)),
                                 onPressed: () {
-                                  ref.read(ticketsProvider.notifier).updateTicketStatus(ticket.id, TicketStatus.resolved);
+                                  ref
+                                      .read(ticketsProvider.notifier)
+                                      .updateTicketStatus(
+                                          ticket.id, TicketStatus.resolved);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Ticket résolu avec succès ✓')),
+                                    const SnackBar(
+                                        content: Text(
+                                            'Ticket résolu avec succès ✓')),
                                   );
                                 },
                               ),
@@ -347,7 +415,10 @@ class TicketDetailScreen extends ConsumerWidget {
                   // Event Log Timeline (Odoo style)
                   const Text(
                     'Historique d\'intervention',
-                    style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   _buildTimeline(ticket),
@@ -397,7 +468,8 @@ class TicketDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildTimeline(WorkTicket ticket) {
-    final bool hasStarted = ticket.status == TicketStatus.inProgress || ticket.status == TicketStatus.resolved;
+    final bool hasStarted = ticket.status == TicketStatus.inProgress ||
+        ticket.status == TicketStatus.resolved;
     final bool hasResolved = ticket.status == TicketStatus.resolved;
 
     return Container(
@@ -419,15 +491,18 @@ class TicketDetailScreen extends ConsumerWidget {
           if (hasStarted)
             _buildTimelineItem(
               title: 'Pris en charge',
-              time: DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated.add(const Duration(minutes: 15))),
-              subtitle: 'Assigné à ${ticket.assignedTechnician ?? "Karim (Technicien)"}',
+              time: DateFormat('dd/MM/yyyy à HH:mm')
+                  .format(ticket.dateCreated.add(const Duration(minutes: 15))),
+              subtitle:
+                  'Assigné à ${ticket.assignedTechnician ?? "Karim (Technicien)"}',
               isActive: true,
               isLast: !hasResolved,
             ),
           if (hasResolved)
             _buildTimelineItem(
               title: ticket.type == TicketType.anomaly ? 'Résolu' : 'Terminé',
-              time: DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCompleted ?? DateTime.now()),
+              time: DateFormat('dd/MM/yyyy à HH:mm')
+                  .format(ticket.dateCompleted ?? DateTime.now()),
               subtitle: 'Intervention validée sur le terrain',
               isActive: true,
               isLast: true,
@@ -461,7 +536,9 @@ class TicketDetailScreen extends ConsumerWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: isActive ? AppColors.success.withValues(alpha: 0.5) : AppColors.border,
+                color: isActive
+                    ? AppColors.success.withValues(alpha: 0.5)
+                    : AppColors.border,
               ),
           ],
         ),
@@ -473,12 +550,20 @@ class TicketDetailScreen extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.bold)),
-                  Text(time, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
+                  Text(title,
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold)),
+                  Text(time,
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 11)),
                 ],
               ),
               const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              Text(subtitle,
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 16),
             ],
           ),

@@ -11,15 +11,17 @@ class ChecklistSwipeScreen extends ConsumerStatefulWidget {
   const ChecklistSwipeScreen({super.key, required this.activityId});
 
   @override
-  ConsumerState<ChecklistSwipeScreen> createState() => _ChecklistSwipeScreenState();
+  ConsumerState<ChecklistSwipeScreen> createState() =>
+      _ChecklistSwipeScreenState();
 }
 
 class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
   // Simple dialog to log problem details
-  Future<Map<String, String>?> _showProblemDialog(BuildContext context, ChecklistItem item) async {
+  Future<Map<String, String>?> _showProblemDialog(
+      BuildContext context, ChecklistItem item) async {
     final commentController = TextEditingController();
     String? simulatedPhotoPath;
-    
+
     return showDialog<Map<String, String>>(
       context: context,
       barrierDismissible: false,
@@ -39,7 +41,10 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                   Expanded(
                     child: Text(
                       'Signaler un Problème',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -51,7 +56,9 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                   children: [
                     Text(
                       item.title,
-                      style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -69,7 +76,8 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppColors.accentPrimary),
+                          borderSide:
+                              const BorderSide(color: AppColors.accentPrimary),
                         ),
                       ),
                     ),
@@ -78,7 +86,10 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                     if (item.requiresPhoto && simulatedPhotoPath == null) ...[
                       const Text(
                         'Photo obligatoire *',
-                        style: TextStyle(color: AppColors.danger, fontSize: 12, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                     ],
@@ -88,24 +99,36 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                       child: OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
-                            color: simulatedPhotoPath != null ? AppColors.success : AppColors.border,
+                            color: simulatedPhotoPath != null
+                                ? AppColors.success
+                                : AppColors.border,
                           ),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                         icon: Icon(
-                          simulatedPhotoPath != null ? Icons.check : Icons.camera_alt,
-                          color: simulatedPhotoPath != null ? AppColors.success : AppColors.info,
+                          simulatedPhotoPath != null
+                              ? Icons.check
+                              : Icons.camera_alt,
+                          color: simulatedPhotoPath != null
+                              ? AppColors.success
+                              : AppColors.info,
                         ),
                         label: Text(
-                          simulatedPhotoPath != null ? 'Photo enregistrée' : 'Prendre une photo',
+                          simulatedPhotoPath != null
+                              ? 'Photo enregistrée'
+                              : 'Prendre une photo',
                           style: TextStyle(
-                            color: simulatedPhotoPath != null ? AppColors.success : AppColors.textPrimary,
+                            color: simulatedPhotoPath != null
+                                ? AppColors.success
+                                : AppColors.textPrimary,
                           ),
                         ),
                         onPressed: () {
                           // Simulate taking a photo
                           setState(() {
-                            simulatedPhotoPath = 'assets/images/inspections/simulated_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                            simulatedPhotoPath =
+                                'assets/images/inspections/simulated_${DateTime.now().millisecondsSinceEpoch}.jpg';
                           });
                         },
                       ),
@@ -115,14 +138,16 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
               ),
               actions: [
                 TextButton(
-                  child: const Text('Annuler', style: TextStyle(color: AppColors.textSecondary)),
+                  child: const Text('Annuler',
+                      style: TextStyle(color: AppColors.textSecondary)),
                   onPressed: () => Navigator.of(context).pop(null),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.warning,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                   onPressed: (item.requiresPhoto && simulatedPhotoPath == null)
                       ? null
@@ -145,25 +170,33 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
   @override
   Widget build(BuildContext context) {
     final allChecklists = ref.watch(checklistProvider);
-    final activityChecklists = allChecklists.where((item) => item.activityId == widget.activityId).toList();
-    
+    final activityChecklists = allChecklists
+        .where((item) => item.activityId == widget.activityId)
+        .toList();
+
     if (activityChecklists.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: const Text('Checklist')),
         body: const Center(
-          child: Text('Aucune inspection configurée pour cette activité.', style: TextStyle(color: AppColors.textSecondary)),
+          child: Text('Aucune inspection configurée pour cette activité.',
+              style: TextStyle(color: AppColors.textSecondary)),
         ),
       );
     }
 
-    final openChecklists = activityChecklists.where((item) => item.status == ChecklistStatus.open).toList();
+    final openChecklists = activityChecklists
+        .where((item) => item.status == ChecklistStatus.open)
+        .toList();
     final completedCount = activityChecklists.length - openChecklists.length;
-    final progress = activityChecklists.isNotEmpty ? completedCount / activityChecklists.length : 0.0;
+    final progress = activityChecklists.isNotEmpty
+        ? completedCount / activityChecklists.length
+        : 0.0;
 
     // Trigger navigation to summary if all swiped
     if (openChecklists.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        context.pushReplacement('/activites/${widget.activityId}/checklist-summary');
+        context.pushReplacement(
+            '/activites/${widget.activityId}/checklist-summary');
       });
       return const Scaffold(
         body: Center(
@@ -192,11 +225,17 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
               children: [
                 Text(
                   'Progression : $completedCount / ${activityChecklists.length}',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500),
                 ),
                 Text(
                   '${(progress * 100).toInt()}%',
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -207,11 +246,12 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                 value: progress,
                 minHeight: 8,
                 backgroundColor: AppColors.surface,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
+                valueColor:
+                    const AlwaysStoppedAnimation<Color>(AppColors.success),
               ),
             ),
             const Spacer(),
-            
+
             // Swipe Stack Card
             Center(
               child: ConstrainedBox(
@@ -225,19 +265,20 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                     if (direction == DismissDirection.startToEnd) {
                       // Swipe Right -> Success Done
                       ref.read(checklistProvider.notifier).updateItemStatus(
-                        currentItem.id,
-                        ChecklistStatus.done,
-                      );
+                            currentItem.id,
+                            ChecklistStatus.done,
+                          );
                     } else {
                       // Swipe Left -> Problem Dialog
-                      final details = await _showProblemDialog(context, currentItem);
+                      final details =
+                          await _showProblemDialog(context, currentItem);
                       if (details != null) {
                         ref.read(checklistProvider.notifier).updateItemStatus(
-                          currentItem.id,
-                          ChecklistStatus.problem,
-                          comment: details['comment'],
-                          photoPath: details['photoPath'],
-                        );
+                              currentItem.id,
+                              ChecklistStatus.problem,
+                              comment: details['comment'],
+                              photoPath: details['photoPath'],
+                            );
                       } else {
                         // User cancelled, force state rebuild to center card back
                         setState(() {});
@@ -247,14 +288,16 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                 ),
               ),
             ),
-            
+
             const Spacer(),
             // Bottom Action Hints
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildSwipeHint(Icons.arrow_back, '⚠️ PROBLÈME', AppColors.warning),
-                _buildSwipeHint(Icons.arrow_forward, '✅ TERMINÉ', AppColors.success),
+                _buildSwipeHint(
+                    Icons.arrow_back, '⚠️ PROBLÈME', AppColors.warning),
+                _buildSwipeHint(
+                    Icons.arrow_forward, '✅ TERMINÉ', AppColors.success),
               ],
             ),
             const SizedBox(height: 16),
@@ -281,7 +324,8 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
           ],
           Text(
             label,
-            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.bold),
           ),
           if (icon == Icons.arrow_forward) ...[
             const SizedBox(width: 8),

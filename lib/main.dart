@@ -32,7 +32,9 @@ class AmarnaClubApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Amarna Club',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
       routerConfig: appRouter,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [

@@ -118,7 +118,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              AppColors.backgroundPrimary.withValues(alpha: 0.8),
+                              AppColors.backgroundPrimary
+                                  .withValues(alpha: 0.8),
                               AppColors.backgroundPrimary,
                             ],
                           ),
@@ -136,7 +137,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                   children: [
                     // Status Bar details
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0, vertical: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -144,7 +146,9 @@ class ActivityDetailScreen extends ConsumerWidget {
                             children: [
                               const Text(
                                 'Statut actuel : ',
-                                style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                style: TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 14),
                               ),
                               StatusBadge(status: activity.status),
                             ],
@@ -335,11 +339,15 @@ class ActivityDetailScreen extends ConsumerWidget {
               ),
               title: const Text(
                 'Personnel en service',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
                 activity.assignedStaff,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 13),
               ),
             ),
           ),
@@ -372,7 +380,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Capacité actuelle : ${activity.currentOccupancy} / ${activity.maxCapacity}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 13),
                       ),
                       Text(
                         '${(activity.occupancyPercentage * 100).toInt()}%',
@@ -410,9 +419,11 @@ class ActivityDetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _buildReservationRow('09:00 - 10:30', 'Entraînement Club junior', '12 pers.'),
+          _buildReservationRow(
+              '09:00 - 10:30', 'Entraînement Club junior', '12 pers.'),
           const SizedBox(height: 8),
-          _buildReservationRow('14:00 - 16:00', 'Réservation Groupe Privé', '8 pers.'),
+          _buildReservationRow(
+              '14:00 - 16:00', 'Réservation Groupe Privé', '8 pers.'),
           const SizedBox(height: 20),
         ],
       ),
@@ -432,7 +443,8 @@ class ActivityDetailScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+              const Icon(Icons.access_time,
+                  size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 8),
               Text(
                 time,
@@ -466,9 +478,11 @@ class ActivityDetailScreen extends ConsumerWidget {
   }
 
   // ── Tab 2: Inventaire ──────────────────────────────────────
-  Widget _buildInventoryTab(BuildContext context, WidgetRef ref, String activityId) {
+  Widget _buildInventoryTab(
+      BuildContext context, WidgetRef ref, String activityId) {
     final inventoryItems = ref.watch(inventoryProvider);
-    final items = inventoryItems.where((item) => item.activityId == activityId).toList();
+    final items =
+        inventoryItems.where((item) => item.activityId == activityId).toList();
 
     if (items.isEmpty) {
       return _buildEmptyState(
@@ -496,7 +510,8 @@ class ActivityDetailScreen extends ConsumerWidget {
   }
 
   // ── Tab 3: Équipement ──────────────────────────────────────
-  Widget _buildEquipmentTab(BuildContext context, WidgetRef ref, String activityId) {
+  Widget _buildEquipmentTab(
+      BuildContext context, WidgetRef ref, String activityId) {
     final allAssets = ref.watch(assetsProvider);
     final assets = allAssets.where((a) => a.activityId == activityId).toList();
 
@@ -553,7 +568,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: asset.statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -583,9 +599,11 @@ class ActivityDetailScreen extends ConsumerWidget {
   }
 
   // ── Tab 4: Tickets ─────────────────────────────────────────
-  Widget _buildTicketsTab(BuildContext context, WidgetRef ref, String activityId) {
+  Widget _buildTicketsTab(
+      BuildContext context, WidgetRef ref, String activityId) {
     final allTickets = ref.watch(ticketsProvider);
-    final activityTickets = allTickets.where((t) => t.activityId == activityId).toList();
+    final activityTickets =
+        allTickets.where((t) => t.activityId == activityId).toList();
 
     if (activityTickets.isEmpty) {
       return _buildEmptyState(
@@ -643,14 +661,18 @@ class ActivityDetailScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1.5),
                         decoration: BoxDecoration(
                           color: ticket.typeColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           ticket.typeTextFrench,
-                          style: TextStyle(color: ticket.typeColor, fontSize: 9, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: ticket.typeColor,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       if (ticket.assetName != null) ...[
@@ -658,7 +680,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             'Équipement: ${ticket.assetName}',
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -673,15 +696,20 @@ class ActivityDetailScreen extends ConsumerWidget {
                         Icon(
                           Icons.calendar_today_outlined,
                           size: 13,
-                          color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                          color: isOverdue
+                              ? AppColors.danger
+                              : AppColors.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           DateFormat('dd/MM/yyyy').format(ticket.dateDue!),
                           style: TextStyle(
-                            color: isOverdue ? AppColors.danger : AppColors.textMuted,
+                            color: isOverdue
+                                ? AppColors.danger
+                                : AppColors.textMuted,
                             fontSize: 11,
-                            fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                            fontWeight:
+                                isOverdue ? FontWeight.bold : FontWeight.normal,
                           ),
                         ),
                       ],

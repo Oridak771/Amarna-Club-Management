@@ -35,11 +35,16 @@ import 'screens/activities/paintball_field_screen.dart';
 import 'screens/activities/gym_equipment_screen.dart';
 import 'screens/activities/padel_courts_screen.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final GlobalKey<NavigatorState> _accueilNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'accueil');
-final GlobalKey<NavigatorState> _activitesNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'activites');
-final GlobalKey<NavigatorState> _ticketsNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'tickets');
-final GlobalKey<NavigatorState> _plusNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'plus');
+final GlobalKey<NavigatorState> _rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _accueilNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'accueil');
+final GlobalKey<NavigatorState> _activitesNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'activites');
+final GlobalKey<NavigatorState> _ticketsNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'tickets');
+final GlobalKey<NavigatorState> _plusNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'plus');
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -48,24 +53,28 @@ final GoRouter appRouter = GoRouter(
     // Splash, Auth & Onboarding Flows
     GoRoute(
       path: '/',
-      builder: (BuildContext context, GoRouterState state) => const SplashScreen(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const SplashScreen(),
     ),
     GoRoute(
       path: '/login',
-      builder: (BuildContext context, GoRouterState state) => const LoginScreen(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const LoginScreen(),
     ),
     GoRoute(
       path: '/onboarding',
-      builder: (BuildContext context, GoRouterState state) => const OnboardingScreen(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const OnboardingScreen(),
     ),
 
     // QR & NFC Scan (Global overlay modal)
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/scan',
-      builder: (BuildContext context, GoRouterState state) => const QRScanScreen(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const QRScanScreen(),
     ),
-    
+
     // Asset profile (accessible via QR Scan or links)
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
@@ -80,12 +89,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       parentNavigatorKey: _rootNavigatorKey,
       path: '/notifications',
-      builder: (BuildContext context, GoRouterState state) => const NotificationCenterScreen(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const NotificationCenterScreen(),
     ),
 
     // Main persistent shell navigation layout
     StatefulShellRoute.indexedStack(
-      builder: (BuildContext context, GoRouterState state, StatefulNavigationShell navigationShell) {
+      builder: (BuildContext context, GoRouterState state,
+          StatefulNavigationShell navigationShell) {
         return MainNavigationShell(navigationShell: navigationShell);
       },
       branches: <StatefulShellBranch>[
@@ -95,7 +106,8 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/accueil',
-              builder: (BuildContext context, GoRouterState state) => const DashboardScreen(),
+              builder: (BuildContext context, GoRouterState state) =>
+                  const DashboardScreen(),
             ),
           ],
         ),
@@ -106,7 +118,8 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/activites',
-              builder: (BuildContext context, GoRouterState state) => const ActivitiesGridScreen(),
+              builder: (BuildContext context, GoRouterState state) =>
+                  const ActivitiesGridScreen(),
               routes: [
                 GoRoute(
                   path: ':id',
@@ -127,7 +140,8 @@ final GoRouter appRouter = GoRouter(
                         GoRoute(
                           path: ':horseId',
                           builder: (context, state) {
-                            final horseId = state.pathParameters['horseId'] ?? '';
+                            final horseId =
+                                state.pathParameters['horseId'] ?? '';
                             return HorseProfileScreen(id: horseId);
                           },
                         ),
@@ -177,11 +191,13 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/tickets',
-              builder: (BuildContext context, GoRouterState state) => const TicketsListScreen(),
+              builder: (BuildContext context, GoRouterState state) =>
+                  const TicketsListScreen(),
               routes: [
                 GoRoute(
                   path: 'nouveau',
-                  builder: (BuildContext context, GoRouterState state) => const CreateTicketScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const CreateTicketScreen(),
                 ),
                 GoRoute(
                   path: ':id',
@@ -201,11 +217,13 @@ final GoRouter appRouter = GoRouter(
           routes: <RouteBase>[
             GoRoute(
               path: '/plus',
-              builder: (BuildContext context, GoRouterState state) => const PlusMenuScreen(),
+              builder: (BuildContext context, GoRouterState state) =>
+                  const PlusMenuScreen(),
               routes: [
                 GoRoute(
                   path: 'inventaire',
-                  builder: (BuildContext context, GoRouterState state) => const GlobalInventoryScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const GlobalInventoryScreen(),
                 ),
                 GoRoute(
                   path: 'reservations',
@@ -221,19 +239,23 @@ final GoRouter appRouter = GoRouter(
                 ),
                 GoRoute(
                   path: 'rapports',
-                  builder: (BuildContext context, GoRouterState state) => const ReportsScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const ReportsScreen(),
                 ),
                 GoRoute(
                   path: 'hors-ligne',
-                  builder: (BuildContext context, GoRouterState state) => const OfflineDashboardScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const OfflineDashboardScreen(),
                 ),
                 GoRoute(
                   path: 'aide',
-                  builder: (BuildContext context, GoRouterState state) => const HelpScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const HelpScreen(),
                 ),
                 GoRoute(
                   path: 'profil',
-                  builder: (BuildContext context, GoRouterState state) => const ProfileScreen(),
+                  builder: (BuildContext context, GoRouterState state) =>
+                      const ProfileScreen(),
                 ),
               ],
             ),
@@ -243,4 +265,3 @@ final GoRouter appRouter = GoRouter(
     ),
   ],
 );
-

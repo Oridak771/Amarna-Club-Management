@@ -108,12 +108,15 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
     // Calculate day offset from today
     final today = DateTime.now();
-    final differenceInDays = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
-        .difference(DateTime(today.year, today.month, today.day))
-        .inDays;
+    final differenceInDays =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day)
+            .difference(DateTime(today.year, today.month, today.day))
+            .inDays;
 
     // Filter reservations matching selected day offset
-    final dayReservations = _mockReservations.where((res) => res.dayOffset == differenceInDays).toList();
+    final dayReservations = _mockReservations
+        .where((res) => res.dayOffset == differenceInDays)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -153,7 +156,10 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                   Expanded(
                     child: Text(
                       'Mode hors-ligne : Réservations en lecture seule',
-                      style: TextStyle(color: AppColors.warning, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.warning,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -172,7 +178,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: dayReservations.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       return _buildReservationCard(dayReservations[index]);
                     },
@@ -199,7 +206,10 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
               date.month == _selectedDate.month &&
               date.year == _selectedDate.year;
 
-          final dayName = DateFormat('EEE', 'fr_FR').format(date).toUpperCase().replaceAll('.', '');
+          final dayName = DateFormat('EEE', 'fr_FR')
+              .format(date)
+              .toUpperCase()
+              .replaceAll('.', '');
           final dayNumber = DateFormat('d').format(date);
 
           return Padding(
@@ -227,7 +237,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                       Text(
                         dayName,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -236,7 +248,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                       Text(
                         dayNumber,
                         style: TextStyle(
-                          color: isSelected ? Colors.white : AppColors.textPrimary,
+                          color:
+                              isSelected ? Colors.white : AppColors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -259,11 +272,15 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.calendar_today_outlined, size: 64, color: AppColors.textMuted),
+            const Icon(Icons.calendar_today_outlined,
+                size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
             const Text(
               'Aucune réservation',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
@@ -327,7 +344,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
               // Details
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -336,7 +354,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: activityColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6),
@@ -355,7 +374,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                             child: Text(
                               res.status,
                               style: TextStyle(
-                                color: res.status == 'Confirmé' ? AppColors.success : AppColors.warning,
+                                color: res.status == 'Confirmé'
+                                    ? AppColors.success
+                                    : AppColors.warning,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -377,7 +398,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.people_outline, size: 14, color: AppColors.textSecondary),
+                          const Icon(Icons.people_outline,
+                              size: 14, color: AppColors.textSecondary),
                           const SizedBox(width: 4),
                           Text(
                             '${res.peopleCount} personnes',

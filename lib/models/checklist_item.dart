@@ -18,10 +18,10 @@ class ChecklistItem {
   final String category;
   final String activityId;
   final bool requiresPhoto;
-  
+
   @enumerated
   final ChecklistStatus status;
-  
+
   final String? comment;
   final String? photoPath;
 

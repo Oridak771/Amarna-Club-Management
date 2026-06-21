@@ -6,10 +6,9 @@ import '../models/work_ticket.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_filter_chip.dart';
-import '../widgets/offline_banner.dart';
 import '../widgets/priority_indicator.dart';
 
-/// Écran liste des tickets consolidés (Anomalies et Interventions de maintenance).
+/// Ecran liste des tickets consolidés (Anomalies et Interventions de maintenance).
 class TicketsListScreen extends ConsumerStatefulWidget {
   const TicketsListScreen({super.key});
 
@@ -25,7 +24,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
     'Anomalies',
     'Maintenances',
     'En cours',
-    'Résolus',
+    'Resolus',
   ];
 
   List<WorkTicket> _applyFilter(List<WorkTicket> tickets) {
@@ -33,10 +32,16 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
       case 'Anomalies':
         return tickets.where((t) => t.type == TicketType.anomaly).toList();
       case 'Maintenances':
-        return tickets.where((t) => t.type == TicketType.preventive || t.type == TicketType.corrective).toList();
+        return tickets
+            .where((t) =>
+                t.type == TicketType.preventive ||
+                t.type == TicketType.corrective)
+            .toList();
       case 'En cours':
-        return tickets.where((t) => t.status == TicketStatus.inProgress).toList();
-      case 'Résolus':
+        return tickets
+            .where((t) => t.status == TicketStatus.inProgress)
+            .toList();
+      case 'Resolus':
         return tickets.where((t) => t.status == TicketStatus.resolved).toList();
       default:
         return tickets;
@@ -86,8 +91,6 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
           constraints: const BoxConstraints(maxWidth: 1000),
           child: Column(
             children: [
-              const OfflineBanner(),
-
               // Create Ticket Button
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -104,8 +107,9 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                     ),
                     icon: const Icon(Icons.add_circle_outline, size: 22),
                     label: const Text(
-                      'Créer un ticket',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      'Creer un ticket',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     onPressed: () => context.push('/tickets/nouveau'),
                   ),
@@ -142,8 +146,10 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                           final isWide = constraints.maxWidth > 600;
                           if (isWide) {
                             return GridView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
@@ -157,9 +163,11 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                             );
                           } else {
                             return ListView.separated(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               itemCount: filteredTickets.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final ticket = filteredTickets[index];
                                 return _buildTicketCard(ticket);
@@ -190,7 +198,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Aucun ticket trouvé — Tout fonctionne! 🌟',
+              'Aucun ticket trouve - tout fonctionne.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textSecondary,
@@ -239,7 +247,8 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: ticket.typeColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -280,7 +289,9 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 children: [
                   Expanded(
                     child: Text(
-                      ticket.assetName != null ? 'Équipement : ${ticket.assetName}' : 'Général',
+                      ticket.assetName != null
+                          ? 'Equipement : ${ticket.assetName}'
+                          : 'General',
                       style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12,
@@ -325,7 +336,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                   ] else
                     const Expanded(
                       child: Text(
-                        'Non assigné',
+                        'Non assigne',
                         style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 12,

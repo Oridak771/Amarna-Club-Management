@@ -14,14 +14,16 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
   bool _isSessionActive = false;
   int _playerCount = 0;
   final int _maxPlayers = 20;
-  
+
   bool _netsOk = true;
   bool _obstaclesOk = true;
 
   void _toggleSession() {
     if (!_netsOk || !_obstaclesOk) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de démarrer: Terrain non sécurisé.'), backgroundColor: AppColors.danger),
+        const SnackBar(
+            content: Text('Impossible de démarrer: Terrain non sécurisé.'),
+            backgroundColor: AppColors.danger),
       );
       return;
     }
@@ -51,12 +53,15 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
           children: [
             // Session Control Card
             Card(
-              color: _isSessionActive ? AppColors.paintball.withValues(alpha: 0.1) : AppColors.backgroundSecondary,
+              color: _isSessionActive
+                  ? AppColors.paintball.withValues(alpha: 0.1)
+                  : AppColors.backgroundSecondary,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
-                  color: _isSessionActive ? AppColors.paintball : AppColors.border,
+                  color:
+                      _isSessionActive ? AppColors.paintball : AppColors.border,
                   width: _isSessionActive ? 2 : 1,
                 ),
               ),
@@ -65,28 +70,35 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                 child: Column(
                   children: [
                     Text(
-                      _isSessionActive ? 'Session en cours' : 'Aucune session active',
+                      _isSessionActive
+                          ? 'Session en cours'
+                          : 'Aucune session active',
                       style: TextStyle(
-                        color: _isSessionActive ? AppColors.paintball : AppColors.textPrimary,
+                        color: _isSessionActive
+                            ? AppColors.paintball
+                            : AppColors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
                     if (_isSessionActive) ...[
                       const Text(
                         'Joueurs sur le terrain',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        style: TextStyle(
+                            color: AppColors.textSecondary, fontSize: 14),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.remove_circle_outline, size: 40),
+                            icon: const Icon(Icons.remove_circle_outline,
+                                size: 40),
                             color: AppColors.textMuted,
-                            onPressed: _playerCount > 0 ? () => setState(() => _playerCount--) : null,
+                            onPressed: _playerCount > 0
+                                ? () => setState(() => _playerCount--)
+                                : null,
                           ),
                           const SizedBox(width: 24),
                           Text(
@@ -99,9 +111,12 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           ),
                           const SizedBox(width: 24),
                           IconButton(
-                            icon: const Icon(Icons.add_circle_outline, size: 40),
+                            icon:
+                                const Icon(Icons.add_circle_outline, size: 40),
                             color: AppColors.textPrimary,
-                            onPressed: _playerCount < _maxPlayers ? () => setState(() => _playerCount++) : null,
+                            onPressed: _playerCount < _maxPlayers
+                                ? () => setState(() => _playerCount++)
+                                : null,
                           ),
                         ],
                       ),
@@ -112,26 +127,35 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           value: _playerCount / _maxPlayers,
                           backgroundColor: AppColors.surface,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            _playerCount >= _maxPlayers ? AppColors.danger : AppColors.paintball,
+                            _playerCount >= _maxPlayers
+                                ? AppColors.danger
+                                : AppColors.paintball,
                           ),
                           minHeight: 8,
                         ),
                       ),
                       const SizedBox(height: 32),
                     ],
-
                     SizedBox(
                       width: double.infinity,
                       height: 56,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSessionActive ? AppColors.danger : AppColors.paintball,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          backgroundColor: _isSessionActive
+                              ? AppColors.danger
+                              : AppColors.paintball,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                         onPressed: _toggleSession,
                         child: Text(
-                          _isSessionActive ? 'Terminer la session' : 'Démarrer une session',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          _isSessionActive
+                              ? 'Terminer la session'
+                              : 'Démarrer une session',
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
                         ),
                       ),
                     ),
@@ -145,7 +169,10 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
             // Field Status Overview
             const Text(
               'État des Infrastructures',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -155,7 +182,9 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               Icons.grid_4x4,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible de modifier pendant une session.')));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text('Impossible de modifier pendant une session.')));
                   return;
                 }
                 setState(() => _netsOk = val);
@@ -168,7 +197,9 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               Icons.sports_gymnastics,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Impossible de modifier pendant une session.')));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text('Impossible de modifier pendant une session.')));
                   return;
                 }
                 setState(() => _obstaclesOk = val);
@@ -203,7 +234,8 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
     );
   }
 
-  Widget _buildStatusToggle(String label, bool isOk, IconData icon, ValueChanged<bool> onChanged) {
+  Widget _buildStatusToggle(
+      String label, bool isOk, IconData icon, ValueChanged<bool> onChanged) {
     return Card(
       color: AppColors.backgroundSecondary,
       elevation: 0,
@@ -215,13 +247,18 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: (isOk ? AppColors.success : AppColors.danger).withValues(alpha: 0.15),
+            color: (isOk ? AppColors.success : AppColors.danger)
+                .withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: isOk ? AppColors.success : AppColors.danger),
         ),
-        title: Text(label, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-        subtitle: Text(isOk ? 'Sécurisé' : 'Maintenance requise', style: TextStyle(color: isOk ? AppColors.textSecondary : AppColors.danger)),
+        title: Text(label,
+            style: const TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        subtitle: Text(isOk ? 'Sécurisé' : 'Maintenance requise',
+            style: TextStyle(
+                color: isOk ? AppColors.textSecondary : AppColors.danger)),
         trailing: Switch(
           value: isOk,
           onChanged: onChanged,

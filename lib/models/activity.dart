@@ -5,9 +5,9 @@ import '../theme/app_theme.dart';
 part 'activity.g.dart';
 
 enum ActivityStatus {
-  open,        // Ouvert (green)
-  closed,      // Fermé (red)
-  warning,     // Attention (amber)
+  open, // Ouvert (green)
+  closed, // Fermé (red)
+  warning, // Attention (amber)
   maintenance, // Maintenance (blue)
 }
 
@@ -17,12 +17,12 @@ class Activity {
 
   @Index(unique: true, replace: true)
   final String id;
-  final String name;       // e.g. "Piscine", "Équitation"
-  final String iconKey;    // e.g. "pool", "horses"
-  
+  final String name; // e.g. "Piscine", "Équitation"
+  final String iconKey; // e.g. "pool", "horses"
+
   @enumerated
   final ActivityStatus status;
-  
+
   final int currentOccupancy;
   final int maxCapacity;
   final String assignedStaff;
@@ -39,7 +39,8 @@ class Activity {
   });
 
   @ignore
-  double get occupancyPercentage => maxCapacity > 0 ? (currentOccupancy / maxCapacity) : 0.0;
+  double get occupancyPercentage =>
+      maxCapacity > 0 ? (currentOccupancy / maxCapacity) : 0.0;
 
   @ignore
   Color get statusColor {

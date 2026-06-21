@@ -29,12 +29,12 @@ class KPITile extends StatelessWidget {
       elevation: 0,
       color: AppColors.backgroundSecondary,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         side: const BorderSide(color: AppColors.border, width: 1),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -47,8 +47,8 @@ class KPITile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: iconColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       icon,
@@ -88,7 +88,7 @@ class KPITile extends StatelessWidget {
                 value,
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       fontSize: 32,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
                     ),
               ),

@@ -69,11 +69,20 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
             activityName: _selectedActivityName,
             type: _selectedType,
             priority: _selectedPriority,
-            assetId: hasAsset ? 'asset-${DateTime.now().millisecondsSinceEpoch}' : null,
+            assetId: hasAsset
+                ? 'asset-${DateTime.now().millisecondsSinceEpoch}'
+                : null,
             assetName: hasAsset ? assetNameVal : null,
-            assignedTechnician: _selectedType == TicketType.anomaly ? null : (_assignedTechnician == 'Non assigné' ? null : _assignedTechnician),
-            imageUrl: _mockPhotoCount > 0 ? 'https://example.com/ticket-photo.jpg' : null,
-            voiceNoteUrl: _hasVoiceNote ? 'https://example.com/voice-note.mp3' : null,
+            assignedTechnician: _selectedType == TicketType.anomaly
+                ? null
+                : (_assignedTechnician == 'Non assigné'
+                    ? null
+                    : _assignedTechnician),
+            imageUrl: _mockPhotoCount > 0
+                ? 'https://example.com/ticket-photo.jpg'
+                : null,
+            voiceNoteUrl:
+                _hasVoiceNote ? 'https://example.com/voice-note.mp3' : null,
           );
 
       context.pop();
@@ -82,7 +91,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           content: Text(_selectedType == TicketType.anomaly
               ? 'Signalement d\'anomalie enregistré ✓'
               : 'Tâche de maintenance créée ✓'),
-          backgroundColor: _selectedType == TicketType.anomaly ? AppColors.danger : AppColors.success,
+          backgroundColor: _selectedType == TicketType.anomaly
+              ? AppColors.danger
+              : AppColors.success,
         ),
       );
     }
@@ -110,7 +121,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 1. Ticket Type Switch
                     const Text(
                       'Nature de l\'intervention',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -118,19 +132,22 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         AppFilterChip(
                           label: 'Signalement d\'anomalie',
                           isSelected: _selectedType == TicketType.anomaly,
-                          onTap: () => setState(() => _selectedType = TicketType.anomaly),
+                          onTap: () => setState(
+                              () => _selectedType = TicketType.anomaly),
                         ),
                         const SizedBox(width: 8),
                         AppFilterChip(
                           label: 'Maintenance Préventive',
                           isSelected: _selectedType == TicketType.preventive,
-                          onTap: () => setState(() => _selectedType = TicketType.preventive),
+                          onTap: () => setState(
+                              () => _selectedType = TicketType.preventive),
                         ),
                         const SizedBox(width: 8),
                         AppFilterChip(
                           label: 'Maintenance Corrective',
                           isSelected: _selectedType == TicketType.corrective,
-                          onTap: () => setState(() => _selectedType = TicketType.corrective),
+                          onTap: () => setState(
+                              () => _selectedType = TicketType.corrective),
                         ),
                       ],
                     ),
@@ -139,7 +156,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 2. Activity Selector
                     const Text(
                       'Activité concernée',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
@@ -147,7 +167,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       initialValue: _selectedActivityId,
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
                       items: _activities.entries.map((entry) {
                         return DropdownMenuItem<String>(
@@ -169,7 +190,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 3. Asset selector (conditional/optional)
                     const Text(
                       'Équipement / Asset (Optionnel)',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -178,19 +202,22 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       decoration: InputDecoration(
                         hintText: 'Nom ou Code-barres de l\'équipement',
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner, color: AppColors.accentPrimary),
+                          icon: const Icon(Icons.qr_code_scanner,
+                              color: AppColors.accentPrimary),
                           onPressed: () {
                             // Mock scan search
                             setState(() {
-                              _assetNameController.text = _selectedActivityId == 'pool'
-                                  ? 'Pompe de Filtration 2'
-                                  : _selectedActivityId == 'horses'
-                                      ? 'Selle Cuir Tornade'
-                                      : 'Équipement Standard';
+                              _assetNameController.text =
+                                  _selectedActivityId == 'pool'
+                                      ? 'Pompe de Filtration 2'
+                                      : _selectedActivityId == 'horses'
+                                          ? 'Selle Cuir Tornade'
+                                          : 'Équipement Standard';
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Équipement détecté : ${_assetNameController.text}'),
+                                content: Text(
+                                    'Équipement détecté : ${_assetNameController.text}'),
                                 duration: const Duration(seconds: 2),
                               ),
                             );
@@ -198,7 +225,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         ),
                       ),
                       validator: (value) {
-                        if (showTechnicianAndAsset && (value == null || value.trim().isEmpty)) {
+                        if (showTechnicianAndAsset &&
+                            (value == null || value.trim().isEmpty)) {
                           return 'Veuillez saisir ou scanner un équipement pour planifier une maintenance';
                         }
                         return null;
@@ -209,7 +237,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 4. Title Field
                     const Text(
                       'Titre / Résumé',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -230,7 +261,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 5. Description Field
                     const Text(
                       'Description',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -238,7 +272,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       maxLines: 3,
                       style: const TextStyle(color: AppColors.textPrimary),
                       decoration: const InputDecoration(
-                        hintText: 'Expliquez en détail le problème ou l\'intervention requise...',
+                        hintText:
+                            'Expliquez en détail le problème ou l\'intervention requise...',
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -246,7 +281,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     // 6. Priority Selector (Large Buttons)
                     const Text(
                       'Niveau de priorité',
-                      style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     _buildPrioritySelector(),
@@ -256,7 +294,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     if (showTechnicianAndAsset) ...[
                       const Text(
                         'Technicien assigné',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
@@ -264,7 +305,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         initialValue: _assignedTechnician,
                         style: const TextStyle(color: AppColors.textPrimary),
                         decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                         ),
                         items: _technicians.map((tech) {
                           return DropdownMenuItem<String>(
@@ -285,7 +327,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     if (_selectedType == TicketType.anomaly) ...[
                       const Text(
                         'Pièces jointes (Photos / Vocal)',
-                        style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
                       _buildMediaRow(),
@@ -298,7 +343,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       height: 52,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: _selectedType == TicketType.anomaly ? AppColors.danger : AppColors.success,
+                          backgroundColor: _selectedType == TicketType.anomaly
+                              ? AppColors.danger
+                              : AppColors.success,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -306,8 +353,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         ),
                         onPressed: _submitForm,
                         child: Text(
-                          _selectedType == TicketType.anomaly ? 'Signaler l\'anomalie' : 'Enregistrer la tâche',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          _selectedType == TicketType.anomaly
+                              ? 'Signaler l\'anomalie'
+                              : 'Enregistrer la tâche',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -358,7 +408,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 height: 50,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected ? prioColor.withValues(alpha: 0.25) : AppColors.backgroundSecondary,
+                  color: isSelected
+                      ? prioColor.withValues(alpha: 0.25)
+                      : AppColors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: isSelected ? prioColor : AppColors.border,
@@ -369,7 +421,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                   text,
                   style: TextStyle(
                     color: isSelected ? prioColor : AppColors.textSecondary,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 13,
                   ),
                 ),
@@ -406,7 +459,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border),
             ),
-            child: const Icon(Icons.camera_alt_outlined, color: AppColors.textSecondary, size: 28),
+            child: const Icon(Icons.camera_alt_outlined,
+                color: AppColors.textSecondary, size: 28),
           ),
         ),
         const SizedBox(width: 12),
@@ -439,7 +493,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       color: Colors.black54,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close, color: Colors.white, size: 14),
+                    child:
+                        const Icon(Icons.close, color: Colors.white, size: 14),
                   ),
                 ),
               ),
@@ -447,14 +502,18 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 bottom: 2,
                 left: 2,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: Colors.black87,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'x$_mockPhotoCount',
-                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -485,7 +544,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: _isRecording ? AppColors.danger.withValues(alpha: 0.25) : AppColors.backgroundSecondary,
+              color: _isRecording
+                  ? AppColors.danger.withValues(alpha: 0.25)
+                  : AppColors.backgroundSecondary,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: _isRecording ? AppColors.danger : AppColors.border,
@@ -505,7 +566,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
           Chip(
             backgroundColor: AppColors.backgroundSecondary,
             avatar: const Icon(Icons.play_arrow, color: AppColors.success),
-            label: const Text('Vocal.mp3', style: TextStyle(color: AppColors.textPrimary, fontSize: 12)),
+            label: const Text('Vocal.mp3',
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 12)),
             onDeleted: () => setState(() => _hasVoiceNote = false),
             deleteIconColor: AppColors.textSecondary,
           ),

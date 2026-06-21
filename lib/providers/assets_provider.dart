@@ -38,7 +38,8 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
   }
 }
 
-final assetsProvider = StateNotifierProvider<AssetsNotifier, List<Asset>>((ref) {
+final assetsProvider =
+    StateNotifierProvider<AssetsNotifier, List<Asset>>((ref) {
   final isar = ref.watch(isarProvider);
   return AssetsNotifier(isar);
 });

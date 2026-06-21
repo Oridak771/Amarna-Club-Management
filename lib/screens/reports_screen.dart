@@ -25,19 +25,31 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final inventoryItems = ref.watch(inventoryProvider);
 
     // Filter by activity if not 'all'
-    final filteredTickets = tickets.where((t) => _selectedActivity == 'all' || t.activityId == _selectedActivity).toList();
-    final filteredInventory = inventoryItems.where((item) => _selectedActivity == 'all' || item.activityId == _selectedActivity).toList();
+    final filteredTickets = tickets
+        .where((t) =>
+            _selectedActivity == 'all' || t.activityId == _selectedActivity)
+        .toList();
+    final filteredInventory = inventoryItems
+        .where((item) =>
+            _selectedActivity == 'all' || item.activityId == _selectedActivity)
+        .toList();
 
     // Separate calculations for anomalies (incidents) and planned maintenances
-    final anomalies = filteredTickets.where((t) => t.type == TicketType.anomaly).toList();
+    final anomalies =
+        filteredTickets.where((t) => t.type == TicketType.anomaly).toList();
     final totalAnomalies = anomalies.length;
-    final resolvedAnomalies = anomalies.where((a) => a.status == TicketStatus.resolved).length;
-    final anomalyResolutionRate = totalAnomalies > 0 ? (resolvedAnomalies / totalAnomalies) : 0.0;
+    final resolvedAnomalies =
+        anomalies.where((a) => a.status == TicketStatus.resolved).length;
+    final anomalyResolutionRate =
+        totalAnomalies > 0 ? (resolvedAnomalies / totalAnomalies) : 0.0;
 
-    final maintenances = filteredTickets.where((t) => t.type != TicketType.anomaly).toList();
+    final maintenances =
+        filteredTickets.where((t) => t.type != TicketType.anomaly).toList();
     final totalMaintenance = maintenances.length;
-    final completedMaintenance = maintenances.where((m) => m.status == TicketStatus.resolved).length;
-    final maintenanceRate = totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) : 0.0;
+    final completedMaintenance =
+        maintenances.where((m) => m.status == TicketStatus.resolved).length;
+    final maintenanceRate =
+        totalMaintenance > 0 ? (completedMaintenance / totalMaintenance) : 0.0;
 
     final lowStockCount = filteredInventory.where((i) => i.isLowStock).length;
 
@@ -54,7 +66,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             tooltip: 'Exporter',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Rapport exporté en format PDF avec succès.')),
+                const SnackBar(
+                    content:
+                        Text('Rapport exporté en format PDF avec succès.')),
               );
             },
           ),
@@ -84,13 +98,31 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             dropdownColor: AppColors.backgroundSecondary,
                             value: _selectedPeriod,
                             items: const [
-                              DropdownMenuItem(value: '7', child: Text('7 derniers jours', style: TextStyle(color: AppColors.textPrimary))),
-                              DropdownMenuItem(value: '30', child: Text('30 derniers jours', style: TextStyle(color: AppColors.textPrimary))),
-                              DropdownMenuItem(value: '90', child: Text('3 derniers mois', style: TextStyle(color: AppColors.textPrimary))),
-                              DropdownMenuItem(value: '365', child: Text('Cette année', style: TextStyle(color: AppColors.textPrimary))),
+                              DropdownMenuItem(
+                                  value: '7',
+                                  child: Text('7 derniers jours',
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary))),
+                              DropdownMenuItem(
+                                  value: '30',
+                                  child: Text('30 derniers jours',
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary))),
+                              DropdownMenuItem(
+                                  value: '90',
+                                  child: Text('3 derniers mois',
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary))),
+                              DropdownMenuItem(
+                                  value: '365',
+                                  child: Text('Cette année',
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary))),
                             ],
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedPeriod = val);
+                              if (val != null) {
+                                setState(() => _selectedPeriod = val);
+                              }
                             },
                           ),
                         ),
@@ -110,11 +142,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             dropdownColor: AppColors.backgroundSecondary,
                             value: _selectedActivity,
                             items: [
-                              const DropdownMenuItem(value: 'all', child: Text('Toutes activités', style: TextStyle(color: AppColors.textPrimary))),
-                              ...activities.map((act) => DropdownMenuItem(value: act.id, child: Text(act.name, style: const TextStyle(color: AppColors.textPrimary)))),
+                              const DropdownMenuItem(
+                                  value: 'all',
+                                  child: Text('Toutes activités',
+                                      style: TextStyle(
+                                          color: AppColors.textPrimary))),
+                              ...activities.map((act) => DropdownMenuItem(
+                                  value: act.id,
+                                  child: Text(act.name,
+                                      style: const TextStyle(
+                                          color: AppColors.textPrimary)))),
                             ],
                             onChanged: (val) {
-                              if (val != null) setState(() => _selectedActivity = val);
+                              if (val != null) {
+                                setState(() => _selectedActivity = val);
+                              }
                             },
                           ),
                         ),
@@ -152,7 +194,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           'Alertes Stock Bas',
                           '$lowStockCount articles',
                           'Seuils critiques atteints',
-                          lowStockCount > 0 ? AppColors.warning : AppColors.success,
+                          lowStockCount > 0
+                              ? AppColors.warning
+                              : AppColors.success,
                         ),
                       ],
                     );
@@ -168,9 +212,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(child: _buildAnomaliesChart(anomalyResolutionRate)),
+                              Expanded(
+                                  child: _buildAnomaliesChart(
+                                      anomalyResolutionRate)),
                               const SizedBox(width: 16),
-                              Expanded(child: _buildMaintenanceChart(maintenanceRate)),
+                              Expanded(
+                                  child:
+                                      _buildMaintenanceChart(maintenanceRate)),
                             ],
                           )
                         : Column(
@@ -195,7 +243,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     );
   }
 
-  Widget _buildKPICard(String title, String value, String subtext, Color accentColor) {
+  Widget _buildKPICard(
+      String title, String value, String subtext, Color accentColor) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -214,15 +263,29 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Text(title,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 13)),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: AppColors.textPrimary, fontSize: 22, fontWeight: FontWeight.bold)),
+          Text(value,
+              style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Row(
             children: [
-              Container(width: 6, height: 6, decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle)),
+              Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                      color: accentColor, shape: BoxShape.circle)),
               const SizedBox(width: 6),
-              Text(subtext, style: TextStyle(color: accentColor, fontSize: 11, fontWeight: FontWeight.w500)),
+              Text(subtext,
+                  style: TextStyle(
+                      color: accentColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         ],
@@ -244,7 +307,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Résolution d\'Anomalies',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 20),
@@ -261,14 +327,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       value: rate,
                       strokeWidth: 12,
                       backgroundColor: AppColors.surface,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.danger),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppColors.danger),
                     ),
                   ),
                 ),
                 Center(
                   child: Text(
                     '${(rate * 100).toInt()}%',
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -298,7 +368,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Complétion de Maintenance',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold),
             ),
           ),
           const SizedBox(height: 20),
@@ -315,14 +388,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       value: rate,
                       strokeWidth: 12,
                       backgroundColor: AppColors.surface,
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.info),
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(AppColors.info),
                     ),
                   ),
                 ),
                 Center(
                   child: Text(
                     '${(rate * 100).toInt()}%',
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -351,7 +428,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         children: [
           const Text(
             'Taux d\'occupation en temps réel',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ListView.separated(
@@ -368,8 +448,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(act.name, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500)),
-                      Text('${act.currentOccupancy} / ${act.maxCapacity} (${(pct * 100).toInt()}%)', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text(act.name,
+                          style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500)),
+                      Text(
+                          '${act.currentOccupancy} / ${act.maxCapacity} (${(pct * 100).toInt()}%)',
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 6),
@@ -379,7 +466,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       value: pct,
                       minHeight: 8,
                       backgroundColor: AppColors.surface,
-                      valueColor: AlwaysStoppedAnimation<Color>(_getActivityColor(act.id)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          _getActivityColor(act.id)),
                     ),
                   ),
                 ],

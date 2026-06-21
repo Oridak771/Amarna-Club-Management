@@ -16,11 +16,12 @@ class ChecklistNotifier extends StateNotifier<List<ChecklistItem>> {
     state = _isar.checklistItems.where().findAllSync();
   }
 
-  void updateItemStatus(String id, ChecklistStatus status, {String? comment, String? photoPath}) {
+  void updateItemStatus(String id, ChecklistStatus status,
+      {String? comment, String? photoPath}) {
     final item = _isar.checklistItems.filter().idEqualTo(id).findFirstSync();
     if (item != null) {
       final syncState = _ref.read(syncProvider);
-      
+
       _isar.writeTxnSync(() {
         final updated = item.copyWith(
           status: status,
@@ -34,14 +35,16 @@ class ChecklistNotifier extends StateNotifier<List<ChecklistItem>> {
       // If offline, register sync pending log
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
-          "Mise à jour checklist '${item.title}' -> ${status == ChecklistStatus.done ? 'Terminé' : 'Problème'}"
-        );
+            "Mise à jour checklist '${item.title}' -> ${status == ChecklistStatus.done ? 'Terminé' : 'Problème'}");
       }
     }
   }
 
   void resetChecklistsForActivity(String activityId) {
-    final items = _isar.checklistItems.filter().activityIdEqualTo(activityId).findAllSync();
+    final items = _isar.checklistItems
+        .filter()
+        .activityIdEqualTo(activityId)
+        .findAllSync();
     if (items.isNotEmpty) {
       _isar.writeTxnSync(() {
         for (final item in items) {
@@ -58,7 +61,8 @@ class ChecklistNotifier extends StateNotifier<List<ChecklistItem>> {
   }
 }
 
-final checklistProvider = StateNotifierProvider<ChecklistNotifier, List<ChecklistItem>>((ref) {
+final checklistProvider =
+    StateNotifierProvider<ChecklistNotifier, List<ChecklistItem>>((ref) {
   final isar = ref.watch(isarProvider);
   return ChecklistNotifier(isar, ref);
 });

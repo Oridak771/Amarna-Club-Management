@@ -33,7 +33,8 @@ class DatabaseService {
       });
     } else {
       // Ensure 'padel' activity and its assets/inventory exist if missing
-      final padelExists = await isar.activitys.filter().idEqualTo('padel').findFirst() != null;
+      final padelExists =
+          await isar.activitys.filter().idEqualTo('padel').findFirst() != null;
       if (!padelExists) {
         await isar.writeTxn(() async {
           await isar.activitys.put(
@@ -47,7 +48,7 @@ class DatabaseService {
               assignedStaff: 'Antoine (Coordinateur Padel)',
             ),
           );
-          
+
           // Seed Padel Asset
           await isar.assets.put(
             Asset(
@@ -57,7 +58,8 @@ class DatabaseService {
               category: 'Infrastructures Terrain',
               activityId: 'padel',
               status: AssetStatus.available,
-              lastMaintenance: DateTime.now().subtract(const Duration(days: 10)),
+              lastMaintenance:
+                  DateTime.now().subtract(const Duration(days: 10)),
             ),
           );
 
@@ -79,7 +81,8 @@ class DatabaseService {
             WorkTicket(
               id: 'maint-003',
               title: 'Remplacement filet court 3',
-              description: 'Le filet de padel présente des déchirures importantes au milieu.',
+              description:
+                  'Le filet de padel présente des déchirures importantes au milieu.',
               assetId: 'asset-padel-net-03',
               assetName: 'Filet Padel Court 3',
               activityId: 'padel',
@@ -171,7 +174,11 @@ class DatabaseService {
         status: AssetStatus.available,
         lastMaintenance: now.subtract(const Duration(days: 30)),
         nextMaintenance: now.add(const Duration(days: 60)),
-        technicalSpecs: {'Débit': '50 m3/h', 'Pression': '1.5 bar', 'Média': 'Sable de silice'},
+        technicalSpecs: {
+          'Débit': '50 m3/h',
+          'Pression': '1.5 bar',
+          'Média': 'Sable de silice'
+        },
       ),
       Asset(
         id: 'asset-pool-pump-02',
@@ -193,7 +200,10 @@ class DatabaseService {
         status: AssetStatus.available,
         lastMaintenance: now.subtract(const Duration(days: 15)),
         nextMaintenance: now.add(const Duration(days: 45)),
-        technicalSpecs: {'Cycles': '1.5 / 2.5 / 3.5 h', 'Longueur câble': '18 m'},
+        technicalSpecs: {
+          'Cycles': '1.5 / 2.5 / 3.5 h',
+          'Longueur câble': '18 m'
+        },
       ),
       Asset(
         id: 'asset-horse-saddle-1',
@@ -263,7 +273,8 @@ class DatabaseService {
       WorkTicket(
         id: 'inc-001',
         title: 'Fuite filtre pompe 2',
-        description: 'Une fuite mineure a été détectée sur le raccord d\'aspiration de la pompe de filtration 2.',
+        description:
+            'Une fuite mineure a été détectée sur le raccord d\'aspiration de la pompe de filtration 2.',
         activityId: 'pool',
         activityName: 'Piscine',
         assetId: 'asset-pool-pump-02',
@@ -277,7 +288,8 @@ class DatabaseService {
       WorkTicket(
         id: 'inc-002',
         title: 'Sangle selle déchirée',
-        description: 'La sangle de la selle de "Tornado" est fissurée et présente un risque de rupture.',
+        description:
+            'La sangle de la selle de "Tornado" est fissurée et présente un risque de rupture.',
         activityId: 'horses',
         activityName: 'Équitation',
         assetId: 'asset-horse-saddle-1',
@@ -291,7 +303,8 @@ class DatabaseService {
       WorkTicket(
         id: 'inc-003',
         title: 'Ventilation stand de tir HS',
-        description: 'L\'extracteur d\'air principal ne démarre plus. Forte concentration de gaz. Fermeture obligatoire.',
+        description:
+            'L\'extracteur d\'air principal ne démarre plus. Forte concentration de gaz. Fermeture obligatoire.',
         activityId: 'shooting',
         activityName: 'Stand de Tir',
         assetId: 'asset-shoot-vent-02',
@@ -305,7 +318,8 @@ class DatabaseService {
       WorkTicket(
         id: 'maint-001',
         title: 'Nettoyage des filtres à sable',
-        description: 'Effectuer le lavage à contre-courant du filtre principal A.',
+        description:
+            'Effectuer le lavage à contre-courant du filtre principal A.',
         assetId: 'asset-pool-filter-01',
         assetName: 'Filtre Principal A',
         activityId: 'pool',
@@ -320,7 +334,8 @@ class DatabaseService {
       WorkTicket(
         id: 'maint-002',
         title: 'Changement extracteur ventilation stand de tir',
-        description: 'Remplacer le moteur électrique grillé de la hotte d\'aspiration.',
+        description:
+            'Remplacer le moteur électrique grillé de la hotte d\'aspiration.',
         assetId: 'asset-shoot-vent-02',
         assetName: 'Extracteur Air Standard',
         activityId: 'shooting',
@@ -335,7 +350,8 @@ class DatabaseService {
       WorkTicket(
         id: 'maint-003',
         title: 'Remplacement filet court 3',
-        description: 'Le filet de padel présente des déchirures importantes au milieu.',
+        description:
+            'Le filet de padel présente des déchirures importantes au milieu.',
         assetId: 'asset-padel-net-03',
         assetName: 'Filet Padel Court 3',
         activityId: 'padel',

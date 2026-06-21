@@ -35,10 +35,30 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
   void initState() {
     super.initState();
     weapons = [
-      Weapon(id: 'w1', serialNumber: 'SN-GLOCK-001', model: 'Glock 17', status: 'Disponible', lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
-      Weapon(id: 'w2', serialNumber: 'SN-GLOCK-002', model: 'Glock 17', status: 'En utilisation', lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
-      Weapon(id: 'w3', serialNumber: 'SN-AR15-001', model: 'AR-15', status: 'Maintenance', lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
-      Weapon(id: 'w4', serialNumber: 'SN-BERETTA-001', model: 'Beretta 92FS', status: 'Disponible', lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
+      Weapon(
+          id: 'w1',
+          serialNumber: 'SN-GLOCK-001',
+          model: 'Glock 17',
+          status: 'Disponible',
+          lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
+      Weapon(
+          id: 'w2',
+          serialNumber: 'SN-GLOCK-002',
+          model: 'Glock 17',
+          status: 'En utilisation',
+          lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
+      Weapon(
+          id: 'w3',
+          serialNumber: 'SN-AR15-001',
+          model: 'AR-15',
+          status: 'Maintenance',
+          lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
+      Weapon(
+          id: 'w4',
+          serialNumber: 'SN-BERETTA-001',
+          model: 'Beretta 92FS',
+          status: 'Disponible',
+          lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
     ];
   }
 
@@ -54,7 +74,9 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
       );
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Nettoyage enregistré'), backgroundColor: AppColors.success),
+      const SnackBar(
+          content: Text('Nettoyage enregistré'),
+          backgroundColor: AppColors.success),
     );
   }
 
@@ -81,7 +103,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
         separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final weapon = weapons[index];
-          
+
           Color statusColor;
           TicketPriority priority;
           if (weapon.status == 'Disponible') {
@@ -95,9 +117,11 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
             priority = TicketPriority.critical;
           }
 
-          final bool needsCleaning = DateTime.now().difference(weapon.lastCleaned).inDays > 7;
+          final bool needsCleaning =
+              DateTime.now().difference(weapon.lastCleaned).inDays > 7;
           if (needsCleaning && priority == TicketPriority.low) {
-            priority = TicketPriority.high; // bump priority if it needs cleaning
+            priority =
+                TicketPriority.high; // bump priority if it needs cleaning
           }
 
           return PriorityIndicator(
@@ -111,7 +135,8 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                 side: const BorderSide(color: AppColors.border),
               ),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -124,14 +149,18 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         weapon.status,
-                        style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: statusColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
@@ -140,22 +169,29 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 6),
-                    Text(weapon.model, style: const TextStyle(color: AppColors.textSecondary)),
+                    Text(weapon.model,
+                        style: const TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           Icons.cleaning_services,
                           size: 14,
-                          color: needsCleaning ? AppColors.danger : AppColors.textMuted,
+                          color: needsCleaning
+                              ? AppColors.danger
+                              : AppColors.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           'Dernier nettoyage : ${DateFormat('dd/MM/yyyy').format(weapon.lastCleaned)}',
                           style: TextStyle(
-                            color: needsCleaning ? AppColors.danger : AppColors.textSecondary,
+                            color: needsCleaning
+                                ? AppColors.danger
+                                : AppColors.textSecondary,
                             fontSize: 12,
-                            fontWeight: needsCleaning ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: needsCleaning
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ],
@@ -163,7 +199,8 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                   ],
                 ),
                 trailing: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppColors.textSecondary),
+                  icon: const Icon(Icons.more_vert,
+                      color: AppColors.textSecondary),
                   color: AppColors.backgroundElevated,
                   onSelected: (value) {
                     if (value == 'clean') {
@@ -174,14 +211,17 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                       context.push('/incidents/nouveau');
                     }
                   },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<String>>[
                     const PopupMenuItem<String>(
                       value: 'clean',
                       child: Row(
                         children: [
-                          Icon(Icons.cleaning_services, color: AppColors.textPrimary, size: 20),
+                          Icon(Icons.cleaning_services,
+                              color: AppColors.textPrimary, size: 20),
                           SizedBox(width: 8),
-                          Text('Marquer nettoyé', style: TextStyle(color: AppColors.textPrimary)),
+                          Text('Marquer nettoyé',
+                              style: TextStyle(color: AppColors.textPrimary)),
                         ],
                       ),
                     ),
@@ -191,7 +231,8 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                         children: [
                           Icon(Icons.build, color: AppColors.warning, size: 20),
                           SizedBox(width: 8),
-                          Text('Créer Maintenance', style: TextStyle(color: AppColors.textPrimary)),
+                          Text('Créer Maintenance',
+                              style: TextStyle(color: AppColors.textPrimary)),
                         ],
                       ),
                     ),
@@ -199,9 +240,11 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                       value: 'report',
                       child: Row(
                         children: [
-                          Icon(Icons.warning, color: AppColors.danger, size: 20),
+                          Icon(Icons.warning,
+                              color: AppColors.danger, size: 20),
                           SizedBox(width: 8),
-                          Text('Signaler Problème', style: TextStyle(color: AppColors.textPrimary)),
+                          Text('Signaler Problème',
+                              style: TextStyle(color: AppColors.textPrimary)),
                         ],
                       ),
                     ),

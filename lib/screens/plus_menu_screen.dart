@@ -20,7 +20,7 @@ class _PlusMenuItem {
   });
 }
 
-/// Écran « Plus » — menu de navigation secondaire.
+/// Ecran  Plus  — menu de navigation secondaire.
 class PlusMenuScreen extends StatelessWidget {
   const PlusMenuScreen({super.key});
 
@@ -29,14 +29,14 @@ class PlusMenuScreen extends StatelessWidget {
       icon: Icons.inventory_2_outlined,
       iconColor: AppColors.horses, // orange
       label: 'Inventaire',
-      subtitle: 'Gérer les stocks',
+      subtitle: 'Gerer les stocks',
       route: '/plus/inventaire',
     ),
     _PlusMenuItem(
       icon: Icons.calendar_month_outlined,
       iconColor: AppColors.pool, // cyan
-      label: 'Réservations',
-      subtitle: 'Voir les réservations',
+      label: 'Reservations',
+      subtitle: 'Voir les reservations',
       route: '/plus/reservations',
     ),
     _PlusMenuItem(
@@ -63,7 +63,7 @@ class PlusMenuScreen extends StatelessWidget {
     _PlusMenuItem(
       icon: Icons.person_outline_rounded,
       iconColor: AppColors.accentPrimary, // blue
-      label: 'Profil & Paramètres',
+      label: 'Profil & Parametres',
       subtitle: 'Mon compte',
       route: '/plus/profil',
     ),
@@ -130,12 +130,12 @@ class PlusMenuScreen extends StatelessWidget {
     return Card(
       color: AppColors.backgroundSecondary,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         side: const BorderSide(color: AppColors.border, width: 1),
       ),
       elevation: 0,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         onTap: () => context.push(item.route),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
@@ -145,7 +145,7 @@ class PlusMenuScreen extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: item.iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 item.icon,
@@ -158,7 +158,7 @@ class PlusMenuScreen extends StatelessWidget {
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w800,
               ),
             ),
             subtitle: Text(

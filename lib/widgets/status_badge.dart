@@ -28,7 +28,7 @@ class StatusBadge extends StatelessWidget {
         backgroundColor = AppColors.danger.withValues(alpha: 0.15);
         textColor = AppColors.danger;
         icon = Icons.cancel_outlined;
-        text = "Fermé";
+        text = "Ferme";
         break;
       case ActivityStatus.warning:
         backgroundColor = AppColors.warning.withValues(alpha: 0.15);

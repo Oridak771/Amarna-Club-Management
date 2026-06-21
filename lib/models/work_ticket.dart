@@ -5,22 +5,22 @@ import '../theme/app_theme.dart';
 part 'work_ticket.g.dart';
 
 enum TicketType {
-  anomaly,            // Quick operational issues / anomalies reported on the fly
-  preventive,         // Scheduled inspection / check task
-  corrective,         // Work order / repair task
+  anomaly, // Quick operational issues / anomalies reported on the fly
+  preventive, // Scheduled inspection / check task
+  corrective, // Work order / repair task
 }
 
 enum TicketPriority {
-  low,      // Faible
-  medium,   // Moyen
-  high,     // Élevé
+  low, // Faible
+  medium, // Moyen
+  high, // Élevé
   critical, // Critique
 }
 
 enum TicketStatus {
-  open,       // Ouvert / À faire
+  open, // Ouvert / À faire
   inProgress, // En cours
-  resolved,   // Résolu / Réalisé
+  resolved, // Résolu / Réalisé
 }
 
 @collection
@@ -46,7 +46,7 @@ class WorkTicket {
   final TicketStatus status;
 
   final DateTime dateCreated;
-  final DateTime? dateDue;       // For scheduled tasks
+  final DateTime? dateDue; // For scheduled tasks
   final DateTime? dateCompleted; // For resolved tasks
   final String? imageUrl;
   final String? voiceNoteUrl;
@@ -116,7 +116,9 @@ class WorkTicket {
   Color get statusColor {
     switch (status) {
       case TicketStatus.open:
-        return type == TicketType.anomaly ? AppColors.danger : AppColors.textSecondary;
+        return type == TicketType.anomaly
+            ? AppColors.danger
+            : AppColors.textSecondary;
       case TicketStatus.inProgress:
         return AppColors.warning;
       case TicketStatus.resolved:

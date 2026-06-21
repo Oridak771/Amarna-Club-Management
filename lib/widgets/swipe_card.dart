@@ -20,7 +20,7 @@ class SwipeCard extends StatelessWidget {
     return Dismissible(
       key: ValueKey(title),
       onDismissed: onSwiped,
-      
+
       // Swipe Right Background (Green - Completed)
       background: Container(
         alignment: Alignment.centerLeft,
@@ -44,7 +44,7 @@ class SwipeCard extends StatelessWidget {
           ],
         ),
       ),
-      
+
       // Swipe Left Background (Amber - Problem)
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
@@ -69,7 +69,7 @@ class SwipeCard extends StatelessWidget {
           ],
         ),
       ),
-      
+
       child: Card(
         color: AppColors.backgroundSecondary,
         elevation: 0,
@@ -100,7 +100,7 @@ class SwipeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Checklist title description
               Text(
                 title,
@@ -112,7 +112,7 @@ class SwipeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Indicators
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,15 +130,17 @@ class SwipeCard extends StatelessWidget {
                     )
                   else
                     const SizedBox.shrink(),
-                  
+
                   // Helper gesture prompt
                   const Row(
                     children: [
                       Text(
                         'Glisser',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        style:
+                            TextStyle(color: AppColors.textMuted, fontSize: 11),
                       ),
-                      Icon(Icons.swap_horiz, color: AppColors.textMuted, size: 16),
+                      Icon(Icons.swap_horiz,
+                          color: AppColors.textMuted, size: 16),
                     ],
                   ),
                 ],

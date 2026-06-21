@@ -8,7 +8,11 @@ class Horse {
   final String status; // 'Disponible', 'Au repos', 'Blessé'
   final double fatigue; // 0.0 to 1.0
 
-  Horse({required this.id, required this.name, required this.status, required this.fatigue});
+  Horse(
+      {required this.id,
+      required this.name,
+      required this.status,
+      required this.fatigue});
 }
 
 class HorseGridScreen extends StatelessWidget {
@@ -39,8 +43,10 @@ class HorseGridScreen extends StatelessWidget {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          int crossAxisCount = constraints.maxWidth > 800 ? 4 : (constraints.maxWidth > 600 ? 3 : 2);
-          
+          int crossAxisCount = constraints.maxWidth > 800
+              ? 4
+              : (constraints.maxWidth > 600 ? 3 : 2);
+
           return GridView.builder(
             padding: const EdgeInsets.all(16.0),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -88,7 +94,8 @@ class HorseGridScreen extends StatelessWidget {
               flex: 3,
               child: Container(
                 color: AppColors.surface,
-                child: const Icon(Icons.pets, size: 48, color: AppColors.textMuted),
+                child: const Icon(Icons.pets,
+                    size: 48, color: AppColors.textMuted),
               ),
             ),
             // Info Area
@@ -110,9 +117,9 @@ class HorseGridScreen extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
@@ -126,13 +133,13 @@ class HorseGridScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'Fatigue',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 10),
+                          style: TextStyle(
+                              color: AppColors.textSecondary, fontSize: 10),
                         ),
                         const SizedBox(height: 4),
                         ClipRRect(
@@ -141,7 +148,9 @@ class HorseGridScreen extends StatelessWidget {
                             value: horse.fatigue,
                             backgroundColor: AppColors.backgroundPrimary,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              horse.fatigue > 0.7 ? AppColors.danger : AppColors.horses,
+                              horse.fatigue > 0.7
+                                  ? AppColors.danger
+                                  : AppColors.horses,
                             ),
                             minHeight: 4,
                           ),

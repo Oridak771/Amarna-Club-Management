@@ -6,7 +6,8 @@ class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
 
   @override
-  State<NotificationCenterScreen> createState() => _NotificationCenterScreenState();
+  State<NotificationCenterScreen> createState() =>
+      _NotificationCenterScreenState();
 }
 
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
@@ -15,7 +16,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     MockNotification(
       id: 'notif-1',
       title: 'Nouvel incident critique',
-      description: 'L\'extracteur d\'air principal stand de tir est HS. Stand fermé.',
+      description:
+          'L\'extracteur d\'air principal stand de tir est HS. Stand fermé.',
       timeAgo: 'Il y a 10 min',
       category: 'incident',
       routePath: '/tickets/inc-003',
@@ -25,7 +27,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     MockNotification(
       id: 'notif-2',
       title: 'Tâche de maintenance assignée',
-      description: 'Vous avez été assigné au remplacement du filet court 3 de padel.',
+      description:
+          'Vous avez été assigné au remplacement du filet court 3 de padel.',
       timeAgo: 'Il y a 1h',
       category: 'maintenance',
       routePath: '/tickets/maint-003',
@@ -35,7 +38,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     MockNotification(
       id: 'notif-3',
       title: 'Alerte stock bas',
-      description: 'Le stock de balles de padel (tube de 3) est sous le seuil bas (10 tubes restants).',
+      description:
+          'Le stock de balles de padel (tube de 3) est sous le seuil bas (10 tubes restants).',
       timeAgo: 'Il y a 3h',
       category: 'inventory',
       routePath: '/plus/inventaire',
@@ -45,7 +49,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     MockNotification(
       id: 'notif-4',
       title: 'Réservation modifiée',
-      description: 'La réservation pour "Groupe Belhaj" au stand de tir a été déplacée à 09:30.',
+      description:
+          'La réservation pour "Groupe Belhaj" au stand de tir a été déplacée à 09:30.',
       timeAgo: 'Hier',
       category: 'reservation',
       routePath: '/plus/reservations',
@@ -55,7 +60,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
     MockNotification(
       id: 'notif-5',
       title: 'Incident résolu',
-      description: 'L\'incident "Fuite filtre pompe 2" de la piscine a été marqué comme résolu par Karim.',
+      description:
+          'L\'incident "Fuite filtre pompe 2" de la piscine a été marqué comme résolu par Karim.',
       timeAgo: 'Il y a 2 jours',
       category: 'incident',
       routePath: '/tickets/inc-001',
@@ -71,7 +77,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Toutes les notifications ont été marquées comme lues.')),
+      const SnackBar(
+          content:
+              Text('Toutes les notifications ont été marquées comme lues.')),
     );
   }
 
@@ -93,7 +101,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               onPressed: _markAllAsRead,
               child: const Text(
                 'Tout lire',
-                style: TextStyle(color: AppColors.accentPrimary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    color: AppColors.accentPrimary,
+                    fontWeight: FontWeight.bold),
               ),
             ),
         ],
@@ -146,11 +156,15 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off_outlined, size: 64, color: AppColors.textMuted),
+          Icon(Icons.notifications_off_outlined,
+              size: 64, color: AppColors.textMuted),
           SizedBox(height: 16),
           Text(
             'Aucune notification',
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
           Text(
@@ -175,7 +189,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         decoration: BoxDecoration(
-          color: notif.isRead ? Colors.transparent : AppColors.accentPrimary.withValues(alpha: 0.04),
+          color: notif.isRead
+              ? Colors.transparent
+              : AppColors.accentPrimary.withValues(alpha: 0.04),
           border: const Border(
             bottom: BorderSide(color: AppColors.border, width: 0.5),
           ),
@@ -187,7 +203,8 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _getCategoryColor(notif.category).withValues(alpha: 0.15),
+                color:
+                    _getCategoryColor(notif.category).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -211,14 +228,17 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                           notif.title,
                           style: TextStyle(
                             color: AppColors.textPrimary,
-                            fontWeight: notif.isRead ? FontWeight.w500 : FontWeight.bold,
+                            fontWeight: notif.isRead
+                                ? FontWeight.w500
+                                : FontWeight.bold,
                             fontSize: 14,
                           ),
                         ),
                       ),
                       Text(
                         notif.timeAgo,
-                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        style: const TextStyle(
+                            color: AppColors.textMuted, fontSize: 11),
                       ),
                     ],
                   ),

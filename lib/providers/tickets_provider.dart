@@ -46,7 +46,10 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
       priority: priority,
       status: TicketStatus.open,
       dateCreated: DateTime.now(),
-      dateDue: dateDue ?? (type != TicketType.anomaly ? DateTime.now().add(const Duration(days: 3)) : null),
+      dateDue: dateDue ??
+          (type != TicketType.anomaly
+              ? DateTime.now().add(const Duration(days: 3))
+              : null),
       assignedTechnician: assignedTechnician,
       imageUrl: imageUrl,
       voiceNoteUrl: voiceNoteUrl,
@@ -70,7 +73,7 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
     final ticket = _isar.workTickets.filter().idEqualTo(id).findFirstSync();
     if (ticket != null) {
       final syncState = _ref.read(syncProvider);
-      
+
       _isar.writeTxnSync(() {
         final updated = WorkTicket(
           isarId: ticket.isarId,
@@ -86,7 +89,9 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
           status: status,
           dateCreated: ticket.dateCreated,
           dateDue: ticket.dateDue,
-          dateCompleted: status == TicketStatus.resolved ? DateTime.now() : ticket.dateCompleted,
+          dateCompleted: status == TicketStatus.resolved
+              ? DateTime.now()
+              : ticket.dateCompleted,
           imageUrl: ticket.imageUrl,
           voiceNoteUrl: ticket.voiceNoteUrl,
           assignedTechnician: ticket.assignedTechnician,
@@ -98,14 +103,14 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
 
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
-          "Mise à jour ticket '${ticket.title}' -> ${status.toString().split('.').last}"
-        );
+            "Mise à jour ticket '${ticket.title}' -> ${status.toString().split('.').last}");
       }
     }
   }
 }
 
-final ticketsProvider = StateNotifierProvider<TicketsNotifier, List<WorkTicket>>((ref) {
+final ticketsProvider =
+    StateNotifierProvider<TicketsNotifier, List<WorkTicket>>((ref) {
   final isar = ref.watch(isarProvider);
   return TicketsNotifier(isar, ref);
 });

@@ -119,17 +119,21 @@ class _PoolGaugesScreenState extends State<PoolGaugesScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            _buildSlider('Température (°C)', _temperature, 10, 40, (val) => setState(() => _temperature = val)),
-            _buildSlider('Chlore (ppm)', _chlorine, 0, 5, (val) => setState(() => _chlorine = val)),
+            _buildSlider('Température (°C)', _temperature, 10, 40,
+                (val) => setState(() => _temperature = val)),
+            _buildSlider('Chlore (ppm)', _chlorine, 0, 5,
+                (val) => setState(() => _chlorine = val)),
             _buildSlider('pH', _ph, 0, 14, (val) => setState(() => _ph = val)),
-            _buildSlider('Turbidité (NTU)', _turbidity, 0, 5, (val) => setState(() => _turbidity = val)),
+            _buildSlider('Turbidité (NTU)', _turbidity, 0, 5,
+                (val) => setState(() => _turbidity = val)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSlider(String label, double value, double min, double max, ValueChanged<double> onChanged) {
+  Widget _buildSlider(String label, double value, double min, double max,
+      ValueChanged<double> onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

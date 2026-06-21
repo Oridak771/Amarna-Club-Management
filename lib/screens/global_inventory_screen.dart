@@ -9,7 +9,8 @@ class GlobalInventoryScreen extends ConsumerStatefulWidget {
   const GlobalInventoryScreen({super.key});
 
   @override
-  ConsumerState<GlobalInventoryScreen> createState() => _GlobalInventoryScreenState();
+  ConsumerState<GlobalInventoryScreen> createState() =>
+      _GlobalInventoryScreenState();
 }
 
 class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
@@ -33,8 +34,10 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
 
     // Filter and search
     final filteredItems = inventory.where((item) {
-      final matchesSearch = item.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesActivity = _selectedActivityId == 'all' || item.activityId == _selectedActivityId;
+      final matchesSearch =
+          item.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesActivity = _selectedActivityId == 'all' ||
+          item.activityId == _selectedActivityId;
       return matchesSearch && matchesActivity;
     }).toList();
 
@@ -56,7 +59,8 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
               decoration: InputDecoration(
                 hintText: 'Rechercher un consommable...',
                 hintStyle: const TextStyle(color: AppColors.textMuted),
-                prefixIcon: const Icon(Icons.search, color: AppColors.textSecondary),
+                prefixIcon:
+                    const Icon(Icons.search, color: AppColors.textSecondary),
                 filled: true,
                 fillColor: AppColors.backgroundSecondary,
                 contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -97,13 +101,16 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                     backgroundColor: AppColors.backgroundSecondary,
                     selectedColor: AppColors.accentPrimary,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      color:
+                          isSelected ? Colors.white : AppColors.textSecondary,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: isSelected ? Colors.transparent : AppColors.border,
+                        color:
+                            isSelected ? Colors.transparent : AppColors.border,
                       ),
                     ),
                   ),
@@ -125,7 +132,8 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                         // Tablet/Desktop Grid
                         return GridView.builder(
                           padding: const EdgeInsets.all(16),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
@@ -141,7 +149,8 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                         return ListView.separated(
                           padding: const EdgeInsets.all(16),
                           itemCount: filteredItems.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             return _buildInventoryCard(filteredItems[index]);
                           },
@@ -162,11 +171,15 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.textMuted),
+            Icon(Icons.inventory_2_outlined,
+                size: 64, color: AppColors.textMuted),
             SizedBox(height: 16),
             Text(
               'Aucun article trouvé',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 8),
             Text(
@@ -208,9 +221,11 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
               children: [
                 // Activity Pill Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getActivityColor(item.activityId).withValues(alpha: 0.15),
+                    color: _getActivityColor(item.activityId)
+                        .withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -249,20 +264,27 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                                 ? AppColors.warning
                                 : AppColors.textSecondary,
                         fontSize: 13,
-                        fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal,
+                        fontWeight:
+                            isLowStock ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     if (isOutOfStock) ...[
                       const SizedBox(width: 8),
                       const Text(
                         '⚠️ ÉPUISÉ',
-                        style: TextStyle(color: AppColors.danger, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold),
                       ),
                     ] else if (isLowStock) ...[
                       const SizedBox(width: 8),
                       const Text(
                         '⚠️ SEUIL BAS',
-                        style: TextStyle(color: AppColors.warning, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.warning,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold),
                       ),
                     ],
                   ],
@@ -291,7 +313,9 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                     ),
                     onTap: item.currentStock > 0
                         ? () {
-                            ref.read(inventoryProvider.notifier).adjustStock(item.id, -1);
+                            ref
+                                .read(inventoryProvider.notifier)
+                                .adjustStock(item.id, -1);
                           }
                         : null,
                     child: const SizedBox(
@@ -331,7 +355,9 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       bottomRight: Radius.circular(12),
                     ),
                     onTap: () {
-                      ref.read(inventoryProvider.notifier).adjustStock(item.id, 1);
+                      ref
+                          .read(inventoryProvider.notifier)
+                          .adjustStock(item.id, 1);
                     },
                     child: const SizedBox(
                       width: 48,

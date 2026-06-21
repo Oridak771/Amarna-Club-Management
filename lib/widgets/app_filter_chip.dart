@@ -19,19 +19,19 @@ class AppFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: isSelected
-          ? AppColors.accentPrimary.withValues(alpha: 0.15)
+          ? AppColors.accentPrimary.withValues(alpha: 0.10)
           : AppColors.backgroundSecondary,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(999),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: isSelected ? AppColors.accentPrimary : AppColors.border,
-              width: isSelected ? 1.5 : 1,
+              width: 1,
             ),
           ),
           child: Row(
@@ -44,7 +44,7 @@ class AppFilterChip extends StatelessWidget {
                       ? AppColors.accentPrimary
                       : AppColors.textSecondary,
                   fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               if (count != null) ...[

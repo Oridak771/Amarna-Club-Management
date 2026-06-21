@@ -4,14 +4,14 @@ import 'package:go_router/go_router.dart';
 
 import 'package:amarna_club/models/activity.dart';
 import 'package:amarna_club/providers/activities_provider.dart';
-import 'package:amarna_club/widgets/offline_banner.dart';
 import 'package:amarna_club/theme/app_theme.dart';
 
 class ActivitiesGridScreen extends ConsumerStatefulWidget {
   const ActivitiesGridScreen({super.key});
 
   @override
-  ConsumerState<ActivitiesGridScreen> createState() => _ActivitiesGridScreenState();
+  ConsumerState<ActivitiesGridScreen> createState() =>
+      _ActivitiesGridScreenState();
 }
 
 class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
@@ -30,8 +30,8 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
     final allActivities = ref.watch(activitiesProvider);
 
     final filtered = allActivities.where((a) {
-      final matchesSearch =
-          _searchQuery.isEmpty || a.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      final matchesSearch = _searchQuery.isEmpty ||
+          a.name.toLowerCase().contains(_searchQuery.toLowerCase());
       final matchesStatus = _filterStatus == null || a.status == _filterStatus;
       return matchesSearch && matchesStatus;
     }).toList();
@@ -54,8 +54,6 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const OfflineBanner(),
-
                 // ── Top App Bar ──────────────────────────────────────
                 _buildTopBar(context, isTablet),
 
@@ -90,7 +88,8 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
   // ── Top Bar ────────────────────────────────────────────────────────────────
   Widget _buildTopBar(BuildContext context, bool isTablet) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(isTablet ? 24 : 16, 16, isTablet ? 16 : 12, 4),
+      padding:
+          EdgeInsets.fromLTRB(isTablet ? 24 : 16, 16, isTablet ? 16 : 12, 4),
       child: Row(
         children: [
           const Expanded(
@@ -98,17 +97,17 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Activités',
+                  'Activites',
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: -0.5,
+                    letterSpacing: 0,
                   ),
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Gestion en temps réel',
+                  'Gestion en temps reel',
                   style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 13,
@@ -143,12 +142,14 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
         onChanged: (val) => setState(() => _searchQuery = val),
         style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
-          hintText: 'Rechercher une activité…',
+          hintText: 'Rechercher une activite…',
           hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-          prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textMuted, size: 20),
+          prefixIcon: const Icon(Icons.search_rounded,
+              color: AppColors.textMuted, size: 20),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppColors.textMuted, size: 18),
+                  icon: const Icon(Icons.close_rounded,
+                      color: AppColors.textMuted, size: 18),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -157,7 +158,8 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
               : null,
           filled: true,
           fillColor: AppColors.backgroundSecondary,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: AppColors.border),
@@ -168,7 +170,8 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.accentPrimary, width: 1.5),
+            borderSide:
+                const BorderSide(color: AppColors.accentPrimary, width: 1.5),
           ),
         ),
       ),
@@ -204,7 +207,9 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
             icon: Icons.check_circle_outline_rounded,
             isSelected: _filterStatus == ActivityStatus.open,
             onTap: () => setState(() => _filterStatus =
-                _filterStatus == ActivityStatus.open ? null : ActivityStatus.open),
+                _filterStatus == ActivityStatus.open
+                    ? null
+                    : ActivityStatus.open),
           ),
           const SizedBox(width: 8),
           _FilterChip(
@@ -214,17 +219,21 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
             icon: Icons.warning_amber_rounded,
             isSelected: _filterStatus == ActivityStatus.warning,
             onTap: () => setState(() => _filterStatus =
-                _filterStatus == ActivityStatus.warning ? null : ActivityStatus.warning),
+                _filterStatus == ActivityStatus.warning
+                    ? null
+                    : ActivityStatus.warning),
           ),
           const SizedBox(width: 8),
           _FilterChip(
-            label: 'Fermées',
+            label: 'Fermees',
             count: closedCount,
             color: AppColors.danger,
             icon: Icons.lock_outline_rounded,
             isSelected: _filterStatus == ActivityStatus.closed,
             onTap: () => setState(() => _filterStatus =
-                _filterStatus == ActivityStatus.closed ? null : ActivityStatus.closed),
+                _filterStatus == ActivityStatus.closed
+                    ? null
+                    : ActivityStatus.closed),
           ),
         ],
       ),
@@ -232,10 +241,17 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
   }
 
   // ── Responsive Grid ────────────────────────────────────────────────────────
-  Widget _buildGrid(
-      List<Activity> activities, bool isTablet, bool isDesktop) {
-    final crossAxisCount = isDesktop ? 4 : isTablet ? 3 : 2;
-    final hPad = isDesktop ? 24.0 : isTablet ? 20.0 : 16.0;
+  Widget _buildGrid(List<Activity> activities, bool isTablet, bool isDesktop) {
+    final crossAxisCount = isDesktop
+        ? 4
+        : isTablet
+            ? 3
+            : 2;
+    final hPad = isDesktop
+        ? 24.0
+        : isTablet
+            ? 20.0
+            : 16.0;
 
     return GridView.builder(
       padding: EdgeInsets.fromLTRB(hPad, 0, hPad, 100),
@@ -244,7 +260,11 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
         crossAxisCount: crossAxisCount,
         crossAxisSpacing: isTablet ? 14 : 12,
         mainAxisSpacing: isTablet ? 14 : 12,
-        childAspectRatio: isDesktop ? 0.88 : isTablet ? 0.84 : 0.78,
+        childAspectRatio: isDesktop
+            ? 0.88
+            : isTablet
+                ? 0.84
+                : 0.78,
       ),
       itemBuilder: (context, index) {
         return ActivityCard(
@@ -277,7 +297,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
           ),
           const SizedBox(height: 20),
           const Text(
-            'Aucune activité trouvée',
+            'Aucune activite trouvée',
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 17,
@@ -299,7 +319,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
               });
             },
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Réinitialiser'),
+            label: const Text('Reinitialiser'),
           ),
         ],
       ),
@@ -386,8 +406,7 @@ class _ActivityCardState extends State<ActivityCard>
                     BoxShadow(
                       color: isUnavailable
                           ? Colors.transparent
-                          : color.withValues(
-                              alpha: _isHovered ? 0.18 : 0.06),
+                          : color.withValues(alpha: _isHovered ? 0.18 : 0.06),
                       blurRadius: _isHovered ? 20 : 10,
                       spreadRadius: _isHovered ? 1 : 0,
                       offset: const Offset(0, 4),
@@ -476,9 +495,8 @@ class _ActivityCardState extends State<ActivityCard>
                             ),
                             child: Icon(
                               activity.iconData,
-                              color: isUnavailable
-                                  ? AppColors.textMuted
-                                  : color,
+                              color:
+                                  isUnavailable ? AppColors.textMuted : color,
                               size: 24,
                             ),
                           ),
@@ -499,7 +517,7 @@ class _ActivityCardState extends State<ActivityCard>
                               : AppColors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          letterSpacing: -0.2,
+                          letterSpacing: 0,
                           height: 1.2,
                         ),
                         maxLines: 2,
@@ -584,9 +602,7 @@ class _ActivityCardState extends State<ActivityCard>
                             ),
                             const SizedBox(width: 5),
                             Text(
-                              isMaintenance
-                                  ? 'En maintenance'
-                                  : 'Accès fermé',
+                              isMaintenance ? 'En maintenance' : 'Acces ferme',
                               style: const TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 11,
@@ -597,8 +613,7 @@ class _ActivityCardState extends State<ActivityCard>
                         ),
                         const SizedBox(height: 5),
                         const ClipRRect(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(6)),
+                          borderRadius: BorderRadius.all(Radius.circular(6)),
                           child: LinearProgressIndicator(
                             value: 0,
                             minHeight: 4,
@@ -688,9 +703,17 @@ class _StatusPill extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color, icon) = switch (status) {
       ActivityStatus.open => ('Ouvert', AppColors.success, Icons.circle),
-      ActivityStatus.warning => ('Alerte', AppColors.warning, Icons.warning_rounded),
+      ActivityStatus.warning => (
+          'Alerte',
+          AppColors.warning,
+          Icons.warning_rounded
+        ),
       ActivityStatus.closed => ('Fermé', AppColors.danger, Icons.lock_rounded),
-      ActivityStatus.maintenance => ('Maintenance', AppColors.info, Icons.build_rounded),
+      ActivityStatus.maintenance => (
+          'Maintenance',
+          AppColors.info,
+          Icons.build_rounded
+        ),
     };
 
     return Container(
@@ -747,7 +770,9 @@ class _FilterChip extends StatelessWidget {
         curve: Curves.easeOut,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? color.withValues(alpha: 0.16) : AppColors.backgroundSecondary,
+          color: isSelected
+              ? color.withValues(alpha: 0.16)
+              : AppColors.backgroundSecondary,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isSelected ? color : AppColors.border,

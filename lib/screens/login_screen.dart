@@ -66,14 +66,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary,
                             letterSpacing: 1.5,
                           ),
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Gestion Opérationnelle',
+                          'Gestion Operationnelle',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
@@ -197,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Connexion biométrique disponible',
+                              'Connexion biometrique disponible',
                               style: TextStyle(
                                 color: AppColors.textSecondary
                                     .withValues(alpha: 0.8),

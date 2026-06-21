@@ -17,7 +17,8 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
   }
 
   void updateOccupancy(String activityId, int newOccupancy) {
-    final activity = _isar.activitys.filter().idEqualTo(activityId).findFirstSync();
+    final activity =
+        _isar.activitys.filter().idEqualTo(activityId).findFirstSync();
     if (activity != null) {
       final syncState = _ref.read(syncProvider);
       _isar.writeTxnSync(() {
@@ -38,14 +39,14 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       // Offline logging
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
-          "Modification occupation '${activity.name}' -> $newOccupancy"
-        );
+            "Modification occupation '${activity.name}' -> $newOccupancy");
       }
     }
   }
 
   void updateStatus(String activityId, ActivityStatus newStatus) {
-    final activity = _isar.activitys.filter().idEqualTo(activityId).findFirstSync();
+    final activity =
+        _isar.activitys.filter().idEqualTo(activityId).findFirstSync();
     if (activity != null) {
       final syncState = _ref.read(syncProvider);
       _isar.writeTxnSync(() {
@@ -55,8 +56,9 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
           name: activity.name,
           iconKey: activity.iconKey,
           status: newStatus,
-          currentOccupancy: newStatus == ActivityStatus.closed || newStatus == ActivityStatus.maintenance 
-              ? 0 
+          currentOccupancy: newStatus == ActivityStatus.closed ||
+                  newStatus == ActivityStatus.maintenance
+              ? 0
               : activity.currentOccupancy,
           maxCapacity: activity.maxCapacity,
           assignedStaff: activity.assignedStaff,
@@ -68,14 +70,14 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       // Offline logging
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
-          "Changement statut '${activity.name}' -> ${newStatus.toString().split('.').last}"
-        );
+            "Changement statut '${activity.name}' -> ${newStatus.toString().split('.').last}");
       }
     }
   }
 }
 
-final activitiesProvider = StateNotifierProvider<ActivitiesNotifier, List<Activity>>((ref) {
+final activitiesProvider =
+    StateNotifierProvider<ActivitiesNotifier, List<Activity>>((ref) {
   final isar = ref.watch(isarProvider);
   return ActivitiesNotifier(isar, ref);
 });

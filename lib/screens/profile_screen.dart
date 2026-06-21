@@ -46,7 +46,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         backgroundColor: AppColors.accentPrimary,
                         child: Text(
                           'OP',
-                          style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -75,7 +78,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           'Activités Affectées :',
-                          style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -85,10 +91,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _buildActivityTag('Piscine', const Color(0xFF00D4FF)),
-                            _buildActivityTag('Équitation', const Color(0xFFFFB347)),
+                            _buildActivityTag(
+                                'Piscine', const Color(0xFF00D4FF)),
+                            _buildActivityTag(
+                                'Équitation', const Color(0xFFFFB347)),
                             _buildActivityTag('Padel', const Color(0xFF34D399)),
-                            _buildActivityTag('Stand de Tir', const Color(0xFFFF4757)),
+                            _buildActivityTag(
+                                'Stand de Tir', const Color(0xFFFF4757)),
                           ],
                         ),
                       ),
@@ -118,7 +127,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Toggle Notifications
                       _buildSwitchTile(
                         title: 'Notifications Push',
-                        subtitle: 'Recevoir les alertes d\'incidents en temps réel',
+                        subtitle:
+                            'Recevoir les alertes d\'incidents en temps réel',
                         icon: Icons.notifications_active_outlined,
                         value: _pushNotifications,
                         onChanged: (val) {
@@ -144,7 +154,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // Dark Theme (Read-only as dark theme is default and preferred)
                       _buildSwitchTile(
                         title: 'Mode Sombre',
-                        subtitle: 'Thème de l\'interface principale (Recommandé)',
+                        subtitle:
+                            'Thème de l\'interface principale (Recommandé)',
                         icon: Icons.dark_mode_outlined,
                         value: true,
                         onChanged: (_) {},
@@ -165,7 +176,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: AppColors.danger, width: 1.5),
+                        side: const BorderSide(
+                            color: AppColors.danger, width: 1.5),
                       ),
                     ),
                     icon: const Icon(Icons.logout),
@@ -191,12 +203,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       Text(
                         'Amarna Club Management',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
                       ),
                       SizedBox(height: 4),
                       Text(
                         'Version 1.0.0 (Build 2606)',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 11),
+                        style:
+                            TextStyle(color: AppColors.textMuted, fontSize: 11),
                       ),
                     ],
                   ),
@@ -242,7 +258,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       leading: Icon(icon, color: AppColors.textSecondary),
       title: Text(
         title,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
         subtitle,

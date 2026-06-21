@@ -54,10 +54,11 @@ class SyncNotifier extends StateNotifier<SyncState> {
   // Simulate network toggle
   void setOnlineStatus(bool online) {
     if (state.isOnline == online) return;
-    
+
     final newLogs = List<String>.from(state.syncLogs);
     if (online) {
-      newLogs.add('Connexion réseau rétablie. Synchronisation automatique en cours...');
+      newLogs.add(
+          'Connexion réseau rétablie. Synchronisation automatique en cours...');
       state = state.copyWith(isOnline: true, syncLogs: newLogs);
       triggerSync();
     } else {
@@ -78,21 +79,25 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
   // Perform sync
   Future<void> triggerSync() async {
-    if (!state.isOnline || state.isSyncing || state.pendingSyncCount == 0) return;
+    if (!state.isOnline || state.isSyncing || state.pendingSyncCount == 0) {
+      return;
+    }
 
     state = state.copyWith(isSyncing: true);
     final newLogs = List<String>.from(state.syncLogs);
-    newLogs.add('Début de synchronisation de ${state.pendingSyncCount} élément(s)...');
-    
+    newLogs.add(
+        'Début de synchronisation de ${state.pendingSyncCount} élément(s)...');
+
     // Simulate API network call
     await Future.delayed(const Duration(seconds: 2));
 
     final isar = _ref.read(isarProvider);
-    
+
     // Perform database sync updates
     await isar.writeTxn(() async {
       // Sync pending work tickets
-      final pendingTickets = await isar.workTickets.filter().syncPendingEqualTo(true).findAll();
+      final pendingTickets =
+          await isar.workTickets.filter().syncPendingEqualTo(true).findAll();
       for (final ticket in pendingTickets) {
         final updated = WorkTicket(
           isarId: ticket.isarId,
