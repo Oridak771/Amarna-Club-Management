@@ -21,9 +21,9 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
   void _toggleSession() {
     if (!_netsOk || !_obstaclesOk) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
             content: Text('Impossible de démarrer: Terrain non sécurisé.'),
-            backgroundColor: AppColors.danger),
+            backgroundColor: context.colors.danger),
       );
       return;
     }
@@ -40,33 +40,33 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Terrain Paintball'),
+        title: Text('Terrain Paintball'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Session Control Card
             Card(
               color: _isSessionActive
-                  ? AppColors.paintball.withValues(alpha: 0.1)
-                  : AppColors.backgroundSecondary,
+                  ? context.colors.paintball.withValues(alpha: 0.1)
+                  : context.colors.backgroundSecondary,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
                 side: BorderSide(
                   color:
-                      _isSessionActive ? AppColors.paintball : AppColors.border,
+                      _isSessionActive ? context.colors.paintball : context.colors.border,
                   width: _isSessionActive ? 2 : 1,
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: EdgeInsets.all(24.0),
                 child: Column(
                   children: [
                     Text(
@@ -75,66 +75,66 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           : 'Aucune session active',
                       style: TextStyle(
                         color: _isSessionActive
-                            ? AppColors.paintball
-                            : AppColors.textPrimary,
+                            ? context.colors.paintball
+                            : context.colors.textPrimary,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                     if (_isSessionActive) ...[
-                      const Text(
+                      Text(
                         'Joueurs sur le terrain',
                         style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 14),
+                            color: context.colors.textSecondary, fontSize: 14),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
+                            icon: Icon(Icons.remove_circle_outline,
                                 size: 40),
-                            color: AppColors.textMuted,
+                            color: context.colors.textMuted,
                             onPressed: _playerCount > 0
                                 ? () => setState(() => _playerCount--)
                                 : null,
                           ),
-                          const SizedBox(width: 24),
+                          SizedBox(width: 24),
                           Text(
                             '$_playerCount / $_maxPlayers',
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: context.colors.textPrimary,
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 24),
+                          SizedBox(width: 24),
                           IconButton(
                             icon:
-                                const Icon(Icons.add_circle_outline, size: 40),
-                            color: AppColors.textPrimary,
+                                Icon(Icons.add_circle_outline, size: 40),
+                            color: context.colors.textPrimary,
                             onPressed: _playerCount < _maxPlayers
                                 ? () => setState(() => _playerCount++)
                                 : null,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: _playerCount / _maxPlayers,
-                          backgroundColor: AppColors.surface,
+                          backgroundColor: context.colors.surface,
                           valueColor: AlwaysStoppedAnimation<Color>(
                             _playerCount >= _maxPlayers
-                                ? AppColors.danger
-                                : AppColors.paintball,
+                                ? context.colors.danger
+                                : context.colors.paintball,
                           ),
                           minHeight: 8,
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      SizedBox(height: 32),
                     ],
                     SizedBox(
                       width: double.infinity,
@@ -142,8 +142,8 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _isSessionActive
-                              ? AppColors.danger
-                              : AppColors.paintball,
+                              ? context.colors.danger
+                              : context.colors.paintball,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12)),
                         ),
@@ -152,7 +152,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           _isSessionActive
                               ? 'Terminer la session'
                               : 'Démarrer une session',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white),
@@ -164,17 +164,17 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               ),
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Field Status Overview
-            const Text(
+            Text(
               'État des Infrastructures',
               style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             _buildStatusToggle(
               'Filets de protection',
@@ -182,7 +182,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               Icons.grid_4x4,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content:
                           Text('Impossible de modifier pendant une session.')));
                   return;
@@ -190,14 +190,14 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                 setState(() => _netsOk = val);
               },
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             _buildStatusToggle(
               'Obstacles gonflables',
               _obstaclesOk,
               Icons.sports_gymnastics,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content:
                           Text('Impossible de modifier pendant une session.')));
                   return;
@@ -206,23 +206,23 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               },
             ),
 
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
                   child: QuickActionButton(
                     icon: Icons.warning,
                     label: 'Signaler Dégât',
-                    color: AppColors.danger,
+                    color: context.colors.danger,
                     onTap: () => context.push('/incidents/nouveau'),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: QuickActionButton(
                     icon: Icons.inventory,
                     label: 'Voir Lanceurs',
-                    color: AppColors.info,
+                    color: context.colors.info,
                     onTap: () => context.push('/activites/paintball'),
                   ),
                 ),
@@ -237,34 +237,34 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
   Widget _buildStatusToggle(
       String label, bool isOk, IconData icon, ValueChanged<bool> onChanged) {
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isOk ? AppColors.border : AppColors.danger),
+        side: BorderSide(color: isOk ? context.colors.border : context.colors.danger),
       ),
       child: ListTile(
         leading: Container(
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: (isOk ? AppColors.success : AppColors.danger)
+            color: (isOk ? context.colors.success : context.colors.danger)
                 .withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: isOk ? AppColors.success : AppColors.danger),
+          child: Icon(icon, color: isOk ? context.colors.success : context.colors.danger),
         ),
         title: Text(label,
-            style: const TextStyle(
-                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
         subtitle: Text(isOk ? 'Sécurisé' : 'Maintenance requise',
             style: TextStyle(
-                color: isOk ? AppColors.textSecondary : AppColors.danger)),
+                color: isOk ? context.colors.textSecondary : context.colors.danger)),
         trailing: Switch(
           value: isOk,
           onChanged: onChanged,
-          activeThumbColor: AppColors.success,
-          inactiveThumbColor: AppColors.danger,
-          inactiveTrackColor: AppColors.danger.withValues(alpha: 0.3),
+          activeThumbColor: context.colors.success,
+          inactiveThumbColor: context.colors.danger,
+          inactiveTrackColor: context.colors.danger.withValues(alpha: 0.3),
         ),
       ),
     );

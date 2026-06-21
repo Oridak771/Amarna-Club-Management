@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import '../theme/app_theme.dart';
 
 part 'activity.g.dart';
 
@@ -42,20 +40,6 @@ class Activity {
   double get occupancyPercentage =>
       maxCapacity > 0 ? (currentOccupancy / maxCapacity) : 0.0;
 
-  @ignore
-  Color get statusColor {
-    switch (status) {
-      case ActivityStatus.open:
-        return AppColors.success;
-      case ActivityStatus.closed:
-        return AppColors.danger;
-      case ActivityStatus.warning:
-        return AppColors.warning;
-      case ActivityStatus.maintenance:
-        return AppColors.info;
-    }
-  }
-
   String get statusTextFrench {
     switch (status) {
       case ActivityStatus.open:
@@ -66,29 +50,6 @@ class Activity {
         return "Attention";
       case ActivityStatus.maintenance:
         return "En Maintenance";
-    }
-  }
-
-  @ignore
-  IconData get iconData {
-    switch (iconKey) {
-      case 'pool':
-      case 'piscine':
-        return Icons.pool;
-      case 'horses':
-      case 'chevaux':
-        return Icons.pets;
-      case 'paintball':
-        return Icons.adjust;
-      case 'shooting':
-      case 'tir':
-        return Icons.gps_fixed;
-      case 'gym':
-        return Icons.fitness_center;
-      case 'padel':
-        return Icons.sports_tennis;
-      default:
-        return Icons.help_outline;
     }
   }
 }

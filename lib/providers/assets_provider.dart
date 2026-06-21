@@ -1,45 +1,51 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import '../models/asset.dart';
+import '../repositories/asset_repository.dart';
 import '../services/database_service.dart';
 
+final assetRepositoryProvider = Provider<AssetRepository>((ref) {
+  return AssetRepository(ref.watch(isarProvider));
+});
+
 class AssetsNotifier extends StateNotifier<List<Asset>> {
-  final Isar _isar;
+  final AssetRepository _repo;
 
-  AssetsNotifier(this._isar) : super([]) {
-    _loadAssets();
+  AssetsNotifier(this._repo) : super([]) {
+    _init();
   }
 
-  void _loadAssets() {
-    state = _isar.assets.where().findAllSync();
+  Future<void> _init() async {
+    await _loadAssets();
   }
 
-  void updateAssetStatus(String assetId, AssetStatus status) {
-    final asset = _isar.assets.filter().idEqualTo(assetId).findFirstSync();
+  Future<void> _loadAssets() async {
+    state = await _repo.getAll();
+  }
+
+  Future<void> updateAssetStatus(String assetId, AssetStatus status) async {
+    final asset = await _repo.getById(assetId);
     if (asset != null) {
-      _isar.writeTxnSync(() {
-        final updated = Asset(
-          isarId: asset.isarId,
-          id: asset.id,
-          serialNumber: asset.serialNumber,
-          name: asset.name,
-          category: asset.category,
-          activityId: asset.activityId,
-          status: status,
-          lastMaintenance: asset.lastMaintenance,
-          nextMaintenance: asset.nextMaintenance,
-          imageUrl: asset.imageUrl,
-          technicalSpecsJson: asset.technicalSpecsJson,
-        );
-        _isar.assets.putSync(updated);
-      });
-      _loadAssets();
+      final updated = Asset(
+        isarId: asset.isarId,
+        id: asset.id,
+        serialNumber: asset.serialNumber,
+        name: asset.name,
+        category: asset.category,
+        activityId: asset.activityId,
+        status: status,
+        lastMaintenance: asset.lastMaintenance,
+        nextMaintenance: asset.nextMaintenance,
+        imageUrl: asset.imageUrl,
+        technicalSpecsJson: asset.technicalSpecsJson,
+      );
+      await _repo.put(updated);
+      await _loadAssets();
     }
   }
 }
 
 final assetsProvider =
     StateNotifierProvider<AssetsNotifier, List<Asset>>((ref) {
-  final isar = ref.watch(isarProvider);
-  return AssetsNotifier(isar);
+  final repo = ref.watch(assetRepositoryProvider);
+  return AssetsNotifier(repo);
 });

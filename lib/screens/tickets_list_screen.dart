@@ -1,3 +1,5 @@
+import 'package:amarna_club/ui/ticket_ui_adapter.dart';
+import 'package:amarna_club/ui/activity_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -72,15 +74,15 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tickets d\'intervention'),
+        title: Text('Tickets d\'intervention'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: Icon(Icons.qr_code_scanner),
             tooltip: 'Scanner QR',
             onPressed: () => context.push('/scan'),
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_none),
+            icon: Icon(Icons.notifications_none),
             tooltip: 'Notifications',
             onPressed: () => context.push('/notifications'),
           ),
@@ -88,25 +90,25 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
       ),
       body: Center(
         child: Container(
-          constraints: const BoxConstraints(maxWidth: 1000),
+          constraints: BoxConstraints(maxWidth: 1000),
           child: Column(
             children: [
               // Create Ticket Button
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentPrimary,
+                      backgroundColor: context.colors.accentPrimary,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.add_circle_outline, size: 22),
-                    label: const Text(
+                    icon: Icon(Icons.add_circle_outline, size: 22),
+                    label: Text(
                       'Creer un ticket',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -120,10 +122,10 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
               SizedBox(
                 height: 48,
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: _filters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, __) => SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final label = _filters[index];
                     return AppFilterChip(
@@ -135,7 +137,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 ),
               ),
 
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
 
               // Tickets list/grid
               Expanded(
@@ -146,10 +148,10 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                           final isWide = constraints.maxWidth > 600;
                           if (isWide) {
                             return GridView.builder(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                  SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
@@ -163,11 +165,11 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                             );
                           } else {
                             return ListView.separated(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               itemCount: filteredTickets.length,
                               separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
+                                  SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final ticket = filteredTickets[index];
                                 return _buildTicketCard(ticket);
@@ -187,21 +189,21 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.check_circle_outline,
               size: 72,
-              color: AppColors.success.withValues(alpha: 0.6),
+              color: context.colors.success.withValues(alpha: 0.6),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: 16),
+            Text(
               'Aucun ticket trouve - tout fonctionne.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 fontSize: 16,
               ),
             ),
@@ -217,7 +219,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
       child: PriorityIndicator(
         priority: ticket.priority,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -227,8 +229,8 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                   Expanded(
                     child: Text(
                       ticket.title,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -236,53 +238,53 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   _buildPriorityBadge(ticket),
                 ],
               ),
 
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
 
               // Row 2: Type badge • Activity name
               Row(
                 children: [
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: ticket.typeColor.withValues(alpha: 0.15),
+                      color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       ticket.typeTextFrench,
                       style: TextStyle(
-                        color: ticket.typeColor,
+                        color: ticket.type.resolveColor(context),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: AppColors.getActivityColor(ticket.activityId),
+                      color: resolveActivityColor(context, ticket.activityId),
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  SizedBox(width: 6),
                   Text(
                     ticket.activityName,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
 
               // Row 3: asset details or date info
               Row(
@@ -292,8 +294,8 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       ticket.assetName != null
                           ? 'Equipement : ${ticket.assetName}'
                           : 'General',
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
+                      style: TextStyle(
+                        color: context.colors.textMuted,
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -302,31 +304,31 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                   ),
                   Text(
                     _relativeTime(ticket.dateCreated),
-                    style: const TextStyle(
-                      color: AppColors.textMuted,
+                    style: TextStyle(
+                      color: context.colors.textMuted,
                       fontSize: 11,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
 
               // Row 4: technician + status badge + sync icon
               Row(
                 children: [
                   if (ticket.assignedTechnician != null) ...[
-                    const Icon(
+                    Icon(
                       Icons.person_outline,
                       size: 14,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         ticket.assignedTechnician!,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: context.colors.textSecondary,
                           fontSize: 12,
                         ),
                         maxLines: 1,
@@ -334,11 +336,11 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       ),
                     ),
                   ] else
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Non assigne',
                         style: TextStyle(
-                          color: AppColors.textMuted,
+                          color: context.colors.textMuted,
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
                         ),
@@ -346,13 +348,13 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                     ),
                   _buildStatusChip(ticket),
                   if (ticket.syncPending) ...[
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Tooltip(
                       message: 'En attente de synchronisation',
                       child: Icon(
                         Icons.cloud_upload_outlined,
                         size: 16,
-                        color: AppColors.warning.withValues(alpha: 0.8),
+                        color: context.colors.warning.withValues(alpha: 0.8),
                       ),
                     ),
                   ],
@@ -367,19 +369,19 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
   Widget _buildPriorityBadge(WorkTicket ticket) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: ticket.priorityColor.withValues(alpha: 0.15),
+        color: ticket.priority.resolveColor(context).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ticket.priorityColor.withValues(alpha: 0.4),
+          color: ticket.priority.resolveColor(context).withValues(alpha: 0.4),
           width: 1,
         ),
       ),
       child: Text(
         ticket.priorityTextFrench,
         style: TextStyle(
-          color: ticket.priorityColor,
+          color: ticket.priority.resolveColor(context),
           fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
@@ -389,15 +391,15 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
   Widget _buildStatusChip(WorkTicket ticket) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: ticket.statusColor.withValues(alpha: 0.12),
+        color: ticket.status.resolveColor(context).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         ticket.statusTextFrench,
         style: TextStyle(
-          color: ticket.statusColor,
+          color: ticket.status.resolveColor(context),
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),

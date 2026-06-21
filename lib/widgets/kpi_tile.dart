@@ -11,7 +11,7 @@ class KPITile extends StatelessWidget {
   final bool? isPositiveTrend;
   final VoidCallback? onTap;
 
-  const KPITile({
+  KPITile({
     super.key,
     required this.icon,
     required this.iconColor,
@@ -27,16 +27,16 @@ class KPITile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: AppColors.border, width: 1),
+        side: BorderSide(color: context.colors.border, width: 1),
       ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -45,7 +45,7 @@ class KPITile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: iconColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
@@ -65,16 +65,16 @@ class KPITile extends StatelessWidget {
                               : Icons.arrow_downward,
                           size: 14,
                           color: isPositiveTrend == true
-                              ? AppColors.success
-                              : AppColors.danger,
+                              ? context.colors.success
+                              : context.colors.danger,
                         ),
-                        const SizedBox(width: 2),
+                        SizedBox(width: 2),
                         Text(
                           trendText!,
                           style: TextStyle(
                             color: isPositiveTrend == true
-                                ? AppColors.success
-                                : AppColors.danger,
+                                ? context.colors.success
+                                : context.colors.danger,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -83,20 +83,20 @@ class KPITile extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 value,
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                       fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.colors.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   height: 1.2,
@@ -105,11 +105,11 @@ class KPITile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (subtitle != null) ...[
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   subtitle!,
-                  style: const TextStyle(
-                    color: AppColors.textMuted,
+                  style: TextStyle(
+                    color: context.colors.textMuted,
                     fontSize: 11,
                   ),
                 ),

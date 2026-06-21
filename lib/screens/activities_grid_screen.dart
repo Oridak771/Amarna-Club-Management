@@ -1,3 +1,4 @@
+import 'package:amarna_club/ui/activity_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,7 +8,7 @@ import 'package:amarna_club/providers/activities_provider.dart';
 import 'package:amarna_club/theme/app_theme.dart';
 
 class ActivitiesGridScreen extends ConsumerStatefulWidget {
-  const ActivitiesGridScreen({super.key});
+  ActivitiesGridScreen({super.key});
 
   @override
   ConsumerState<ActivitiesGridScreen> createState() =>
@@ -44,7 +45,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
         allActivities.where((a) => a.status == ActivityStatus.closed).length;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -69,7 +70,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                   filtered: filtered.length,
                 ),
 
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
 
                 // ── Activity Grid / List ─────────────────────────────
                 Expanded(
@@ -92,14 +93,14 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
           EdgeInsets.fromLTRB(isTablet ? 24 : 16, 16, isTablet ? 16 : 12, 4),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Activites',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0,
@@ -109,7 +110,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                 Text(
                   'Gestion en temps reel',
                   style: TextStyle(
-                    color: AppColors.textMuted,
+                    color: context.colors.textMuted,
                     fontSize: 13,
                     letterSpacing: 0.1,
                   ),
@@ -122,7 +123,7 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
             tooltip: 'Scanner QR/NFC',
             onTap: () => context.push('/scan'),
           ),
-          const SizedBox(width: 6),
+          SizedBox(width: 6),
           _ActionIconButton(
             icon: Icons.notifications_none_rounded,
             tooltip: 'Notifications',
@@ -136,20 +137,20 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
   // ── Search + Filter row ────────────────────────────────────────────────────
   Widget _buildSearchRow(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+      padding: EdgeInsets.fromLTRB(16, 10, 16, 0),
       child: TextField(
         controller: _searchController,
         onChanged: (val) => setState(() => _searchQuery = val),
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+        style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
         decoration: InputDecoration(
           hintText: 'Rechercher une activite…',
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-          prefixIcon: const Icon(Icons.search_rounded,
-              color: AppColors.textMuted, size: 20),
+          hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 14),
+          prefixIcon: Icon(Icons.search_rounded,
+              color: context.colors.textMuted, size: 20),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppColors.textMuted, size: 18),
+                  icon: Icon(Icons.close_rounded,
+                      color: context.colors.textMuted, size: 18),
                   onPressed: () {
                     _searchController.clear();
                     setState(() => _searchQuery = '');
@@ -157,21 +158,21 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                 )
               : null,
           filled: true,
-          fillColor: AppColors.backgroundSecondary,
+          fillColor: context.colors.backgroundSecondary,
           contentPadding:
-              const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
+              EdgeInsets.symmetric(vertical: 0, horizontal: 8),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: BorderSide(color: context.colors.border),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderSide: BorderSide(color: context.colors.border),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide:
-                const BorderSide(color: AppColors.accentPrimary, width: 1.5),
+                BorderSide(color: context.colors.accentPrimary, width: 1.5),
           ),
         ),
       ),
@@ -188,22 +189,22 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
   }) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      padding: EdgeInsets.fromLTRB(16, 14, 16, 8),
       child: Row(
         children: [
           _FilterChip(
             label: 'Toutes',
             count: total,
-            color: AppColors.accentPrimary,
+            color: context.colors.accentPrimary,
             icon: Icons.grid_view_rounded,
             isSelected: _filterStatus == null,
             onTap: () => setState(() => _filterStatus = null),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _FilterChip(
             label: 'Ouvertes',
             count: openCount,
-            color: AppColors.success,
+            color: context.colors.success,
             icon: Icons.check_circle_outline_rounded,
             isSelected: _filterStatus == ActivityStatus.open,
             onTap: () => setState(() => _filterStatus =
@@ -211,11 +212,11 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                     ? null
                     : ActivityStatus.open),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _FilterChip(
             label: 'Alerte',
             count: warningCount,
-            color: AppColors.warning,
+            color: context.colors.warning,
             icon: Icons.warning_amber_rounded,
             isSelected: _filterStatus == ActivityStatus.warning,
             onTap: () => setState(() => _filterStatus =
@@ -223,11 +224,11 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                     ? null
                     : ActivityStatus.warning),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           _FilterChip(
             label: 'Fermees',
             count: closedCount,
-            color: AppColors.danger,
+            color: context.colors.danger,
             icon: Icons.lock_outline_rounded,
             isSelected: _filterStatus == ActivityStatus.closed,
             onTap: () => setState(() => _filterStatus =
@@ -285,31 +286,31 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.backgroundSecondary,
+              color: context.colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.search_off_rounded,
               size: 40,
-              color: AppColors.textMuted,
+              color: context.colors.textMuted,
             ),
           ),
-          const SizedBox(height: 20),
-          const Text(
+          SizedBox(height: 20),
+          Text(
             'Aucune activite trouvée',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             'Essayez de modifier vos filtres',
-            style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+            style: TextStyle(color: context.colors.textMuted, fontSize: 13),
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
           TextButton.icon(
             onPressed: () {
               _searchController.clear();
@@ -318,8 +319,8 @@ class _ActivitiesGridScreenState extends ConsumerState<ActivitiesGridScreen> {
                 _filterStatus = null;
               });
             },
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Reinitialiser'),
+            icon: Icon(Icons.refresh_rounded),
+            label: Text('Reinitialiser'),
           ),
         ],
       ),
@@ -335,7 +336,7 @@ class ActivityCard extends StatefulWidget {
   final Activity activity;
   final VoidCallback? onTap;
 
-  const ActivityCard({super.key, required this.activity, this.onTap});
+  ActivityCard({super.key, required this.activity, this.onTap});
 
   @override
   State<ActivityCard> createState() => _ActivityCardState();
@@ -352,7 +353,7 @@ class _ActivityCardState extends State<ActivityCard>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 150),
+      duration: Duration(milliseconds: 150),
     );
     _scale = Tween<double>(begin: 1.0, end: 0.965).animate(
       CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
@@ -368,7 +369,7 @@ class _ActivityCardState extends State<ActivityCard>
   @override
   Widget build(BuildContext context) {
     final activity = widget.activity;
-    final color = AppColors.getActivityColor(activity.id);
+    final color = resolveActivityColor(context, activity.id);
     final isClosed = activity.status == ActivityStatus.closed;
     final isMaintenance = activity.status == ActivityStatus.maintenance;
     final isUnavailable = isClosed || isMaintenance;
@@ -390,13 +391,13 @@ class _ActivityCardState extends State<ActivityCard>
             return Transform.scale(
               scale: _scale.value,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: Duration(milliseconds: 200),
                 decoration: BoxDecoration(
-                  color: AppColors.backgroundSecondary,
+                  color: context.colors.backgroundSecondary,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isUnavailable
-                        ? AppColors.border
+                        ? context.colors.border
                         : (_isHovered
                             ? color.withValues(alpha: 0.6)
                             : color.withValues(alpha: 0.25)),
@@ -409,7 +410,7 @@ class _ActivityCardState extends State<ActivityCard>
                           : color.withValues(alpha: _isHovered ? 0.18 : 0.06),
                       blurRadius: _isHovered ? 20 : 10,
                       spreadRadius: _isHovered ? 1 : 0,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -428,7 +429,7 @@ class _ActivityCardState extends State<ActivityCard>
                   child: Opacity(
                     opacity: isUnavailable ? 0.04 : 0.07,
                     child: Icon(
-                      activity.iconData,
+                      resolveActivityIcon(activity.iconKey),
                       size: 100,
                       color: color,
                     ),
@@ -445,7 +446,7 @@ class _ActivityCardState extends State<ActivityCard>
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isUnavailable
-                            ? [AppColors.border, AppColors.border]
+                            ? [context.colors.border, context.colors.border]
                             : [
                                 color.withValues(alpha: 0.0),
                                 color.withValues(alpha: 0.8),
@@ -458,7 +459,7 @@ class _ActivityCardState extends State<ActivityCard>
 
                 // ── Main content ─────────────────────────────────────
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 18, 14, 14),
+                  padding: EdgeInsets.fromLTRB(14, 18, 14, 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -477,8 +478,8 @@ class _ActivityCardState extends State<ActivityCard>
                                 end: Alignment.bottomRight,
                                 colors: isUnavailable
                                     ? [
-                                        AppColors.surface,
-                                        AppColors.backgroundElevated,
+                                        context.colors.surface,
+                                        context.colors.backgroundElevated,
                                       ]
                                     : [
                                         color.withValues(alpha: 0.25),
@@ -488,15 +489,15 @@ class _ActivityCardState extends State<ActivityCard>
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
                                 color: isUnavailable
-                                    ? AppColors.border
+                                    ? context.colors.border
                                     : color.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
                             child: Icon(
-                              activity.iconData,
+                              resolveActivityIcon(activity.iconKey),
                               color:
-                                  isUnavailable ? AppColors.textMuted : color,
+                                  isUnavailable ? context.colors.textMuted : color,
                               size: 24,
                             ),
                           ),
@@ -506,15 +507,15 @@ class _ActivityCardState extends State<ActivityCard>
                         ],
                       ),
 
-                      const Spacer(),
+                      Spacer(),
 
                       // Activity name
                       Text(
                         activity.name,
                         style: TextStyle(
                           color: isUnavailable
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
+                              ? context.colors.textSecondary
+                              : context.colors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0,
@@ -524,22 +525,22 @@ class _ActivityCardState extends State<ActivityCard>
                         overflow: TextOverflow.ellipsis,
                       ),
 
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
 
                       // Staff line
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.person_outline_rounded,
                             size: 12,
-                            color: AppColors.textMuted,
+                            color: context.colors.textMuted,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               activity.assignedStaff,
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
+                              style: TextStyle(
+                                color: context.colors.textMuted,
                                 fontSize: 11,
                               ),
                               maxLines: 1,
@@ -549,17 +550,17 @@ class _ActivityCardState extends State<ActivityCard>
                         ],
                       ),
 
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
 
                       // Occupancy section
                       if (!isUnavailable) ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Occupation',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                                 fontSize: 11,
                               ),
                             ),
@@ -573,12 +574,12 @@ class _ActivityCardState extends State<ActivityCard>
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5),
+                        SizedBox(height: 5),
                         _AnimatedProgressBar(
                           value: activity.occupancyPercentage,
                           color: color,
                         ),
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
@@ -598,26 +599,26 @@ class _ActivityCardState extends State<ActivityCard>
                                   ? Icons.build_circle_outlined
                                   : Icons.lock_rounded,
                               size: 12,
-                              color: AppColors.textMuted,
+                              color: context.colors.textMuted,
                             ),
-                            const SizedBox(width: 5),
+                            SizedBox(width: 5),
                             Text(
                               isMaintenance ? 'En maintenance' : 'Acces ferme',
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
+                              style: TextStyle(
+                                color: context.colors.textMuted,
                                 fontSize: 11,
                                 fontStyle: FontStyle.italic,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 5),
-                        const ClipRRect(
+                        SizedBox(height: 5),
+                        ClipRRect(
                           borderRadius: BorderRadius.all(Radius.circular(6)),
                           child: LinearProgressIndicator(
                             value: 0,
                             minHeight: 4,
-                            backgroundColor: AppColors.surface,
+                            backgroundColor: context.colors.surface,
                           ),
                         ),
                       ],
@@ -642,7 +643,7 @@ class _AnimatedProgressBar extends StatefulWidget {
   final double value;
   final Color color;
 
-  const _AnimatedProgressBar({required this.value, required this.color});
+  _AnimatedProgressBar({required this.value, required this.color});
 
   @override
   State<_AnimatedProgressBar> createState() => _AnimatedProgressBarState();
@@ -658,7 +659,7 @@ class _AnimatedProgressBarState extends State<_AnimatedProgressBar>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: Duration(milliseconds: 800),
     );
     _anim = Tween<double>(begin: 0, end: widget.value)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
@@ -674,7 +675,7 @@ class _AnimatedProgressBarState extends State<_AnimatedProgressBar>
   @override
   Widget build(BuildContext context) {
     final isWarning = widget.value > 0.85;
-    final barColor = isWarning ? AppColors.warning : widget.color;
+    final barColor = isWarning ? context.colors.warning : widget.color;
 
     return AnimatedBuilder(
       animation: _anim,
@@ -684,7 +685,7 @@ class _AnimatedProgressBarState extends State<_AnimatedProgressBar>
           child: LinearProgressIndicator(
             value: _anim.value,
             minHeight: 5,
-            backgroundColor: AppColors.surface,
+            backgroundColor: context.colors.surface,
             valueColor: AlwaysStoppedAnimation<Color>(barColor),
           ),
         );
@@ -697,27 +698,27 @@ class _AnimatedProgressBarState extends State<_AnimatedProgressBar>
 class _StatusPill extends StatelessWidget {
   final ActivityStatus status;
 
-  const _StatusPill({required this.status});
+  _StatusPill({required this.status});
 
   @override
   Widget build(BuildContext context) {
     final (label, color, icon) = switch (status) {
-      ActivityStatus.open => ('Ouvert', AppColors.success, Icons.circle),
+      ActivityStatus.open => ('Ouvert', context.colors.success, Icons.circle),
       ActivityStatus.warning => (
           'Alerte',
-          AppColors.warning,
+          context.colors.warning,
           Icons.warning_rounded
         ),
-      ActivityStatus.closed => ('Fermé', AppColors.danger, Icons.lock_rounded),
+      ActivityStatus.closed => ('Fermé', context.colors.danger, Icons.lock_rounded),
       ActivityStatus.maintenance => (
           'Maintenance',
-          AppColors.info,
+          context.colors.info,
           Icons.build_rounded
         ),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
@@ -727,7 +728,7 @@ class _StatusPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 7, color: color),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
@@ -752,7 +753,7 @@ class _FilterChip extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
-  const _FilterChip({
+  _FilterChip({
     required this.label,
     required this.count,
     required this.color,
@@ -766,16 +767,16 @@ class _FilterChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: Duration(milliseconds: 200),
         curve: Curves.easeOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
               ? color.withValues(alpha: 0.16)
-              : AppColors.backgroundSecondary,
+              : context.colors.backgroundSecondary,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? color : AppColors.border,
+            color: isSelected ? color : context.colors.border,
             width: isSelected ? 1.5 : 1,
           ),
           boxShadow: isSelected
@@ -783,7 +784,7 @@ class _FilterChip extends StatelessWidget {
                   BoxShadow(
                     color: color.withValues(alpha: 0.2),
                     blurRadius: 8,
-                    offset: const Offset(0, 2),
+                    offset: Offset(0, 2),
                   )
                 ]
               : [],
@@ -794,30 +795,30 @@ class _FilterChip extends StatelessWidget {
             Icon(
               icon,
               size: 13,
-              color: isSelected ? color : AppColors.textMuted,
+              color: isSelected ? color : context.colors.textMuted,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : AppColors.textSecondary,
+                color: isSelected ? color : context.colors.textSecondary,
                 fontSize: 12.5,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),
             ),
             if (count > 0) ...[
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                duration: Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                 decoration: BoxDecoration(
-                  color: isSelected ? color : AppColors.surface,
+                  color: isSelected ? color : context.colors.surface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   '$count',
                   style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.textMuted,
+                    color: isSelected ? Colors.white : context.colors.textMuted,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
@@ -837,7 +838,7 @@ class _ActionIconButton extends StatelessWidget {
   final String tooltip;
   final VoidCallback onTap;
 
-  const _ActionIconButton({
+  _ActionIconButton({
     required this.icon,
     required this.tooltip,
     required this.onTap,
@@ -848,7 +849,7 @@ class _ActionIconButton extends StatelessWidget {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: AppColors.backgroundSecondary,
+        color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -858,9 +859,9 @@ class _ActionIconButton extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
-            child: Icon(icon, color: AppColors.textPrimary, size: 20),
+            child: Icon(icon, color: context.colors.textPrimary, size: 20),
           ),
         ),
       ),

@@ -34,7 +34,7 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
           name: 'Terrain 1 (Intérieur)',
           status: 'Occupé',
           sessionStartTime:
-              DateTime.now().subtract(const Duration(minutes: 45))),
+              DateTime.now().subtract(Duration(minutes: 45))),
       PadelCourt(id: 'c2', name: 'Terrain 2 (Intérieur)', status: 'Disponible'),
       PadelCourt(id: 'c3', name: 'Terrain 3 (Extérieur)', status: 'Disponible'),
       PadelCourt(
@@ -59,14 +59,14 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Terrains de Padel'),
+        title: Text('Terrains de Padel'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.calendar_month),
+            icon: Icon(Icons.calendar_month),
             onPressed: () => context.push('/plus/reservations'),
             tooltip: 'Réservations',
           ),
@@ -79,7 +79,7 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
               : (constraints.maxWidth > 600 ? 2 : 1);
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(16.0),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               childAspectRatio: 1.2,
@@ -101,15 +101,15 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
     Color statusColor;
 
     if (court.status == 'Disponible') {
-      statusColor = AppColors.success;
+      statusColor = context.colors.success;
     } else if (court.status == 'Occupé') {
-      statusColor = AppColors.padel;
+      statusColor = context.colors.padel;
     } else {
-      statusColor = AppColors.warning;
+      statusColor = context.colors.warning;
     }
 
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       clipBehavior: Clip.antiAlias,
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -123,22 +123,22 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
           // Header
           Container(
             color: statusColor.withValues(alpha: 0.1),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
                   child: Text(
                     court.name,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
+                    style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                       color: statusColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8)),
@@ -155,32 +155,32 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
           // Body
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (court.status == 'Occupé' &&
                       court.sessionStartTime != null) ...[
-                    const Icon(Icons.timer, color: AppColors.padel, size: 32),
-                    const SizedBox(height: 8),
+                    Icon(Icons.timer, color: context.colors.padel, size: 32),
+                    SizedBox(height: 8),
                     Text(
                       'En cours depuis ${DateTime.now().difference(court.sessionStartTime!).inMinutes} min',
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 14),
+                      style: TextStyle(
+                          color: context.colors.textSecondary, fontSize: 14),
                     ),
                   ] else if (court.status == 'Disponible') ...[
-                    const Icon(Icons.check_circle_outline,
-                        color: AppColors.success, size: 32),
-                    const SizedBox(height: 8),
-                    const Text('Prêt pour une session',
+                    Icon(Icons.check_circle_outline,
+                        color: context.colors.success, size: 32),
+                    SizedBox(height: 8),
+                    Text('Prêt pour une session',
                         style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 14)),
+                            color: context.colors.textSecondary, fontSize: 14)),
                   ] else ...[
-                    const Icon(Icons.build, color: AppColors.warning, size: 32),
-                    const SizedBox(height: 8),
-                    const Text('Intervention nécessaire',
+                    Icon(Icons.build, color: context.colors.warning, size: 32),
+                    SizedBox(height: 8),
+                    Text('Intervention nécessaire',
                         style: TextStyle(
-                            color: AppColors.textSecondary, fontSize: 14)),
+                            color: context.colors.textSecondary, fontSize: 14)),
                   ],
                 ],
               ),
@@ -191,46 +191,46 @@ class _PadelCourtsScreenState extends State<PadelCourtsScreen> {
           if (court.status != 'Maintenance')
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: court.status == 'Disponible'
-                      ? AppColors.padel
-                      : AppColors.surface,
+                      ? context.colors.padel
+                      : context.colors.surface,
                   foregroundColor: court.status == 'Disponible'
                       ? Colors.white
-                      : AppColors.textPrimary,
+                      : context.colors.textPrimary,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () => _toggleSession(index),
                 child: Text(
                   court.status == 'Disponible'
                       ? 'Démarrer Session'
                       : 'Terminer Session',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
             )
           else
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.warning.withValues(alpha: 0.2),
-                  foregroundColor: AppColors.warning,
+                  backgroundColor: context.colors.warning.withValues(alpha: 0.2),
+                  foregroundColor: context.colors.warning,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: () {
                   setState(() {
                     court.status = 'Disponible';
                   });
                 },
-                child: const Text(
+                child: Text(
                   'Marquer Réparé',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),

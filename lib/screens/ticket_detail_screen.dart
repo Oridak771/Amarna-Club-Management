@@ -10,7 +10,7 @@ import '../widgets/priority_indicator.dart';
 
 class TicketDetailScreen extends ConsumerWidget {
   final String id;
-  const TicketDetailScreen({super.key, required this.id});
+  TicketDetailScreen({super.key, required this.id});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,7 +46,7 @@ class TicketDetailScreen extends ConsumerWidget {
             : 'Détail Maintenance'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
           ),
         ],
@@ -54,9 +54,9 @@ class TicketDetailScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
+            constraints: BoxConstraints(maxWidth: 800),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -64,40 +64,40 @@ class TicketDetailScreen extends ConsumerWidget {
                   PriorityIndicator(
                     priority: ticket.priority,
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              _buildTypeBadge(ticket),
-                              _buildStatusBadge(ticket),
+                              _buildTypeBadge(context, ticket),
+                              _buildStatusBadge(context, ticket),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text(
                             ticket.title,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          SizedBox(height: 8),
                           Text(
                             'Activité : ${ticket.activityName}',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                               fontSize: 14,
                             ),
                           ),
                           if (ticket.assetName != null) ...[
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(
                               'Équipement : ${ticket.assetName}',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -108,67 +108,67 @@ class TicketDetailScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Detail section
-                  const Text(
+                  Text(
                     'Détails du ticket',
                     style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundSecondary,
+                      color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Description',
                           style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 12),
+                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
                           ticket.description.isNotEmpty
                               ? ticket.description
                               : 'Aucune description fournie.',
-                          style: const TextStyle(
-                              color: AppColors.textPrimary,
+                          style: TextStyle(
+                              color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                               fontSize: 14,
                               height: 1.4),
                         ),
-                        const Divider(height: 24, color: AppColors.border),
+                        Divider(height: 24, color: Theme.of(context).extension<AppSemanticColors>()!.border),
                         Row(
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'Date de création',
                                     style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                         fontSize: 12),
                                   ),
-                                  const SizedBox(height: 6),
+                                  SizedBox(height: 6),
                                   Row(
                                     children: [
-                                      const Icon(Icons.calendar_today,
+                                      Icon(Icons.calendar_today,
                                           size: 14,
-                                          color: AppColors.textSecondary),
-                                      const SizedBox(width: 6),
+                                          color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary),
+                                      SizedBox(width: 6),
                                       Text(
                                         createdDateStr,
-                                        style: const TextStyle(
-                                            color: AppColors.textPrimary,
+                                        style: TextStyle(
+                                            color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                                             fontSize: 13),
                                       ),
                                     ],
@@ -185,28 +185,28 @@ class TicketDetailScreen extends ConsumerWidget {
                                       'Échéance',
                                       style: TextStyle(
                                         color: isOverdue
-                                            ? AppColors.danger
-                                            : AppColors.textSecondary,
+                                            ? Theme.of(context).extension<AppSemanticColors>()!.danger
+                                            : Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                         fontSize: 12,
                                       ),
                                     ),
-                                    const SizedBox(height: 6),
+                                    SizedBox(height: 6),
                                     Row(
                                       children: [
                                         Icon(
                                           Icons.access_alarm,
                                           size: 14,
                                           color: isOverdue
-                                              ? AppColors.danger
-                                              : AppColors.textSecondary,
+                                              ? Theme.of(context).extension<AppSemanticColors>()!.danger
+                                              : Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                         ),
-                                        const SizedBox(width: 6),
+                                        SizedBox(width: 6),
                                         Text(
                                           dueDateStr,
                                           style: TextStyle(
                                             color: isOverdue
-                                                ? AppColors.danger
-                                                : AppColors.textPrimary,
+                                                ? Theme.of(context).extension<AppSemanticColors>()!.danger
+                                                : Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                                             fontSize: 13,
                                             fontWeight: isOverdue
                                                 ? FontWeight.bold
@@ -220,24 +220,24 @@ class TicketDetailScreen extends ConsumerWidget {
                               ),
                           ],
                         ),
-                        const Divider(height: 24, color: AppColors.border),
-                        const Text(
+                        Divider(height: 24, color: Theme.of(context).extension<AppSemanticColors>()!.border),
+                        Text(
                           'Technicien assigné',
                           style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 12),
+                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(Icons.person_outline,
-                                size: 16, color: AppColors.textSecondary),
-                            const SizedBox(width: 8),
+                            Icon(Icons.person_outline,
+                                size: 16, color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary),
+                            SizedBox(width: 8),
                             Text(
                               ticket.assignedTechnician ?? 'Non assigné',
                               style: TextStyle(
                                 color: ticket.assignedTechnician != null
-                                    ? AppColors.textPrimary
-                                    : AppColors.textMuted,
+                                    ? Theme.of(context).extension<AppSemanticColors>()!.textPrimary
+                                    : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                                 fontSize: 14,
                                 fontStyle: ticket.assignedTechnician != null
                                     ? FontStyle.normal
@@ -250,26 +250,26 @@ class TicketDetailScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Media attachments (photos / voice)
                   if (ticket.imageUrl != null ||
                       ticket.voiceNoteUrl != null) ...[
-                    const Text(
+                    Text(
                       'Pièces jointes',
                       style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.all(12),
+                      padding: EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.backgroundSecondary,
+                        color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +280,7 @@ class TicketDetailScreen extends ConsumerWidget {
                               child: Container(
                                 height: 180,
                                 width: double.infinity,
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                   image: DecorationImage(
                                     image: AssetImage(
                                         'assets/images/placeholder_pool.jpg'),
@@ -289,24 +289,24 @@ class TicketDetailScreen extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 12),
+                            SizedBox(height: 12),
                           ],
                           if (ticket.voiceNoteUrl != null)
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.surface,
+                                color: Theme.of(context).extension<AppSemanticColors>()!.surface,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Row(
                                 children: [
                                   IconButton(
-                                    icon: const Icon(Icons.play_circle_outline,
-                                        color: AppColors.success, size: 32),
+                                    icon: Icon(Icons.play_circle_outline,
+                                        color: Theme.of(context).extension<AppSemanticColors>()!.success, size: 32),
                                     onPressed: () {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
                                               'Lecture de la note vocale...'),
                                           duration: Duration(seconds: 1),
@@ -314,20 +314,20 @@ class TicketDetailScreen extends ConsumerWidget {
                                       );
                                     },
                                   ),
-                                  const SizedBox(width: 8),
-                                  const Expanded(
+                                  SizedBox(width: 8),
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text('Note vocale.mp3',
                                             style: TextStyle(
-                                                color: AppColors.textPrimary,
+                                                color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                                                 fontSize: 13)),
                                         SizedBox(height: 4),
                                         Text('Durée : 0:14',
                                             style: TextStyle(
-                                                color: AppColors.textSecondary,
+                                                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                                 fontSize: 11)),
                                       ],
                                     ),
@@ -338,7 +338,7 @@ class TicketDetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                   ],
 
                   // Action Buttons based on status
@@ -351,13 +351,13 @@ class TicketDetailScreen extends ConsumerWidget {
                               height: 48,
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.warning,
+                                  backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.warning,
                                   foregroundColor: Colors.black,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: const Icon(Icons.play_arrow),
-                                label: const Text('Prendre en charge',
+                                icon: Icon(Icons.play_arrow),
+                                label: Text('Prendre en charge',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
                                 onPressed: () {
@@ -366,7 +366,7 @@ class TicketDetailScreen extends ConsumerWidget {
                                       .updateTicketStatus(
                                           ticket.id, TicketStatus.inProgress);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                         content: Text(
                                             'Ticket pris en charge (En cours) ✓')),
                                   );
@@ -380,17 +380,17 @@ class TicketDetailScreen extends ConsumerWidget {
                               height: 48,
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.success,
+                                  backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.success,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: const Icon(Icons.check),
+                                icon: Icon(Icons.check),
                                 label: Text(
                                     ticket.type == TicketType.anomaly
                                         ? 'Résoudre'
                                         : 'Terminer',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontWeight: FontWeight.bold)),
                                 onPressed: () {
                                   ref
@@ -398,7 +398,7 @@ class TicketDetailScreen extends ConsumerWidget {
                                       .updateTicketStatus(
                                           ticket.id, TicketStatus.resolved);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                         content: Text(
                                             'Ticket résolu avec succès ✓')),
                                   );
@@ -409,19 +409,19 @@ class TicketDetailScreen extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    SizedBox(height: 24),
                   ],
 
                   // Event Log Timeline (Odoo style)
-                  const Text(
+                  Text(
                     'Historique d\'intervention',
                     style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
-                  _buildTimeline(ticket),
+                  SizedBox(height: 12),
+                  _buildTimeline(context, ticket),
                 ],
               ),
             ),
@@ -431,17 +431,17 @@ class TicketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTypeBadge(WorkTicket ticket) {
+  Widget _buildTypeBadge(BuildContext context, WorkTicket ticket) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: ticket.typeColor.withValues(alpha: 0.15),
+        color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         ticket.typeTextFrench,
         style: TextStyle(
-          color: ticket.typeColor,
+          color: ticket.type.resolveColor(context),
           fontSize: 11,
           fontWeight: FontWeight.bold,
         ),
@@ -449,17 +449,17 @@ class TicketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusBadge(WorkTicket ticket) {
+  Widget _buildStatusBadge(BuildContext context, WorkTicket ticket) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: ticket.statusColor.withValues(alpha: 0.15),
+        color: ticket.status.resolveColor(context).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         ticket.statusTextFrench,
         style: TextStyle(
-          color: ticket.statusColor,
+          color: ticket.status.resolveColor(context),
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
@@ -467,21 +467,21 @@ class TicketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTimeline(WorkTicket ticket) {
+  Widget _buildTimeline(BuildContext context, WorkTicket ticket) {
     final bool hasStarted = ticket.status == TicketStatus.inProgress ||
         ticket.status == TicketStatus.resolved;
     final bool hasResolved = ticket.status == TicketStatus.resolved;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
       ),
       child: Column(
         children: [
-          _buildTimelineItem(
+          _buildTimelineItem(context: context, 
             title: 'Création du ticket',
             time: DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated),
             subtitle: 'Ticket signalé par l\'opérateur',
@@ -489,17 +489,17 @@ class TicketDetailScreen extends ConsumerWidget {
             isLast: !hasStarted,
           ),
           if (hasStarted)
-            _buildTimelineItem(
+            _buildTimelineItem(context: context, 
               title: 'Pris en charge',
               time: DateFormat('dd/MM/yyyy à HH:mm')
-                  .format(ticket.dateCreated.add(const Duration(minutes: 15))),
+                  .format(ticket.dateCreated.add(Duration(minutes: 15))),
               subtitle:
                   'Assigné à ${ticket.assignedTechnician ?? "Karim (Technicien)"}',
               isActive: true,
               isLast: !hasResolved,
             ),
           if (hasResolved)
-            _buildTimelineItem(
+            _buildTimelineItem(context: context, 
               title: ticket.type == TicketType.anomaly ? 'Résolu' : 'Terminé',
               time: DateFormat('dd/MM/yyyy à HH:mm')
                   .format(ticket.dateCompleted ?? DateTime.now()),
@@ -512,7 +512,7 @@ class TicketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTimelineItem({
+  Widget _buildTimelineItem({required BuildContext context, 
     required String title,
     required String time,
     required String subtitle,
@@ -528,7 +528,7 @@ class TicketDetailScreen extends ConsumerWidget {
               width: 14,
               height: 14,
               decoration: BoxDecoration(
-                color: isActive ? AppColors.success : AppColors.textMuted,
+                color: isActive ? Theme.of(context).extension<AppSemanticColors>()!.success : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                 shape: BoxShape.circle,
               ),
             ),
@@ -537,12 +537,12 @@ class TicketDetailScreen extends ConsumerWidget {
                 width: 2,
                 height: 40,
                 color: isActive
-                    ? AppColors.success.withValues(alpha: 0.5)
-                    : AppColors.border,
+                    ? Theme.of(context).extension<AppSemanticColors>()!.success.withValues(alpha: 0.5)
+                    : Theme.of(context).extension<AppSemanticColors>()!.border,
               ),
           ],
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,20 +551,20 @@ class TicketDetailScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          color: AppColors.textPrimary,
+                      style: TextStyle(
+                          color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                           fontSize: 13,
                           fontWeight: FontWeight.bold)),
                   Text(time,
-                      style: const TextStyle(
-                          color: AppColors.textMuted, fontSize: 11)),
+                      style: TextStyle(
+                          color: Theme.of(context).extension<AppSemanticColors>()!.textMuted, fontSize: 11)),
                 ],
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(subtitle,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 12)),
-              const SizedBox(height: 16),
+                  style: TextStyle(
+                      color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12)),
+              SizedBox(height: 16),
             ],
           ),
         ),

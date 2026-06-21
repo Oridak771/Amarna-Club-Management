@@ -29,20 +29,20 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              backgroundColor: AppColors.backgroundSecondary,
+              backgroundColor: context.colors.backgroundSecondary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: AppColors.border, width: 1.5),
+                side: BorderSide(color: context.colors.border, width: 1.5),
               ),
-              title: const Row(
+              title: Row(
                 children: [
-                  Icon(Icons.warning, color: AppColors.warning),
+                  Icon(Icons.warning, color: context.colors.warning),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Signaler un Problème',
                       style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold),
                     ),
@@ -56,42 +56,42 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                   children: [
                     Text(
                       item.title,
-                      style: const TextStyle(
-                          color: AppColors.textPrimary,
+                      style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontWeight: FontWeight.w500),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     TextField(
                       controller: commentController,
                       maxLines: 3,
-                      style: const TextStyle(color: AppColors.textPrimary),
+                      style: TextStyle(color: context.colors.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'Décrivez le problème...',
-                        hintStyle: const TextStyle(color: AppColors.textMuted),
+                        hintStyle: TextStyle(color: context.colors.textMuted),
                         filled: true,
-                        fillColor: AppColors.surface,
+                        fillColor: context.colors.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderSide: BorderSide(color: context.colors.border),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide:
-                              const BorderSide(color: AppColors.accentPrimary),
+                              BorderSide(color: context.colors.accentPrimary),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     // Simulated photo capture
                     if (item.requiresPhoto && simulatedPhotoPath == null) ...[
-                      const Text(
+                      Text(
                         'Photo obligatoire *',
                         style: TextStyle(
-                            color: AppColors.danger,
+                            color: context.colors.danger,
                             fontSize: 12,
                             fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                     ],
                     SizedBox(
                       width: double.infinity,
@@ -100,8 +100,8 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(
                             color: simulatedPhotoPath != null
-                                ? AppColors.success
-                                : AppColors.border,
+                                ? context.colors.success
+                                : context.colors.border,
                           ),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
@@ -111,8 +111,8 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                               ? Icons.check
                               : Icons.camera_alt,
                           color: simulatedPhotoPath != null
-                              ? AppColors.success
-                              : AppColors.info,
+                              ? context.colors.success
+                              : context.colors.info,
                         ),
                         label: Text(
                           simulatedPhotoPath != null
@@ -120,8 +120,8 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                               : 'Prendre une photo',
                           style: TextStyle(
                             color: simulatedPhotoPath != null
-                                ? AppColors.success
-                                : AppColors.textPrimary,
+                                ? context.colors.success
+                                : context.colors.textPrimary,
                           ),
                         ),
                         onPressed: () {
@@ -138,13 +138,13 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
               ),
               actions: [
                 TextButton(
-                  child: const Text('Annuler',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                  child: Text('Annuler',
+                      style: TextStyle(color: context.colors.textSecondary)),
                   onPressed: () => Navigator.of(context).pop(null),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.warning,
+                    backgroundColor: context.colors.warning,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
@@ -157,7 +157,7 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                             'photoPath': simulatedPhotoPath ?? '',
                           });
                         },
-                  child: const Text('Signaler'),
+                  child: Text('Signaler'),
                 ),
               ],
             );
@@ -176,10 +176,10 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
 
     if (activityChecklists.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Checklist')),
-        body: const Center(
+        appBar: AppBar(title: Text('Checklist')),
+        body: Center(
           child: Text('Aucune inspection configurée pour cette activité.',
-              style: TextStyle(color: AppColors.textSecondary)),
+              style: TextStyle(color: context.colors.textSecondary)),
         ),
       );
     }
@@ -209,14 +209,14 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contrôle Journalier'),
+        title: Text('Contrôle Journalier'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
         child: Column(
           children: [
             // Progress Section
@@ -225,29 +225,29 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
               children: [
                 Text(
                   'Progression : $completedCount / ${activityChecklists.length}',
-                  style: const TextStyle(
-                      color: AppColors.textSecondary,
+                  style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 14,
                       fontWeight: FontWeight.w500),
                 ),
                 Text(
                   '${(progress * 100).toInt()}%',
-                  style: const TextStyle(
-                      color: AppColors.textPrimary,
+                  style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
-                backgroundColor: AppColors.surface,
+                backgroundColor: context.colors.surface,
                 valueColor:
-                    const AlwaysStoppedAnimation<Color>(AppColors.success),
+                    AlwaysStoppedAnimation<Color>(context.colors.success),
               ),
             ),
             const Spacer(),
@@ -255,7 +255,7 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
             // Swipe Stack Card
             Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 500),
+                constraints: BoxConstraints(maxWidth: 500),
                 child: SwipeCard(
                   key: ValueKey(currentItem.id),
                   title: currentItem.title,
@@ -295,12 +295,12 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildSwipeHint(
-                    Icons.arrow_back, '⚠️ PROBLÈME', AppColors.warning),
+                    Icons.arrow_back, '⚠️ PROBLÈME', context.colors.warning),
                 _buildSwipeHint(
-                    Icons.arrow_forward, '✅ TERMINÉ', AppColors.success),
+                    Icons.arrow_forward, '✅ TERMINÉ', context.colors.success),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       ),
@@ -309,7 +309,7 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
 
   Widget _buildSwipeHint(IconData icon, String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(30),
@@ -320,7 +320,7 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
         children: [
           if (icon == Icons.arrow_back) ...[
             Icon(icon, color: color, size: 16),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
           ],
           Text(
             label,
@@ -328,7 +328,7 @@ class _ChecklistSwipeScreenState extends ConsumerState<ChecklistSwipeScreen> {
                 color: color, fontSize: 12, fontWeight: FontWeight.bold),
           ),
           if (icon == Icons.arrow_forward) ...[
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Icon(icon, color: color, size: 16),
           ],
         ],

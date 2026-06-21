@@ -1,3 +1,5 @@
+import 'package:amarna_club/ui/ticket_ui_adapter.dart';
+import 'package:amarna_club/ui/asset_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -31,40 +33,40 @@ class AssetProfileScreen extends ConsumerWidget {
 
     if (isNotFound) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Profil Équipement')),
+        appBar: AppBar(title: Text('Profil Équipement')),
         body: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.warning_amber_rounded,
-                    size: 64, color: AppColors.danger),
-                const SizedBox(height: 16),
-                const Text(
+                Icon(Icons.warning_amber_rounded,
+                    size: 64, color: context.colors.danger),
+                SizedBox(height: 16),
+                Text(
                   'Équipement introuvable',
                   style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   'Le code "$id" ne correspond à aucun équipement enregistré.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(color: context.colors.textSecondary),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentPrimary,
+                    backgroundColor: context.colors.accentPrimary,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(200, 48),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Scanner à nouveau'),
+                  icon: Icon(Icons.qr_code_scanner),
+                  label: Text('Scanner à nouveau'),
                   onPressed: () => context.pushReplacement('/scan'),
                 ),
               ],
@@ -96,7 +98,7 @@ class AssetProfileScreen extends ConsumerWidget {
             ? TimelineEventType.incident
             : TimelineEventType.maintenance,
         statusLabel: ticket.statusTextFrench,
-        color: ticket.statusColor,
+        color: ticket.status.resolveColor(context),
       ));
     }
 
@@ -110,17 +112,17 @@ class AssetProfileScreen extends ConsumerWidget {
               'Maintenance préventive de routine approuvée et finalisée.',
           type: TimelineEventType.maintenance,
           statusLabel: 'Terminé',
-          color: AppColors.success,
+          color: context.colors.success,
         ));
       }
       events.add(TimelineEvent(
-        date: DateTime.now().subtract(const Duration(days: 60)),
+        date: DateTime.now().subtract(Duration(days: 60)),
         title: 'Mise en service de l\'équipement',
         description:
             'Installation initiale et configuration des paramètres de fonctionnement.',
         type: TimelineEventType.system,
         statusLabel: 'Actif',
-        color: AppColors.success,
+        color: context.colors.success,
       ));
     }
 
@@ -131,17 +133,17 @@ class AssetProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fiche Équipement'),
+        title: Text('Fiche Équipement'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            padding: const EdgeInsets.all(16.0),
+            constraints: BoxConstraints(maxWidth: 800),
+            padding: EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -149,16 +151,16 @@ class AssetProfileScreen extends ConsumerWidget {
                 Container(
                   height: 180,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [
-                        AppColors.surface,
-                        AppColors.backgroundSecondary,
+                        context.colors.surface,
+                        context.colors.backgroundSecondary,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border, width: 1.5),
+                    border: Border.all(color: context.colors.border, width: 1.5),
                   ),
                   child: Stack(
                     children: [
@@ -170,13 +172,13 @@ class AssetProfileScreen extends ConsumerWidget {
                             Icon(
                               _getCategoryIcon(asset.category),
                               size: 56,
-                              color: asset.statusColor.withValues(alpha: 0.8),
+                              color: asset.status.resolveColor(context).withValues(alpha: 0.8),
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Text(
                               asset.category,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -189,18 +191,18 @@ class AssetProfileScreen extends ConsumerWidget {
                         top: 16,
                         right: 16,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: asset.statusColor.withValues(alpha: 0.15),
+                            color: asset.status.resolveColor(context).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(20),
                             border:
-                                Border.all(color: asset.statusColor, width: 1),
+                                Border.all(color: asset.status.resolveColor(context), width: 1),
                           ),
                           child: Text(
                             asset.statusTextFrench.toUpperCase(),
                             style: TextStyle(
-                              color: asset.statusColor,
+                              color: asset.status.resolveColor(context),
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -210,66 +212,66 @@ class AssetProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
 
                 // 2. Asset Name & ID Strip
                 Text(
                   asset.name,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   'SN: ${asset.serialNumber}  •  ID: ${asset.id}',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 13,
                   ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // 3. Technical Specs Matrix
                 if (asset.technicalSpecs != null &&
                     asset.technicalSpecs!.isNotEmpty) ...[
-                  const Text(
+                  Text(
                     'Spécifications Techniques',
                     style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundSecondary,
+                      color: context.colors.backgroundSecondary,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(color: context.colors.border),
                     ),
                     child: ListView.separated(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: asset.technicalSpecs!.length,
                       separatorBuilder: (context, index) =>
-                          const Divider(color: AppColors.border, height: 1),
+                          Divider(color: context.colors.border, height: 1),
                       itemBuilder: (context, index) {
                         final entry =
                             asset.technicalSpecs!.entries.elementAt(index);
                         return Padding(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(entry.key,
-                                  style: const TextStyle(
-                                      color: AppColors.textSecondary,
+                                  style: TextStyle(
+                                      color: context.colors.textSecondary,
                                       fontSize: 14)),
                               Text(entry.value,
-                                  style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                  style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500)),
                             ],
@@ -278,7 +280,7 @@ class AssetProfileScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
                 ],
 
                 // 4. Maintenance Dates Strip
@@ -295,7 +297,7 @@ class AssetProfileScreen extends ConsumerWidget {
                         Icons.settings_backup_restore,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: _buildDateTile(
                         context,
@@ -309,17 +311,17 @@ class AssetProfileScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
 
                 // 5. Quick Actions Row (glove-friendly minimum touch bounds)
-                const Text(
+                Text(
                   'Actions Rapides',
                   style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 500;
@@ -331,7 +333,7 @@ class AssetProfileScreen extends ConsumerWidget {
                           context,
                           'Signaler Problème',
                           Icons.warning_amber_rounded,
-                          AppColors.danger,
+                          context.colors.danger,
                           width: isWide
                               ? (constraints.maxWidth - 24) / 3
                               : double.infinity,
@@ -346,7 +348,7 @@ class AssetProfileScreen extends ConsumerWidget {
                           context,
                           'Créer Maintenance',
                           Icons.build_outlined,
-                          AppColors.info,
+                          context.colors.info,
                           width: isWide
                               ? (constraints.maxWidth - 24) / 3
                               : double.infinity,
@@ -361,7 +363,7 @@ class AssetProfileScreen extends ConsumerWidget {
                           context,
                           'Modifier Statut',
                           Icons.sync_alt,
-                          AppColors.warning,
+                          context.colors.warning,
                           width: isWide
                               ? (constraints.maxWidth - 24) / 3
                               : double.infinity,
@@ -372,19 +374,19 @@ class AssetProfileScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
 
                 // 6. Chronological Events Timeline
-                const Text(
+                Text(
                   'Historique de l\'équipement',
                   style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 _buildTimelineList(events, dateFormat),
-                const SizedBox(height: 32),
+                SizedBox(height: 32),
               ],
             ),
           ),
@@ -396,27 +398,27 @@ class AssetProfileScreen extends ConsumerWidget {
   Widget _buildDateTile(
       BuildContext context, String label, String value, IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.textSecondary, size: 20),
-          const SizedBox(width: 12),
+          Icon(icon, color: context.colors.textSecondary, size: 20),
+          SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary, fontSize: 11)),
-                const SizedBox(height: 4),
+                    style: TextStyle(
+                        color: context.colors.textSecondary, fontSize: 11)),
+                SizedBox(height: 4),
                 Text(value,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary,
+                    style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold)),
               ],
@@ -440,7 +442,7 @@ class AssetProfileScreen extends ConsumerWidget {
       height: 52, // glove friendly minimum 48px touch bound
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.backgroundSecondary,
+          backgroundColor: context.colors.backgroundSecondary,
           foregroundColor: color,
           elevation: 0,
           shape: RoundedRectangleBorder(
@@ -451,8 +453,8 @@ class AssetProfileScreen extends ConsumerWidget {
         icon: Icon(icon, size: 20),
         label: Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: context.colors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -493,8 +495,8 @@ class AssetProfileScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, Asset asset) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundSecondary,
-      shape: const RoundedRectangleBorder(
+      backgroundColor: context.colors.backgroundSecondary,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -503,39 +505,39 @@ class AssetProfileScreen extends ConsumerWidget {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     'Modifier le statut de l\'équipement',
                     style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
-                const Divider(color: AppColors.border, height: 1),
+                Divider(color: context.colors.border, height: 1),
                 _buildStatusSelectionRow(context, ref, asset,
-                    AssetStatus.available, 'Disponible', AppColors.success),
+                    AssetStatus.available, 'Disponible', context.colors.success),
                 _buildStatusSelectionRow(context, ref, asset, AssetStatus.inUse,
-                    'En utilisation', AppColors.info),
+                    'En utilisation', context.colors.info),
                 _buildStatusSelectionRow(
                     context,
                     ref,
                     asset,
                     AssetStatus.maintenance,
                     'En maintenance',
-                    AppColors.warning),
+                    context.colors.warning),
                 _buildStatusSelectionRow(
                     context,
                     ref,
                     asset,
                     AssetStatus.broken,
                     'Hors-service / En panne',
-                    AppColors.danger),
+                    context.colors.danger),
               ],
             ),
           ),
@@ -566,7 +568,7 @@ class AssetProfileScreen extends ConsumerWidget {
       },
       child: Container(
         height: 52, // glove friendly minimum 48px
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -578,13 +580,13 @@ class AssetProfileScreen extends ConsumerWidget {
                   decoration:
                       BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Text(
                   label,
                   style: TextStyle(
                     color: isSelected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
+                        ? context.colors.textPrimary
+                        : context.colors.textSecondary,
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                     fontSize: 15,
@@ -593,7 +595,7 @@ class AssetProfileScreen extends ConsumerWidget {
               ],
             ),
             if (isSelected)
-              const Icon(Icons.check, color: AppColors.accentPrimary),
+              Icon(Icons.check, color: context.colors.accentPrimary),
           ],
         ),
       ),
@@ -636,22 +638,22 @@ class AssetProfileScreen extends ConsumerWidget {
                   Container(
                     width: 2,
                     height: 80,
-                    color: AppColors.border,
+                    color: context.colors.border,
                   ),
               ],
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
 
             // Card content
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 24.0),
+                padding: EdgeInsets.only(bottom: 24.0),
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundSecondary,
+                    color: context.colors.backgroundSecondary,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,15 +664,15 @@ class AssetProfileScreen extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               ev.title,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: ev.color.withValues(alpha: 0.1),
@@ -686,18 +688,18 @@ class AssetProfileScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         dateFormat.format(ev.date),
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 11),
+                        style: TextStyle(
+                            color: context.colors.textMuted, fontSize: 11),
                       ),
                       if (ev.description.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           ev.description,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13),
+                          style: TextStyle(
+                              color: context.colors.textSecondary, fontSize: 13),
                         ),
                       ],
                     ],

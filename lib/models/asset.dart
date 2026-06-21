@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'dart:convert';
-import '../theme/app_theme.dart';
 
 part 'asset.g.dart';
 
@@ -74,20 +72,6 @@ class Asset {
         return "En maintenance";
       case AssetStatus.broken:
         return "Hors-service";
-    }
-  }
-
-  @ignore
-  Color get statusColor {
-    switch (status) {
-      case AssetStatus.available:
-        return AppColors.success;
-      case AssetStatus.inUse:
-        return AppColors.info;
-      case AssetStatus.maintenance:
-        return AppColors.warning;
-      case AssetStatus.broken:
-        return AppColors.danger;
     }
   }
 }

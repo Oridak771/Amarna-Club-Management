@@ -35,9 +35,9 @@ class HorseGridScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grille des Chevaux'),
+        title: Text('Grille des Chevaux'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
@@ -48,7 +48,7 @@ class HorseGridScreen extends StatelessWidget {
               : (constraints.maxWidth > 600 ? 3 : 2);
 
           return GridView.builder(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(16.0),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               childAspectRatio: 0.75,
@@ -69,20 +69,20 @@ class HorseGridScreen extends StatelessWidget {
   Widget _buildHorseCard(BuildContext context, Horse horse) {
     Color statusColor;
     if (horse.status == 'Disponible') {
-      statusColor = AppColors.success;
+      statusColor = context.colors.success;
     } else if (horse.status == 'Au repos') {
-      statusColor = AppColors.warning;
+      statusColor = context.colors.warning;
     } else {
-      statusColor = AppColors.danger;
+      statusColor = context.colors.danger;
     }
 
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       clipBehavior: Clip.antiAlias,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: context.colors.border),
       ),
       child: InkWell(
         onTap: () => context.push('/activites/horses/${horse.id}'),
@@ -93,24 +93,24 @@ class HorseGridScreen extends StatelessWidget {
             Expanded(
               flex: 3,
               child: Container(
-                color: AppColors.surface,
-                child: const Icon(Icons.pets,
-                    size: 48, color: AppColors.textMuted),
+                color: context.colors.surface,
+                child: Icon(Icons.pets,
+                    size: 48, color: context.colors.textMuted),
               ),
             ),
             // Info Area
             Expanded(
               flex: 2,
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: EdgeInsets.all(12.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       horse.name,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -118,7 +118,7 @@ class HorseGridScreen extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
@@ -136,21 +136,21 @@ class HorseGridScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Fatigue',
                           style: TextStyle(
-                              color: AppColors.textSecondary, fontSize: 10),
+                              color: context.colors.textSecondary, fontSize: 10),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(2),
                           child: LinearProgressIndicator(
                             value: horse.fatigue,
-                            backgroundColor: AppColors.backgroundPrimary,
+                            backgroundColor: context.colors.backgroundPrimary,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               horse.fatigue > 0.7
-                                  ? AppColors.danger
-                                  : AppColors.horses,
+                                  ? context.colors.danger
+                                  : context.colors.horses,
                             ),
                             minHeight: 4,
                           ),

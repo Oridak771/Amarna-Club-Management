@@ -6,7 +6,7 @@ class PriorityIndicator extends StatefulWidget {
   final TicketPriority priority;
   final Widget child;
 
-  const PriorityIndicator({
+  PriorityIndicator({
     super.key,
     required this.priority,
     required this.child,
@@ -64,16 +64,16 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
     Color indicatorColor;
     switch (widget.priority) {
       case TicketPriority.low:
-        indicatorColor = AppColors.priorityLow;
+        indicatorColor = context.colors.priorityLow;
         break;
       case TicketPriority.medium:
-        indicatorColor = AppColors.priorityMedium;
+        indicatorColor = context.colors.priorityMedium;
         break;
       case TicketPriority.high:
-        indicatorColor = AppColors.priorityHigh;
+        indicatorColor = context.colors.priorityHigh;
         break;
       case TicketPriority.critical:
-        indicatorColor = AppColors.priorityCritical;
+        indicatorColor = context.colors.priorityCritical;
         break;
     }
 
@@ -99,12 +99,12 @@ class _PriorityIndicatorState extends State<PriorityIndicator>
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.backgroundSecondary,
+              color: context.colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: widget.priority == TicketPriority.critical
                     ? indicatorColor.withValues(alpha: glowAlpha)
-                    : AppColors.border,
+                    : context.colors.border,
                 width: widget.priority == TicketPriority.critical ? 1.5 : 1,
               ),
             ),

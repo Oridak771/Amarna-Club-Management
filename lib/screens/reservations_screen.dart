@@ -120,14 +120,14 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Réservations'),
+        title: Text('Réservations'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
+            icon: Icon(Icons.filter_list_rounded),
             tooltip: 'Filtrer par activité',
             onPressed: () {},
           ),
@@ -135,9 +135,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/plus/reservations/nouvelle'),
-        backgroundColor: AppColors.accentPrimary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
+        backgroundColor: context.colors.accentPrimary,
+        icon: Icon(Icons.add, color: Colors.white),
+        label: Text(
           'Nouvelle réservation',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
@@ -147,17 +147,17 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           // 1. Offline Mode warning banner if offline
           if (isOffline)
             Container(
-              color: AppColors.warning.withValues(alpha: 0.15),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: const Row(
+              color: context.colors.warning.withValues(alpha: 0.15),
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
                 children: [
-                  Icon(Icons.cloud_off, color: AppColors.warning, size: 16),
+                  Icon(Icons.cloud_off, color: context.colors.warning, size: 16),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Mode hors-ligne : Réservations en lecture seule',
                       style: TextStyle(
-                          color: AppColors.warning,
+                          color: context.colors.warning,
                           fontSize: 12,
                           fontWeight: FontWeight.bold),
                     ),
@@ -169,17 +169,17 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           // 2. Horizontal Date Selector Card
           _buildHorizontalDatePicker(),
 
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: context.colors.border),
 
           // 3. Agenda Timeline List
           Expanded(
             child: dayReservations.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(16),
                     itemCount: dayReservations.length,
                     separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       return _buildReservationCard(dayReservations[index]);
                     },
@@ -194,11 +194,11 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
     final today = DateTime.now();
     return Container(
       height: 90,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      color: AppColors.backgroundSecondary,
+      padding: EdgeInsets.symmetric(vertical: 12),
+      color: context.colors.backgroundSecondary,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: EdgeInsets.symmetric(horizontal: 12),
         itemCount: 8,
         itemBuilder: (context, index) {
           final date = today.add(Duration(days: index));
@@ -213,15 +213,15 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
           final dayNumber = DateFormat('d').format(date);
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            padding: EdgeInsets.symmetric(horizontal: 4.0),
             child: SizedBox(
               width: 56, // glove friendly minimum width
               child: Material(
-                color: isSelected ? AppColors.accentPrimary : AppColors.surface,
+                color: isSelected ? context.colors.accentPrimary : context.colors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                   side: BorderSide(
-                    color: isSelected ? Colors.transparent : AppColors.border,
+                    color: isSelected ? Colors.transparent : context.colors.border,
                   ),
                 ),
                 child: InkWell(
@@ -239,17 +239,17 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                         style: TextStyle(
                           color: isSelected
                               ? Colors.white
-                              : AppColors.textSecondary,
+                              : context.colors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Text(
                         dayNumber,
                         style: TextStyle(
                           color:
-                              isSelected ? Colors.white : AppColors.textPrimary,
+                              isSelected ? Colors.white : context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -268,25 +268,25 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.calendar_today_outlined,
-                size: 64, color: AppColors.textMuted),
-            const SizedBox(height: 16),
-            const Text(
+            Icon(Icons.calendar_today_outlined,
+                size: 64, color: context.colors.textMuted),
+            SizedBox(height: 16),
+            Text(
               'Aucune réservation',
               style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Aucune activité n\'est planifiée pour le ${DateFormat('d MMMM', 'fr_FR').format(_selectedDate)}.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.colors.textSecondary),
             ),
           ],
         ),
@@ -299,9 +299,9 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: context.colors.border),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -311,41 +311,41 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
             children: [
               // Activity Color Strip
               Container(width: 5, color: activityColor),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
 
               // Time Block
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: EdgeInsets.symmetric(vertical: 16.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       res.timeStart,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       res.timeEnd,
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: context.colors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 20),
+              SizedBox(width: 20),
 
               // Details
               Expanded(
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
+                      EdgeInsets.symmetric(vertical: 16.0, horizontal: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -354,7 +354,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: activityColor.withValues(alpha: 0.1),
@@ -370,13 +370,13 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
+                            padding: EdgeInsets.only(right: 12.0),
                             child: Text(
                               res.status,
                               style: TextStyle(
                                 color: res.status == 'Confirmé'
-                                    ? AppColors.success
-                                    : AppColors.warning,
+                                    ? context.colors.success
+                                    : context.colors.warning,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -384,27 +384,27 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      SizedBox(height: 8),
                       Text(
                         res.clientName,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.people_outline,
-                              size: 14, color: AppColors.textSecondary),
-                          const SizedBox(width: 4),
+                          Icon(Icons.people_outline,
+                              size: 14, color: context.colors.textSecondary),
+                          SizedBox(width: 4),
                           Text(
                             '${res.peopleCount} personnes',
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: context.colors.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -436,7 +436,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       case 'padel':
         return const Color(0xFF34D399);
       default:
-        return AppColors.accentPrimary;
+        return context.colors.accentPrimary;
     }
   }
 }

@@ -19,18 +19,18 @@ class AppFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: isSelected
-          ? AppColors.accentPrimary.withValues(alpha: 0.10)
-          : AppColors.backgroundSecondary,
+          ? context.colors.accentPrimary.withValues(alpha: 0.10)
+          : context.colors.backgroundSecondary,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: isSelected ? AppColors.accentPrimary : AppColors.border,
+              color: isSelected ? context.colors.accentPrimary : context.colors.border,
               width: 1,
             ),
           ),
@@ -41,29 +41,29 @@ class AppFilterChip extends StatelessWidget {
                 label,
                 style: TextStyle(
                   color: isSelected
-                      ? AppColors.accentPrimary
-                      : AppColors.textSecondary,
+                      ? context.colors.accentPrimary
+                      : context.colors.textSecondary,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               if (count != null) ...[
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.accentPrimary.withValues(alpha: 0.2)
-                        : AppColors.surface,
+                        ? context.colors.accentPrimary.withValues(alpha: 0.2)
+                        : context.colors.surface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '$count',
                     style: TextStyle(
                       color: isSelected
-                          ? AppColors.accentPrimary
-                          : AppColors.textSecondary,
+                          ? context.colors.accentPrimary
+                          : context.colors.textSecondary,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),

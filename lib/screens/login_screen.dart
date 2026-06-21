@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -53,46 +53,46 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
                         // Branded Placeholder Logo
-                        const Icon(
+                        Icon(
                           Icons.sports_hockey,
                           size: 64,
-                          color: AppColors.accentPrimary,
+                          color: context.colors.accentPrimary,
                         ),
-                        const SizedBox(height: 16),
-                        const Text(
+                        SizedBox(height: 16),
+                        Text(
                           'AMARNA CLUB',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
+                            color: context.colors.textPrimary,
                             letterSpacing: 1.5,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
+                        SizedBox(height: 8),
+                        Text(
                           'Gestion Operationnelle',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
-                            color: AppColors.textSecondary,
+                            color: context.colors.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: 48),
+                        SizedBox(height: 48),
 
                         // Username / Email Field
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: AppColors.textPrimary),
-                          decoration: const InputDecoration(
+                          style: TextStyle(color: context.colors.textPrimary),
+                          decoration: InputDecoration(
                             labelText: 'Identifiant / E-mail',
                             labelStyle:
-                                TextStyle(color: AppColors.textSecondary),
+                                TextStyle(color: context.colors.textSecondary),
                             prefixIcon: Icon(Icons.person_outline,
-                                color: AppColors.textSecondary),
+                                color: context.colors.textSecondary),
                             hintText: 'Entrez votre identifiant',
                           ),
                           validator: (value) {
@@ -102,25 +102,25 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 20),
+                        SizedBox(height: 20),
 
                         // Password Field
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
-                          style: const TextStyle(color: AppColors.textPrimary),
+                          style: TextStyle(color: context.colors.textPrimary),
                           decoration: InputDecoration(
                             labelText: 'Mot de passe',
                             labelStyle:
-                                const TextStyle(color: AppColors.textSecondary),
-                            prefixIcon: const Icon(Icons.lock_outline,
-                                color: AppColors.textSecondary),
+                                TextStyle(color: context.colors.textSecondary),
+                            prefixIcon: Icon(Icons.lock_outline,
+                                color: context.colors.textSecondary),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_off
                                     : Icons.visibility,
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
 
                         // Remember me toggle
                         Row(
@@ -147,10 +147,10 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: 24,
                               child: Checkbox(
                                 value: _rememberMe,
-                                activeColor: AppColors.accentPrimary,
+                                activeColor: context.colors.accentPrimary,
                                 checkColor: Colors.black,
-                                side: const BorderSide(
-                                    color: AppColors.border, width: 1.5),
+                                side: BorderSide(
+                                    color: context.colors.border, width: 1.5),
                                 onChanged: (value) {
                                   setState(() {
                                     _rememberMe = value ?? false;
@@ -158,32 +158,32 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            const Text(
+                            SizedBox(width: 12),
+                            Text(
                               'Se souvenir de moi',
                               style: TextStyle(
-                                color: AppColors.textSecondary,
+                                color: context.colors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
+                        SizedBox(height: 32),
 
                         // Login button
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.accentPrimary,
-                            foregroundColor: AppColors.textOnAccent,
+                            backgroundColor: context.colors.accentPrimary,
+                            foregroundColor: context.colors.textOnAccent,
                             minimumSize: const Size(double.infinity, 52),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           onPressed: _handleLogin,
-                          child: const Text('Connexion'),
+                          child: Text('Connexion'),
                         ),
-                        const SizedBox(height: 48),
+                        SizedBox(height: 48),
 
                         // Biometrics hint
                         Row(
@@ -191,22 +191,22 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             Icon(
                               Icons.fingerprint,
-                              color: AppColors.textSecondary
+                              color: context.colors.textSecondary
                                   .withValues(alpha: 0.8),
                               size: 24,
                             ),
-                            const SizedBox(width: 8),
+                            SizedBox(width: 8),
                             Text(
                               'Connexion biometrique disponible',
                               style: TextStyle(
-                                color: AppColors.textSecondary
+                                color: context.colors.textSecondary
                                     .withValues(alpha: 0.8),
                                 fontSize: 13,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
                       ],
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'package:amarna_club/ui/activity_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,57 +38,57 @@ class ChecklistSummaryScreen extends ConsumerWidget {
     final overallStatusText =
         hasProblems ? "Activité bloquée" : "Activité ouverte";
     final overallStatusColor =
-        hasProblems ? AppColors.danger : AppColors.success;
+        hasProblems ? context.colors.danger : context.colors.success;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Résumé du Contrôle'),
+        title: Text('Résumé du Contrôle'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Activity Header Card
             Container(
-              padding: const EdgeInsets.all(20.0),
+              padding: EdgeInsets.all(20.0),
               decoration: BoxDecoration(
-                color: AppColors.backgroundSecondary,
+                color: context.colors.backgroundSecondary,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border, width: 1.5),
+                border: Border.all(color: context.colors.border, width: 1.5),
               ),
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 28,
                     backgroundColor:
-                        activity.statusColor.withValues(alpha: 0.2),
-                    child: Icon(activity.iconData,
-                        color: activity.statusColor, size: 28),
+                        activity.status.resolveColor(context).withValues(alpha: 0.2),
+                    child: Icon(resolveActivityIcon(activity.iconKey),
+                        color: activity.status.resolveColor(context), size: 28),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           activity.name,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           'Contrôle quotidien terminé',
                           style: TextStyle(
                             color:
-                                AppColors.textSecondary.withValues(alpha: 0.8),
+                                context.colors.textSecondary.withValues(alpha: 0.8),
                             fontSize: 14,
                           ),
                         ),
@@ -97,11 +98,11 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Overall Status Section
             Container(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: overallStatusColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -119,7 +120,7 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                         color: overallStatusColor,
                         size: 28,
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Text(
                         overallStatusText.toUpperCase(),
                         style: TextStyle(
@@ -131,52 +132,52 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text(
                     hasProblems
                         ? 'Des problèmes ont été signalés. L\'activité sera marquée comme fermée.'
                         : 'Aucun problème détecté. L\'activité sera marquée comme ouverte.',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 13,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Checklist Items list header
-            const Text(
+            Text(
               'Détails des points contrôlés',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Items List
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: activityChecklists.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final item = activityChecklists[index];
                 final isProblem = item.status == ChecklistStatus.problem;
 
                 return Container(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundSecondary,
+                    color: context.colors.backgroundSecondary,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isProblem
-                          ? AppColors.warning.withValues(alpha: 0.5)
-                          : AppColors.border,
+                          ? context.colors.warning.withValues(alpha: 0.5)
+                          : context.colors.border,
                       width: 1,
                     ),
                   ),
@@ -191,16 +192,16 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                                 ? Icons.warning_amber_rounded
                                 : Icons.check_circle,
                             color: isProblem
-                                ? AppColors.warning
-                                : AppColors.success,
+                                ? context.colors.warning
+                                : context.colors.success,
                             size: 20,
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               item.title,
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -210,13 +211,13 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                       ),
                       if (isProblem &&
                           (item.comment != null || item.photoPath != null)) ...[
-                        const SizedBox(height: 12),
+                        SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.all(12.0),
+                          padding: EdgeInsets.all(12.0),
                           decoration: BoxDecoration(
-                            color: AppColors.surface,
+                            color: context.colors.surface,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.border),
+                            border: Border.all(color: context.colors.border),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,15 +227,15 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Icon(Icons.comment,
-                                        color: AppColors.textSecondary,
+                                    Icon(Icons.comment,
+                                        color: context.colors.textSecondary,
                                         size: 16),
-                                    const SizedBox(width: 8),
+                                    SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         item.comment!,
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
+                                        style: TextStyle(
+                                          color: context.colors.textSecondary,
                                           fontSize: 13,
                                           fontStyle: FontStyle.italic,
                                         ),
@@ -245,17 +246,17 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                               ],
                               if (item.photoPath != null &&
                                   item.photoPath!.isNotEmpty) ...[
-                                const SizedBox(height: 8),
+                                SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    const Icon(Icons.photo,
-                                        color: AppColors.textSecondary,
+                                    Icon(Icons.photo,
+                                        color: context.colors.textSecondary,
                                         size: 16),
-                                    const SizedBox(width: 8),
-                                    const Text(
+                                    SizedBox(width: 8),
+                                    Text(
                                       'Photo jointe',
                                       style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: context.colors.textSecondary,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -265,13 +266,13 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: AppColors.backgroundPrimary,
+                                        color: context.colors.backgroundPrimary,
                                         borderRadius: BorderRadius.circular(4),
                                         border:
-                                            Border.all(color: AppColors.border),
+                                            Border.all(color: context.colors.border),
                                       ),
-                                      child: const Icon(Icons.image,
-                                          color: AppColors.textMuted, size: 20),
+                                      child: Icon(Icons.image,
+                                          color: context.colors.textMuted, size: 20),
                                     ),
                                   ],
                                 ),
@@ -285,7 +286,7 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
 
             // Submit Button
             SizedBox(
@@ -313,7 +314,7 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                     barrierDismissible: false,
                     barrierLabel: 'Success',
                     barrierColor: Colors.black.withValues(alpha: 0.8),
-                    transitionDuration: const Duration(milliseconds: 300),
+                    transitionDuration: Duration(milliseconds: 300),
                     pageBuilder: (context, anim1, anim2) {
                       return FadeTransition(
                         opacity: anim1,
@@ -323,11 +324,11 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                             type: MaterialType.transparency,
                             child: Center(
                               child: Container(
-                                padding: const EdgeInsets.all(32),
+                                padding: EdgeInsets.all(32),
                                 decoration: BoxDecoration(
-                                  color: AppColors.backgroundSecondary,
+                                  color: context.colors.backgroundSecondary,
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.border),
+                                  border: Border.all(color: context.colors.border),
                                 ),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -346,20 +347,20 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                                         size: 48,
                                       ),
                                     ),
-                                    const SizedBox(height: 24),
-                                    const Text(
+                                    SizedBox(height: 24),
+                                    Text(
                                       'Contrôle Enregistré',
                                       style: TextStyle(
-                                        color: AppColors.textPrimary,
+                                        color: context.colors.textPrimary,
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    SizedBox(height: 8),
                                     Text(
                                       'Statut : $overallStatusText',
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
+                                      style: TextStyle(
+                                        color: context.colors.textSecondary,
                                         fontSize: 15,
                                       ),
                                     ),
@@ -374,7 +375,7 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                   );
 
                   // Auto dismiss success overlay and pop to activity details after 1.5 seconds
-                  Future.delayed(const Duration(milliseconds: 1500), () {
+                  Future.delayed(Duration(milliseconds: 1500), () {
                     if (context.mounted) {
                       // Pop the success dialog
                       Navigator.of(context).pop();
@@ -383,13 +384,13 @@ class ChecklistSummaryScreen extends ConsumerWidget {
                     }
                   });
                 },
-                child: const Text(
+                child: Text(
                   'Enregistrer et Finaliser',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
           ],
         ),
       ),

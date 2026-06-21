@@ -24,12 +24,12 @@ class SwipeCard extends StatelessWidget {
       // Swipe Right Background (Green - Completed)
       background: Container(
         alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.only(left: 30),
+        padding: EdgeInsets.only(left: 30),
         decoration: BoxDecoration(
-          color: AppColors.success,
+          color: context.colors.success,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Row(
+        child: Row(
           children: [
             Icon(Icons.check_circle, color: Colors.white, size: 28),
             SizedBox(width: 12),
@@ -48,12 +48,12 @@ class SwipeCard extends StatelessWidget {
       // Swipe Left Background (Amber - Problem)
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 30),
+        padding: EdgeInsets.only(right: 30),
         decoration: BoxDecoration(
-          color: AppColors.warning,
+          color: context.colors.warning,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
@@ -71,76 +71,76 @@ class SwipeCard extends StatelessWidget {
       ),
 
       child: Card(
-        color: AppColors.backgroundSecondary,
+        color: context.colors.backgroundSecondary,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 1.5),
+          side: BorderSide(color: context.colors.border, width: 1.5),
         ),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(24.0),
+          padding: EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Category tag
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   category.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
 
               // Checklist title description
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   height: 1.3,
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
 
               // Indicators
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (requiresPhoto)
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.camera_alt, color: AppColors.info, size: 16),
+                        Icon(Icons.camera_alt, color: context.colors.info, size: 16),
                         SizedBox(width: 6),
                         Text(
                           'Photo obligatoire',
-                          style: TextStyle(color: AppColors.info, fontSize: 12),
+                          style: TextStyle(color: context.colors.info, fontSize: 12),
                         ),
                       ],
                     )
                   else
-                    const SizedBox.shrink(),
+                    SizedBox.shrink(),
 
                   // Helper gesture prompt
-                  const Row(
+                  Row(
                     children: [
                       Text(
                         'Glisser',
                         style:
-                            TextStyle(color: AppColors.textMuted, fontSize: 11),
+                            TextStyle(color: context.colors.textMuted, fontSize: 11),
                       ),
                       Icon(Icons.swap_horiz,
-                          color: AppColors.textMuted, size: 16),
+                          color: context.colors.textMuted, size: 16),
                     ],
                   ),
                 ],

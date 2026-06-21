@@ -21,7 +21,7 @@ class GymMachine {
 }
 
 class GymEquipmentScreen extends StatefulWidget {
-  const GymEquipmentScreen({super.key});
+  GymEquipmentScreen({super.key});
 
   @override
   State<GymEquipmentScreen> createState() => _GymEquipmentScreenState();
@@ -77,10 +77,10 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
           content: Text(
               'Toutes les machines fonctionnelles marquées comme nettoyées'),
-          backgroundColor: AppColors.success),
+          backgroundColor: context.colors.success),
     );
   }
 
@@ -88,27 +88,27 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Équipement Gym'),
+        title: Text('Équipement Gym'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.cleaning_services),
+            icon: Icon(Icons.cleaning_services),
             onPressed: _markAllCleaned,
             tooltip: 'Tout marquer nettoyé',
           ),
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
           ),
         ],
       ),
       body: ListView.separated(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         itemCount: machines.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) => SizedBox(height: 12),
         itemBuilder: (context, index) {
           final machine = machines[index];
 
@@ -116,17 +116,17 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
             priority:
                 machine.isBroken ? TicketPriority.high : TicketPriority.low,
             child: Card(
-              color: AppColors.backgroundSecondary,
+              color: context.colors.backgroundSecondary,
               elevation: 0,
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
                 side: BorderSide(
-                  color: machine.isBroken ? AppColors.danger : AppColors.border,
+                  color: machine.isBroken ? context.colors.danger : context.colors.border,
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -139,8 +139,8 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                                 machine.name,
                                 style: TextStyle(
                                   color: machine.isBroken
-                                      ? AppColors.textSecondary
-                                      : AppColors.textPrimary,
+                                      ? context.colors.textSecondary
+                                      : context.colors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                   decoration: machine.isBroken
@@ -149,29 +149,29 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                                 ),
                               ),
                               if (machine.isBroken) ...[
-                                const SizedBox(width: 8),
+                                SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
+                                  padding: EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color:
-                                        AppColors.danger.withValues(alpha: 0.2),
+                                        context.colors.danger.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
-                                  child: const Text('HS',
+                                  child: Text('HS',
                                       style: TextStyle(
-                                          color: AppColors.danger,
+                                          color: context.colors.danger,
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ],
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Text(
                             machine.category,
-                            style: const TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12),
+                            style: TextStyle(
+                                color: context.colors.textSecondary, fontSize: 12),
                           ),
                         ],
                       ),
@@ -186,13 +186,13 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                                 ? Icons.check_circle
                                 : Icons.radio_button_unchecked,
                             color: machine.isCleaned
-                                ? AppColors.success
-                                : AppColors.textMuted,
+                                ? context.colors.success
+                                : context.colors.textMuted,
                           ),
-                          const SizedBox(height: 4),
-                          const Text('Nettoyé',
+                          SizedBox(height: 4),
+                          Text('Nettoyé',
                               style: TextStyle(
-                                  color: AppColors.textSecondary,
+                                  color: context.colors.textSecondary,
                                   fontSize: 10)),
                         ],
                       ),
@@ -203,33 +203,33 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                             machine.isCleaned = val;
                           });
                         },
-                        activeThumbColor: AppColors.success,
+                        activeThumbColor: context.colors.success,
                       ),
                     ] else ...[
                       // Broken State Action
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.surface,
-                          foregroundColor: AppColors.textPrimary,
-                          padding: const EdgeInsets.symmetric(
+                          backgroundColor: context.colors.surface,
+                          foregroundColor: context.colors.textPrimary,
+                          padding: EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                         ),
                         onPressed: () {
                           // Could resolve the issue or show details
                           context.push('/maintenance/nouveau');
                         },
-                        icon: const Icon(Icons.build,
-                            size: 16, color: AppColors.warning),
-                        label: const Text('Réparer',
+                        icon: Icon(Icons.build,
+                            size: 16, color: context.colors.warning),
+                        label: Text('Réparer',
                             style: TextStyle(fontSize: 12)),
                       ),
                     ],
 
                     // More Menu
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert,
-                          color: AppColors.textSecondary),
-                      color: AppColors.backgroundElevated,
+                      icon: Icon(Icons.more_vert,
+                          color: context.colors.textSecondary),
+                      color: context.colors.backgroundElevated,
                       onSelected: (val) {
                         if (val == 'report') {
                           setState(() {
@@ -247,30 +247,30 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                       itemBuilder: (BuildContext context) =>
                           <PopupMenuEntry<String>>[
                         if (!machine.isBroken)
-                          const PopupMenuItem<String>(
+                          PopupMenuItem<String>(
                             value: 'report',
                             child: Row(
                               children: [
                                 Icon(Icons.warning,
-                                    color: AppColors.danger, size: 20),
+                                    color: context.colors.danger, size: 20),
                                 SizedBox(width: 8),
                                 Text('Signaler Panne',
                                     style: TextStyle(
-                                        color: AppColors.textPrimary)),
+                                        color: context.colors.textPrimary)),
                               ],
                             ),
                           )
                         else
-                          const PopupMenuItem<String>(
+                          PopupMenuItem<String>(
                             value: 'resolve',
                             child: Row(
                               children: [
                                 Icon(Icons.check,
-                                    color: AppColors.success, size: 20),
+                                    color: context.colors.success, size: 20),
                                 SizedBox(width: 8),
                                 Text('Marquer Fonctionnel',
                                     style: TextStyle(
-                                        color: AppColors.textPrimary)),
+                                        color: context.colors.textPrimary)),
                               ],
                             ),
                           ),

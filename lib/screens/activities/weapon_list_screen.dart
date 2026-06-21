@@ -22,7 +22,7 @@ class Weapon {
 }
 
 class WeaponListScreen extends StatefulWidget {
-  const WeaponListScreen({super.key});
+  WeaponListScreen({super.key});
 
   @override
   State<WeaponListScreen> createState() => _WeaponListScreenState();
@@ -40,25 +40,25 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
           serialNumber: 'SN-GLOCK-001',
           model: 'Glock 17',
           status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
+          lastCleaned: DateTime.now().subtract(Duration(days: 1))),
       Weapon(
           id: 'w2',
           serialNumber: 'SN-GLOCK-002',
           model: 'Glock 17',
           status: 'En utilisation',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
+          lastCleaned: DateTime.now().subtract(Duration(days: 5))),
       Weapon(
           id: 'w3',
           serialNumber: 'SN-AR15-001',
           model: 'AR-15',
           status: 'Maintenance',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
+          lastCleaned: DateTime.now().subtract(Duration(days: 30))),
       Weapon(
           id: 'w4',
           serialNumber: 'SN-BERETTA-001',
           model: 'Beretta 92FS',
           status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
+          lastCleaned: DateTime.now().subtract(Duration(days: 2))),
     ];
   }
 
@@ -74,9 +74,9 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
       );
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
           content: Text('Nettoyage enregistré'),
-          backgroundColor: AppColors.success),
+          backgroundColor: context.colors.success),
     );
   }
 
@@ -84,36 +84,36 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Liste des Armes'),
+        title: Text('Liste des Armes'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
+            icon: Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
             tooltip: 'Scanner une arme',
           ),
         ],
       ),
       body: ListView.separated(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         itemCount: weapons.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) => SizedBox(height: 12),
         itemBuilder: (context, index) {
           final weapon = weapons[index];
 
           Color statusColor;
           TicketPriority priority;
           if (weapon.status == 'Disponible') {
-            statusColor = AppColors.success;
+            statusColor = context.colors.success;
             priority = TicketPriority.low;
           } else if (weapon.status == 'En utilisation') {
-            statusColor = AppColors.warning;
+            statusColor = context.colors.warning;
             priority = TicketPriority.medium;
           } else {
-            statusColor = AppColors.danger;
+            statusColor = context.colors.danger;
             priority = TicketPriority.critical;
           }
 
@@ -127,29 +127,29 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
           return PriorityIndicator(
             priority: priority,
             child: Card(
-              color: AppColors.backgroundSecondary,
+              color: context.colors.backgroundSecondary,
               elevation: 0,
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: AppColors.border),
+                side: BorderSide(color: context.colors.border),
               ),
               child: ListTile(
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       weapon.serialNumber,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
@@ -168,26 +168,26 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(weapon.model,
-                        style: const TextStyle(color: AppColors.textSecondary)),
-                    const SizedBox(height: 6),
+                        style: TextStyle(color: context.colors.textSecondary)),
+                    SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           Icons.cleaning_services,
                           size: 14,
                           color: needsCleaning
-                              ? AppColors.danger
-                              : AppColors.textMuted,
+                              ? context.colors.danger
+                              : context.colors.textMuted,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           'Dernier nettoyage : ${DateFormat('dd/MM/yyyy').format(weapon.lastCleaned)}',
                           style: TextStyle(
                             color: needsCleaning
-                                ? AppColors.danger
-                                : AppColors.textSecondary,
+                                ? context.colors.danger
+                                : context.colors.textSecondary,
                             fontSize: 12,
                             fontWeight: needsCleaning
                                 ? FontWeight.bold
@@ -199,9 +199,9 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                   ],
                 ),
                 trailing: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert,
-                      color: AppColors.textSecondary),
-                  color: AppColors.backgroundElevated,
+                  icon: Icon(Icons.more_vert,
+                      color: context.colors.textSecondary),
+                  color: context.colors.backgroundElevated,
                   onSelected: (value) {
                     if (value == 'clean') {
                       _cleanWeapon(index);
@@ -213,38 +213,38 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                   },
                   itemBuilder: (BuildContext context) =>
                       <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
+                    PopupMenuItem<String>(
                       value: 'clean',
                       child: Row(
                         children: [
                           Icon(Icons.cleaning_services,
-                              color: AppColors.textPrimary, size: 20),
+                              color: context.colors.textPrimary, size: 20),
                           SizedBox(width: 8),
                           Text('Marquer nettoyé',
-                              style: TextStyle(color: AppColors.textPrimary)),
+                              style: TextStyle(color: context.colors.textPrimary)),
                         ],
                       ),
                     ),
-                    const PopupMenuItem<String>(
+                    PopupMenuItem<String>(
                       value: 'maintain',
                       child: Row(
                         children: [
-                          Icon(Icons.build, color: AppColors.warning, size: 20),
+                          Icon(Icons.build, color: context.colors.warning, size: 20),
                           SizedBox(width: 8),
                           Text('Créer Maintenance',
-                              style: TextStyle(color: AppColors.textPrimary)),
+                              style: TextStyle(color: context.colors.textPrimary)),
                         ],
                       ),
                     ),
-                    const PopupMenuItem<String>(
+                    PopupMenuItem<String>(
                       value: 'report',
                       child: Row(
                         children: [
                           Icon(Icons.warning,
-                              color: AppColors.danger, size: 20),
+                              color: context.colors.danger, size: 20),
                           SizedBox(width: 8),
                           Text('Signaler Problème',
-                              style: TextStyle(color: AppColors.textPrimary)),
+                              style: TextStyle(color: context.colors.textPrimary)),
                         ],
                       ),
                     ),

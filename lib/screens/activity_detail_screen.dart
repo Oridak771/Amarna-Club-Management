@@ -17,7 +17,7 @@ import 'package:amarna_club/widgets/quick_action_button.dart';
 
 class ActivityDetailScreen extends ConsumerWidget {
   final String id;
-  const ActivityDetailScreen({super.key, required this.id});
+  ActivityDetailScreen({super.key, required this.id});
 
   // Mock list of assets/equipment by activity
   // Refactored to use Isar via assetsProvider
@@ -38,7 +38,7 @@ class ActivityDetailScreen extends ConsumerWidget {
       ),
     );
 
-    final activityColor = AppColors.getActivityColor(activity.id);
+    final activityColor = Theme.of(context).extension<AppSemanticColors>()!.getActivityColor(activity.id);
 
     return DefaultTabController(
       length: 4,
@@ -51,18 +51,18 @@ class ActivityDetailScreen extends ConsumerWidget {
                 expandedHeight: 180.0,
                 floating: false,
                 pinned: true,
-                backgroundColor: AppColors.backgroundPrimary,
+                backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.backgroundPrimary,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: Icon(Icons.arrow_back),
                   onPressed: () => context.pop(),
                 ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.qr_code_scanner),
+                    icon: Icon(Icons.qr_code_scanner),
                     onPressed: () => context.push('/scan'),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.notifications_none),
+                    icon: Icon(Icons.notifications_none),
                     onPressed: () {},
                   ),
                 ],
@@ -70,7 +70,7 @@ class ActivityDetailScreen extends ConsumerWidget {
                   centerTitle: true,
                   title: Text(
                     activity.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 20.0,
                       fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class ActivityDetailScreen extends ConsumerWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               activityColor.withValues(alpha: 0.8),
-                              AppColors.backgroundPrimary,
+                              Theme.of(context).extension<AppSemanticColors>()!.backgroundPrimary,
                             ],
                           ),
                         ),
@@ -104,7 +104,7 @@ class ActivityDetailScreen extends ConsumerWidget {
                         child: Opacity(
                           opacity: 0.15,
                           child: Icon(
-                            activity.iconData,
+                            resolveActivityIcon(activity.iconKey),
                             size: 110,
                             color: Colors.white,
                           ),
@@ -118,9 +118,9 @@ class ActivityDetailScreen extends ConsumerWidget {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              AppColors.backgroundPrimary
+                              Theme.of(context).extension<AppSemanticColors>()!.backgroundPrimary
                                   .withValues(alpha: 0.8),
-                              AppColors.backgroundPrimary,
+                              Theme.of(context).extension<AppSemanticColors>()!.backgroundPrimary,
                             ],
                           ),
                         ),
@@ -137,17 +137,17 @@ class ActivityDetailScreen extends ConsumerWidget {
                   children: [
                     // Status Bar details
                     Padding(
-                      padding: const EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                           horizontal: 16.0, vertical: 12),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Row(
                             children: [
-                              const Text(
+                              Text(
                                 'Statut actuel : ',
                                 style: TextStyle(
-                                    color: AppColors.textSecondary,
+                                    color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                                     fontSize: 14),
                               ),
                               StatusBadge(status: activity.status),
@@ -156,8 +156,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                           if (activity.maxCapacity > 0)
                             Text(
                               'Occupation : ${activity.currentOccupancy}/${activity.maxCapacity}',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
+                              style: TextStyle(
+                                color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -171,19 +171,19 @@ class ActivityDetailScreen extends ConsumerWidget {
                       height: 96,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(horizontal: 16),
                         children: _buildQuickActions(context, activity.id),
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
 
                     // Inner Tabs
-                    const TabBar(
+                    TabBar(
                       isScrollable: true,
-                      indicatorColor: AppColors.accentPrimary,
-                      labelColor: AppColors.textPrimary,
-                      unselectedLabelColor: AppColors.textSecondary,
+                      indicatorColor: Theme.of(context).extension<AppSemanticColors>()!.accentPrimary,
+                      labelColor: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
+                      unselectedLabelColor: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                       tabs: [
                         Tab(text: "Vue d'ensemble"),
                         Tab(text: "Inventaire"),
@@ -218,11 +218,11 @@ class ActivityDetailScreen extends ConsumerWidget {
       QuickActionButton(
         icon: Icons.checklist_rounded,
         label: 'Checklist',
-        color: AppColors.success,
+        color: Theme.of(context).extension<AppSemanticColors>()!.success,
         onTap: () => context.push('/activites/$activityId/checklist'),
       ),
     );
-    actions.add(const SizedBox(width: 12));
+    actions.add(SizedBox(width: 12));
 
     // Activity Specific Actions
     if (activityId == 'pool') {
@@ -230,61 +230,61 @@ class ActivityDetailScreen extends ConsumerWidget {
         QuickActionButton(
           icon: Icons.speed,
           label: 'Gauges Eau',
-          color: AppColors.pool,
+          color: Theme.of(context).extension<AppSemanticColors>()!.pool,
           onTap: () => context.push('/activites/pool/pool-gauges'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     } else if (activityId == 'horses') {
       actions.add(
         QuickActionButton(
           icon: Icons.pets,
           label: 'Chevaux',
-          color: AppColors.horses,
+          color: Theme.of(context).extension<AppSemanticColors>()!.horses,
           onTap: () => context.push('/activites/horses/horses'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     } else if (activityId == 'shooting') {
       actions.add(
         QuickActionButton(
           icon: Icons.gps_fixed,
           label: 'Armes',
-          color: AppColors.danger,
+          color: Theme.of(context).extension<AppSemanticColors>()!.danger,
           onTap: () => context.push('/activites/shooting/weapon-list'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     } else if (activityId == 'padel') {
       actions.add(
         QuickActionButton(
           icon: Icons.sports_tennis,
           label: 'Terrains',
-          color: AppColors.padel,
+          color: Theme.of(context).extension<AppSemanticColors>()!.padel,
           onTap: () => context.push('/activites/padel/padel-courts'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     } else if (activityId == 'paintball') {
       actions.add(
         QuickActionButton(
           icon: Icons.adjust,
           label: 'Terrain',
-          color: AppColors.paintball,
+          color: Theme.of(context).extension<AppSemanticColors>()!.paintball,
           onTap: () => context.push('/activites/paintball/paintball-field'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     } else if (activityId == 'gym') {
       actions.add(
         QuickActionButton(
           icon: Icons.fitness_center,
           label: 'Équipements',
-          color: AppColors.gym,
+          color: Theme.of(context).extension<AppSemanticColors>()!.gym,
           onTap: () => context.push('/activites/gym/gym-equipment'),
         ),
       );
-      actions.add(const SizedBox(width: 12));
+      actions.add(SizedBox(width: 12));
     }
 
     // Common standard report buttons
@@ -292,18 +292,18 @@ class ActivityDetailScreen extends ConsumerWidget {
       QuickActionButton(
         icon: Icons.warning_amber_rounded,
         label: 'Signaler Panne',
-        color: AppColors.danger,
+        color: Theme.of(context).extension<AppSemanticColors>()!.danger,
         onTap: () => context.push('/tickets/nouveau'),
       ),
     );
 
     // Also add a quick reservation shortcut
-    actions.add(const SizedBox(width: 12));
+    actions.add(SizedBox(width: 12));
     actions.add(
       QuickActionButton(
         icon: Icons.calendar_month_outlined,
         label: 'Réservation',
-        color: AppColors.accentPrimary,
+        color: Theme.of(context).extension<AppSemanticColors>()!.accentPrimary,
         onTap: () => context.push('/plus/reservations'),
       ),
     );
@@ -313,75 +313,75 @@ class ActivityDetailScreen extends ConsumerWidget {
 
   // ── Tab 1: Vue d'ensemble ──────────────────────────────────
   Widget _buildOverviewTab(BuildContext context, Activity activity) {
-    final activityColor = AppColors.getActivityColor(activity.id);
+    final activityColor = Theme.of(context).extension<AppSemanticColors>()!.getActivityColor(activity.id);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Staff Assignment Card
           Card(
-            color: AppColors.backgroundSecondary,
+            color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: AppColors.border),
+              side: BorderSide(color: Theme.of(context).extension<AppSemanticColors>()!.border),
             ),
             child: ListTile(
               leading: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: activityColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.person, color: activityColor),
               ),
-              title: const Text(
+              title: Text(
                 'Personnel en service',
                 style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
                 activity.assignedStaff,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13),
+                style: TextStyle(
+                    color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 13),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Occupancy Progress Box
           Card(
-            color: AppColors.backgroundSecondary,
+            color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
             elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: AppColors.border),
+              side: BorderSide(color: Theme.of(context).extension<AppSemanticColors>()!.border),
             ),
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Occupation en Temps Réel',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Capacité actuelle : ${activity.currentOccupancy} / ${activity.maxCapacity}',
-                        style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 13),
+                        style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 13),
                       ),
                       Text(
                         '${(activity.occupancyPercentage * 100).toInt()}%',
@@ -393,12 +393,12 @@ class ActivityDetailScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: activity.occupancyPercentage,
-                      backgroundColor: AppColors.surface,
+                      backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.surface,
                       valueColor: AlwaysStoppedAnimation<Color>(activityColor),
                       minHeight: 8,
                     ),
@@ -407,24 +407,24 @@ class ActivityDetailScreen extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           // Today's Reservations List Mock
-          const Text(
+          Text(
             "Réservations d'aujourd'hui",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           _buildReservationRow(
               '09:00 - 10:30', 'Entraînement Club junior', '12 pers.'),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           _buildReservationRow(
               '14:00 - 16:00', 'Réservation Groupe Privé', '8 pers.'),
-          const SizedBox(height: 20),
+          SizedBox(height: 20),
         ],
       ),
     );
@@ -432,33 +432,33 @@ class ActivityDetailScreen extends ConsumerWidget {
 
   Widget _buildReservationRow(String time, String title, String count) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              const Icon(Icons.access_time,
-                  size: 16, color: AppColors.textSecondary),
-              const SizedBox(width: 8),
+              Icon(Icons.access_time,
+                  size: 16, color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary),
+              SizedBox(width: 8),
               Text(
                 time,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 12),
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                   fontSize: 13,
                 ),
               ),
@@ -466,8 +466,8 @@ class ActivityDetailScreen extends ConsumerWidget {
           ),
           Text(
             count,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -485,19 +485,19 @@ class ActivityDetailScreen extends ConsumerWidget {
         inventoryItems.where((item) => item.activityId == activityId).toList();
 
     if (items.isEmpty) {
-      return _buildEmptyState(
+      return _buildEmptyState(context, 
         Icons.inventory_2_outlined,
         'Aucun consommable enregistré pour cette activité.',
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
         return Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: EdgeInsets.only(bottom: 8.0),
           child: InventoryStepper(
             item: item,
             onChanged: (delta) {
@@ -516,31 +516,31 @@ class ActivityDetailScreen extends ConsumerWidget {
     final assets = allAssets.where((a) => a.activityId == activityId).toList();
 
     if (assets.isEmpty) {
-      return _buildEmptyState(
+      return _buildEmptyState(context, 
         Icons.construction,
         'Aucun équipement enregistré pour cette activité.',
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       itemCount: assets.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      separatorBuilder: (_, __) => SizedBox(height: 8),
       itemBuilder: (context, index) {
         final asset = assets[index];
 
         return Card(
-          color: AppColors.backgroundSecondary,
+          color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: Theme.of(context).extension<AppSemanticColors>()!.border),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
             onTap: () => context.push('/asset/${asset.id}'),
             child: Padding(
-              padding: const EdgeInsets.all(14.0),
+              padding: EdgeInsets.all(14.0),
               child: Row(
                 children: [
                   Expanded(
@@ -549,44 +549,44 @@ class ActivityDetailScreen extends ConsumerWidget {
                       children: [
                         Text(
                           asset.name,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           'S/N: ${asset.serialNumber} • ${asset.category}',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                             fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: asset.statusColor.withValues(alpha: 0.12),
+                      color: asset.status.resolveColor(context).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       asset.statusTextFrench,
                       style: TextStyle(
-                        color: asset.statusColor,
+                        color: asset.status.resolveColor(context),
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  const Icon(
+                  SizedBox(width: 6),
+                  Icon(
                     Icons.chevron_right,
-                    color: AppColors.textMuted,
+                    color: Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                     size: 20,
                   ),
                 ],
@@ -606,16 +606,16 @@ class ActivityDetailScreen extends ConsumerWidget {
         allTickets.where((t) => t.activityId == activityId).toList();
 
     if (activityTickets.isEmpty) {
-      return _buildEmptyState(
+      return _buildEmptyState(context, 
         Icons.assignment_outlined,
         'Aucun ticket (anomalie ou maintenance) pour cette activité.',
       );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       itemCount: activityTickets.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      separatorBuilder: (_, __) => SizedBox(height: 10),
       itemBuilder: (context, index) {
         final ticket = activityTickets[index];
         final isOverdue = ticket.status != TicketStatus.resolved &&
@@ -627,7 +627,7 @@ class ActivityDetailScreen extends ConsumerWidget {
           child: PriorityIndicator(
             priority: ticket.priority,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(12.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -637,8 +637,8 @@ class ActivityDetailScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           ticket.title,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -646,42 +646,42 @@ class ActivityDetailScreen extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         ticket.statusTextFrench,
                         style: TextStyle(
-                          color: ticket.statusColor,
+                          color: ticket.status.resolveColor(context),
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  SizedBox(height: 6),
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                             horizontal: 5, vertical: 1.5),
                         decoration: BoxDecoration(
-                          color: ticket.typeColor.withValues(alpha: 0.15),
+                          color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           ticket.typeTextFrench,
                           style: TextStyle(
-                              color: ticket.typeColor,
+                              color: ticket.type.resolveColor(context),
                               fontSize: 9,
                               fontWeight: FontWeight.bold),
                         ),
                       ),
                       if (ticket.assetName != null) ...[
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Équipement: ${ticket.assetName}',
-                            style: const TextStyle(
-                                color: AppColors.textSecondary, fontSize: 12),
+                            style: TextStyle(
+                                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -690,23 +690,23 @@ class ActivityDetailScreen extends ConsumerWidget {
                     ],
                   ),
                   if (ticket.dateDue != null) ...[
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
                           Icons.calendar_today_outlined,
                           size: 13,
                           color: isOverdue
-                              ? AppColors.danger
-                              : AppColors.textMuted,
+                              ? Theme.of(context).extension<AppSemanticColors>()!.danger
+                              : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                         ),
-                        const SizedBox(width: 4),
+                        SizedBox(width: 4),
                         Text(
                           DateFormat('dd/MM/yyyy').format(ticket.dateDue!),
                           style: TextStyle(
                             color: isOverdue
-                                ? AppColors.danger
-                                : AppColors.textMuted,
+                                ? Theme.of(context).extension<AppSemanticColors>()!.danger
+                                : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                             fontSize: 11,
                             fontWeight:
                                 isOverdue ? FontWeight.bold : FontWeight.normal,
@@ -725,24 +725,24 @@ class ActivityDetailScreen extends ConsumerWidget {
   }
 
   // Helper empty state
-  Widget _buildEmptyState(IconData icon, String message) {
+  Widget _buildEmptyState(BuildContext context, IconData icon, String message) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32.0),
+        padding: EdgeInsets.all(32.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               icon,
               size: 48,
-              color: AppColors.textMuted,
+              color: Theme.of(context).extension<AppSemanticColors>()!.textMuted,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                 fontSize: 14,
               ),
             ),

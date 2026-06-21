@@ -1,3 +1,4 @@
+import 'package:amarna_club/ui/activity_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,29 +42,29 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Accueil'),
+        title: Text('Accueil'),
         actions: [
           IconButton.filledTonal(
-            icon: const Icon(Icons.qr_code_scanner_rounded),
+            icon: Icon(Icons.qr_code_scanner_rounded),
             tooltip: 'Scanner QR/NFC',
             onPressed: () => context.push('/scan'),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           IconButton.filledTonal(
-            icon: const Icon(Icons.notifications_none_rounded),
+            icon: Icon(Icons.notifications_none_rounded),
             tooltip: 'Notifications',
             onPressed: () => context.push('/notifications'),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
         ],
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
+          constraints: BoxConstraints(maxWidth: 1080),
           child: CustomScrollView(
             slivers: [
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
                 sliver: SliverToBoxAdapter(
                   child: _DashboardHeader(
                     openActivitiesCount: openActivitiesCount,
@@ -72,7 +73,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverToBoxAdapter(
                   child: LayoutBuilder(
                     builder: (context, constraints) {
@@ -92,37 +93,37 @@ class DashboardScreen extends ConsumerWidget {
                         children: [
                           KPITile(
                             icon: Icons.grid_view_rounded,
-                            iconColor: AppColors.accentSecondary,
+                            iconColor: context.colors.accentSecondary,
                             value: '$openActivitiesCount',
                             title: 'Activites ouvertes',
                           ),
                           KPITile(
                             icon: Icons.report_problem_outlined,
-                            iconColor: AppColors.danger,
+                            iconColor: context.colors.danger,
                             value: '$activeAnomaliesCount',
                             title: 'Anomalies actives',
                           ),
                           KPITile(
                             icon: Icons.engineering_outlined,
-                            iconColor: AppColors.warning,
+                            iconColor: context.colors.warning,
                             value: '$overdueMaintenanceCount',
                             title: 'Maintenances en retard',
                           ),
-                          const KPITile(
+                          KPITile(
                             icon: Icons.calendar_today_outlined,
-                            iconColor: AppColors.pool,
+                            iconColor: context.colors.pool,
                             value: '8',
                             title: "Reservations aujourd'hui",
                           ),
                           KPITile(
                             icon: Icons.inventory_2_outlined,
-                            iconColor: AppColors.horses,
+                            iconColor: context.colors.horses,
                             value: '$lowStockItemsCount',
                             title: 'Stocks bas',
                           ),
-                          const KPITile(
+                          KPITile(
                             icon: Icons.groups_2_outlined,
-                            iconColor: AppColors.padel,
+                            iconColor: context.colors.padel,
                             value: '72%',
                             title: 'Occupation actuelle',
                           ),
@@ -133,7 +134,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 10),
+                padding: EdgeInsets.fromLTRB(16, 24, 16, 10),
                 sliver: SliverToBoxAdapter(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -144,28 +145,28 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                       TextButton.icon(
                         onPressed: () => context.push('/activites'),
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                        label: const Text('Voir tout'),
+                        icon: Icon(Icons.arrow_forward_rounded, size: 18),
+                        label: Text('Voir tout'),
                       ),
                     ],
                   ),
                 ),
               ),
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 100),
                 sliver: SliverList.separated(
                   itemCount: activities.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final activity = activities[index];
                     final activityColor =
-                        AppColors.getActivityColor(activity.id);
+                        resolveActivityColor(context, activity.id);
                     return Card(
                       child: InkWell(
                         borderRadius: BorderRadius.circular(16),
                         onTap: () => context.push('/activites/${activity.id}'),
                         child: Padding(
-                          padding: const EdgeInsets.all(14),
+                          padding: EdgeInsets.all(14),
                           child: Row(
                             children: [
                               Container(
@@ -175,27 +176,27 @@ class DashboardScreen extends ConsumerWidget {
                                   color: activityColor.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: Icon(activity.iconData,
+                                child: Icon(resolveActivityIcon(activity.iconKey),
                                     color: activityColor),
                               ),
-                              const SizedBox(width: 14),
+                              SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       activity.name,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
+                                    SizedBox(height: 4),
                                     Text(
                                       activity.assignedStaff,
-                                      style: const TextStyle(
-                                        color: AppColors.textSecondary,
+                                      style: TextStyle(
+                                        color: context.colors.textSecondary,
                                         fontSize: 13,
                                       ),
                                       maxLines: 1,
@@ -204,7 +205,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              SizedBox(width: 8),
                               StatusBadge(status: activity.status),
                             ],
                           ),
@@ -234,13 +235,13 @@ class _DashboardHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.accentPrimary,
+        color: context.colors.accentPrimary,
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: AppColors.accentPrimary.withValues(alpha: 0.16),
+            color: context.colors.accentPrimary.withValues(alpha: 0.16),
             blurRadius: 22,
             offset: const Offset(0, 12),
           ),
@@ -259,7 +260,7 @@ class _DashboardHeader extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   '$openActivitiesCount activites ouvertes, $activeAnomaliesCount anomalies a suivre.',
                   style: TextStyle(
@@ -278,7 +279,7 @@ class _DashboardHeader extends StatelessWidget {
               color: Colors.white.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(18),
             ),
-            child: const Icon(Icons.insights_rounded,
+            child: Icon(Icons.insights_rounded,
                 color: Colors.white, size: 30),
           ),
         ],

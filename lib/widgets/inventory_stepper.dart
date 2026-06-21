@@ -17,18 +17,18 @@ class InventoryStepper extends StatelessWidget {
     final bool isLow = item.isLowStock;
 
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: isLow
-              ? AppColors.danger.withValues(alpha: 0.5)
-              : AppColors.border,
+              ? context.colors.danger.withValues(alpha: 0.5)
+              : context.colors.border,
           width: isLow ? 1.5 : 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -39,8 +39,8 @@ class InventoryStepper extends StatelessWidget {
                 Expanded(
                   child: Text(
                     item.name,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -51,15 +51,15 @@ class InventoryStepper extends StatelessWidget {
                 if (isLow)
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppColors.danger.withValues(alpha: 0.15),
+                      color: context.colors.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
+                    child: Text(
                       'STOCK BAS',
                       style: TextStyle(
-                        color: AppColors.danger,
+                        color: context.colors.danger,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -67,27 +67,27 @@ class InventoryStepper extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: 6),
 
             // Current stock details
             Row(
               children: [
-                const Text(
+                Text(
                   'Stock actuel: ',
                   style:
-                      TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      TextStyle(color: context.colors.textSecondary, fontSize: 13),
                 ),
                 Text(
                   '${item.currentStock} ${item.unitName}',
                   style: TextStyle(
-                    color: isLow ? AppColors.danger : AppColors.textPrimary,
+                    color: isLow ? context.colors.danger : context.colors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Interactive Stepper Row
             Row(
@@ -95,7 +95,7 @@ class InventoryStepper extends StatelessWidget {
               children: [
                 // Decrement Button (min 48x48px target)
                 Material(
-                  color: AppColors.surface,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(8),
                   child: InkWell(
                     onTap: item.isOutOfStock ? null : () => onChanged(-1),
@@ -106,13 +106,13 @@ class InventoryStepper extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.colors.border),
                       ),
                       child: Icon(
                         Icons.remove,
                         color: item.isOutOfStock
-                            ? AppColors.textMuted
-                            : AppColors.textPrimary,
+                            ? context.colors.textMuted
+                            : context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -124,14 +124,14 @@ class InventoryStepper extends StatelessWidget {
                   height: 48,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundElevated,
+                    color: context.colors.backgroundElevated,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: context.colors.border),
                   ),
                   child: Text(
                     '${item.currentStock}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -140,7 +140,7 @@ class InventoryStepper extends StatelessWidget {
 
                 // Increment Button (min 48x48px target)
                 Material(
-                  color: AppColors.surface,
+                  color: context.colors.surface,
                   borderRadius: BorderRadius.circular(8),
                   child: InkWell(
                     onTap: () => onChanged(1),
@@ -151,11 +151,11 @@ class InventoryStepper extends StatelessWidget {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: context.colors.border),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.add,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -164,11 +164,11 @@ class InventoryStepper extends StatelessWidget {
             ),
 
             // Warning threshold details
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Seuil d\'alerte: ${item.lowThreshold} ${item.unitName}',
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.colors.textMuted,
                 fontSize: 11,
               ),
             ),

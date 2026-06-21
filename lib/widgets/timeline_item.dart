@@ -51,7 +51,7 @@ class TimelineItem extends StatelessWidget {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: AppColors.border,
+                    color: Theme.of(context).extension<AppSemanticColors>()!.border,
                   ),
                 ),
             ],
@@ -71,16 +71,16 @@ class TimelineItem extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
                         timeStr,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
+                        style: TextStyle(
+                          color: Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                           fontSize: 11,
                         ),
                       ),
@@ -90,8 +90,8 @@ class TimelineItem extends StatelessWidget {
                   // Description text
                   Text(
                     description,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                       fontSize: 13,
                       height: 1.2,
                     ),
@@ -101,13 +101,13 @@ class TimelineItem extends StatelessWidget {
                     // Operator / Worker info
                     Row(
                       children: [
-                        const Icon(Icons.person_outline,
-                            size: 12, color: AppColors.textMuted),
+                        Icon(Icons.person_outline,
+                            size: 12, color: Theme.of(context).extension<AppSemanticColors>()!.textMuted),
                         const SizedBox(width: 4),
                         Text(
                           operatorName!,
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textMuted,
                             fontSize: 11,
                           ),
                         ),

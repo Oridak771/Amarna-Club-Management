@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 class StatusBadge extends StatelessWidget {
   final ActivityStatus status;
 
-  const StatusBadge({
+  StatusBadge({
     super.key,
     required this.status,
   });
@@ -19,33 +19,33 @@ class StatusBadge extends StatelessWidget {
 
     switch (status) {
       case ActivityStatus.open:
-        backgroundColor = AppColors.success.withValues(alpha: 0.15);
-        textColor = AppColors.success;
+        backgroundColor = context.colors.success.withValues(alpha: 0.15);
+        textColor = context.colors.success;
         icon = Icons.check_circle_outline;
         text = "Ouvert";
         break;
       case ActivityStatus.closed:
-        backgroundColor = AppColors.danger.withValues(alpha: 0.15);
-        textColor = AppColors.danger;
+        backgroundColor = context.colors.danger.withValues(alpha: 0.15);
+        textColor = context.colors.danger;
         icon = Icons.cancel_outlined;
         text = "Ferme";
         break;
       case ActivityStatus.warning:
-        backgroundColor = AppColors.warning.withValues(alpha: 0.15);
-        textColor = AppColors.warning;
+        backgroundColor = context.colors.warning.withValues(alpha: 0.15);
+        textColor = context.colors.warning;
         icon = Icons.error_outline;
         text = "Attention";
         break;
       case ActivityStatus.maintenance:
-        backgroundColor = AppColors.info.withValues(alpha: 0.15);
-        textColor = AppColors.info;
+        backgroundColor = context.colors.info.withValues(alpha: 0.15);
+        textColor = context.colors.info;
         icon = Icons.build_circle_outlined;
         text = "Maintenance";
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
@@ -62,7 +62,7 @@ class StatusBadge extends StatelessWidget {
             size: 14,
             color: textColor,
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(

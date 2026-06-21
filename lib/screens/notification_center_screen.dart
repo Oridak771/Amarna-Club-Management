@@ -77,7 +77,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
           content:
               Text('Toutes les notifications ont été marquées comme lues.')),
     );
@@ -90,19 +90,19 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Notifications'),
+        title: Text('Notifications'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           if (_notifications.any((n) => !n.isRead))
             TextButton(
               onPressed: _markAllAsRead,
-              child: const Text(
+              child: Text(
                 'Tout lire',
                 style: TextStyle(
-                    color: AppColors.accentPrimary,
+                    color: context.colors.accentPrimary,
                     fontWeight: FontWeight.bold),
               ),
             ),
@@ -111,10 +111,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       body: _notifications.isEmpty
           ? _buildEmptyState()
           : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: EdgeInsets.symmetric(vertical: 8.0),
               child: Center(
                 child: Container(
-                  constraints: const BoxConstraints(maxWidth: 800),
+                  constraints: BoxConstraints(maxWidth: 800),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -123,11 +123,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         ...todayNotifs.map((n) => _buildNotificationRow(n)),
                       ],
                       if (earlierNotifs.isNotEmpty) ...[
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         _buildSectionHeader('Plus tôt'),
                         ...earlierNotifs.map((n) => _buildNotificationRow(n)),
                       ],
-                      const SizedBox(height: 24),
+                      SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -138,11 +138,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
+        style: TextStyle(
+          color: context.colors.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.8,
@@ -152,24 +152,24 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.notifications_off_outlined,
-              size: 64, color: AppColors.textMuted),
+              size: 64, color: context.colors.textMuted),
           SizedBox(height: 16),
           Text(
             'Aucune notification',
             style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
           Text(
             'Vous êtes à jour ! Vos alertes apparaîtront ici.',
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: context.colors.textSecondary),
           ),
         ],
       ),
@@ -187,13 +187,13 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         decoration: BoxDecoration(
           color: notif.isRead
               ? Colors.transparent
-              : AppColors.accentPrimary.withValues(alpha: 0.04),
-          border: const Border(
-            bottom: BorderSide(color: AppColors.border, width: 0.5),
+              : context.colors.accentPrimary.withValues(alpha: 0.04),
+          border: Border(
+            bottom: BorderSide(color: context.colors.border, width: 0.5),
           ),
         ),
         child: Row(
@@ -201,7 +201,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           children: [
             // Category Icon Badge
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color:
                     _getCategoryColor(notif.category).withValues(alpha: 0.15),
@@ -213,7 +213,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 size: 20,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: 16),
 
             // Content
             Expanded(
@@ -227,7 +227,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         child: Text(
                           notif.title,
                           style: TextStyle(
-                            color: AppColors.textPrimary,
+                            color: context.colors.textPrimary,
                             fontWeight: notif.isRead
                                 ? FontWeight.w500
                                 : FontWeight.bold,
@@ -237,16 +237,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ),
                       Text(
                         notif.timeAgo,
-                        style: const TextStyle(
-                            color: AppColors.textMuted, fontSize: 11),
+                        style: TextStyle(
+                            color: context.colors.textMuted, fontSize: 11),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     notif.description,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -254,16 +254,16 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: 12),
 
             // Unread Dot
             if (!notif.isRead)
               Container(
-                margin: const EdgeInsets.only(top: 6),
+                margin: EdgeInsets.only(top: 6),
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentPrimary,
+                decoration: BoxDecoration(
+                  color: context.colors.accentPrimary,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -291,15 +291,15 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'incident':
-        return AppColors.danger;
+        return context.colors.danger;
       case 'maintenance':
-        return AppColors.info;
+        return context.colors.info;
       case 'inventory':
-        return AppColors.warning;
+        return context.colors.warning;
       case 'reservation':
-        return AppColors.accentSecondary;
+        return context.colors.accentSecondary;
       default:
-        return AppColors.accentPrimary;
+        return context.colors.accentPrimary;
     }
   }
 }

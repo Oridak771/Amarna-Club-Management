@@ -1,90 +1,250 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class AppColors {
-  // Base colors - employee-facing light mode.
-  static const Color backgroundPrimary = Color(0xFFF6F8FB);
-  static const Color backgroundSecondary = Color(0xFFFFFFFF);
-  static const Color backgroundElevated = Color(0xFFF1F5F9);
-  static const Color surface = Color(0xFFEFF4FA);
-  static const Color surfaceHover = Color(0xFFE2E8F0);
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderActive = Color(0xFF2563EB);
+// ---------------------------------------------------------------------------
+// Semantic color tokens — use via Theme.of(context).extension<AppSemanticColors>()
+// or the convenience getter `context.colors`.
+// ---------------------------------------------------------------------------
 
-  // Text Colors
-  static const Color textPrimary = Color(0xFF111827);
-  static const Color textSecondary = Color(0xFF526173);
-  static const Color textMuted = Color(0xFF8A98AA);
-  static const Color textOnAccent = Color(0xFFFFFFFF);
+class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
+  // Backgrounds
+  final Color backgroundPrimary;
+  final Color backgroundSecondary;
+  final Color backgroundElevated;
+  final Color surface;
+  final Color surfaceHover;
 
-  // Accent Colors
-  static const Color accentPrimary = Color(0xFF2563EB);
-  static const Color accentSecondary = Color(0xFF0F766E);
+  // Borders
+  final Color border;
+  final Color borderActive;
 
-  // Activity Colors
-  static const Color pool = Color(0xFF0891B2);
-  static const Color horses = Color(0xFFB45309);
-  static const Color paintball = Color(0xFF16A34A);
-  static const Color shooting = Color(0xFFDC2626);
-  static const Color gym = Color(0xFF7C3AED);
-  static const Color padel = Color(0xFF059669);
+  // Text
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textOnAccent;
 
-  // Status Colors
-  static const Color success = Color(0xFF16A34A);
-  static const Color warning = Color(0xFFD97706);
-  static const Color danger = Color(0xFFDC2626);
-  static const Color info = Color(0xFF2563EB);
+  // Accents
+  final Color accentPrimary;
+  final Color accentSecondary;
 
-  // Priority Colors
-  static const Color priorityLow = Color(0xFF64748B);
-  static const Color priorityMedium = Color(0xFFD97706);
-  static const Color priorityHigh = Color(0xFFEA580C);
-  static const Color priorityCritical = Color(0xFFDC2626);
+  // Status
+  final Color success;
+  final Color warning;
+  final Color danger;
+  final Color info;
 
-  // Helper method to get activity-specific color
-  static Color getActivityColor(String activityKey) {
-    switch (activityKey.toLowerCase()) {
-      case 'pool':
-      case 'piscine':
-        return pool;
-      case 'horses':
-      case 'chevaux':
-        return horses;
-      case 'paintball':
-        return paintball;
-      case 'shooting':
-      case 'tir':
-        return shooting;
-      case 'gym':
-        return gym;
-      case 'padel':
-        return padel;
-      default:
-        return accentPrimary;
-    }
+  // Priority
+  final Color priorityLow;
+  final Color priorityMedium;
+  final Color priorityHigh;
+  final Color priorityCritical;
+
+  // Activity brand colours
+  final Color pool;
+  final Color horses;
+  final Color paintball;
+  final Color shooting;
+  final Color gym;
+  final Color padel;
+
+  const AppSemanticColors({
+    required this.backgroundPrimary,
+    required this.backgroundSecondary,
+    required this.backgroundElevated,
+    required this.surface,
+    required this.surfaceHover,
+    required this.border,
+    required this.borderActive,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.textOnAccent,
+    required this.accentPrimary,
+    required this.accentSecondary,
+    required this.success,
+    required this.warning,
+    required this.danger,
+    required this.info,
+    required this.priorityLow,
+    required this.priorityMedium,
+    required this.priorityHigh,
+    required this.priorityCritical,
+    required this.pool,
+    required this.horses,
+    required this.paintball,
+    required this.shooting,
+    required this.gym,
+    required this.padel,
+  });
+
+  // ---- Light palette ----
+  static const light = AppSemanticColors(
+    backgroundPrimary: Color(0xFFF6F8FB),
+    backgroundSecondary: Color(0xFFFFFFFF),
+    backgroundElevated: Color(0xFFF1F5F9),
+    surface: Color(0xFFEFF4FA),
+    surfaceHover: Color(0xFFE2E8F0),
+    border: Color(0xFFE2E8F0),
+    borderActive: Color(0xFF2563EB),
+    textPrimary: Color(0xFF111827),
+    textSecondary: Color(0xFF526173),
+    textMuted: Color(0xFF8A98AA),
+    textOnAccent: Color(0xFFFFFFFF),
+    accentPrimary: Color(0xFF2563EB),
+    accentSecondary: Color(0xFF0F766E),
+    success: Color(0xFF16A34A),
+    warning: Color(0xFFD97706),
+    danger: Color(0xFFDC2626),
+    info: Color(0xFF2563EB),
+    priorityLow: Color(0xFF64748B),
+    priorityMedium: Color(0xFFD97706),
+    priorityHigh: Color(0xFFEA580C),
+    priorityCritical: Color(0xFFDC2626),
+    pool: Color(0xFF0891B2),
+    horses: Color(0xFFB45309),
+    paintball: Color(0xFF16A34A),
+    shooting: Color(0xFFDC2626),
+    gym: Color(0xFF7C3AED),
+    padel: Color(0xFF059669),
+  );
+
+  // ---- Dark palette ----
+  static const dark = AppSemanticColors(
+    backgroundPrimary: Color(0xFF0B1220),
+    backgroundSecondary: Color(0xFF111827),
+    backgroundElevated: Color(0xFF1A2332),
+    surface: Color(0xFF1E293B),
+    surfaceHover: Color(0xFF334155),
+    border: Color(0xFF1F2937),
+    borderActive: Color(0xFF60A5FA),
+    textPrimary: Color(0xFFF8FAFC),
+    textSecondary: Color(0xFFCBD5E1),
+    textMuted: Color(0xFF64748B),
+    textOnAccent: Color(0xFFFFFFFF),
+    accentPrimary: Color(0xFF60A5FA),
+    accentSecondary: Color(0xFF2DD4BF),
+    success: Color(0xFF4ADE80),
+    warning: Color(0xFFFBBF24),
+    danger: Color(0xFFF87171),
+    info: Color(0xFF60A5FA),
+    priorityLow: Color(0xFF94A3B8),
+    priorityMedium: Color(0xFFFBBF24),
+    priorityHigh: Color(0xFFFB923C),
+    priorityCritical: Color(0xFFF87171),
+    pool: Color(0xFF22D3EE),
+    horses: Color(0xFFFBBF24),
+    paintball: Color(0xFF4ADE80),
+    shooting: Color(0xFFF87171),
+    gym: Color(0xFFA78BFA),
+    padel: Color(0xFF34D399),
+  );
+
+  @override
+  AppSemanticColors copyWith({
+    Color? backgroundPrimary,
+    Color? backgroundSecondary,
+    Color? backgroundElevated,
+    Color? surface,
+    Color? surfaceHover,
+    Color? border,
+    Color? borderActive,
+    Color? textPrimary,
+    Color? textSecondary,
+    Color? textMuted,
+    Color? textOnAccent,
+    Color? accentPrimary,
+    Color? accentSecondary,
+    Color? success,
+    Color? warning,
+    Color? danger,
+    Color? info,
+    Color? priorityLow,
+    Color? priorityMedium,
+    Color? priorityHigh,
+    Color? priorityCritical,
+    Color? pool,
+    Color? horses,
+    Color? paintball,
+    Color? shooting,
+    Color? gym,
+    Color? padel,
+  }) {
+    return AppSemanticColors(
+      backgroundPrimary: backgroundPrimary ?? this.backgroundPrimary,
+      backgroundSecondary: backgroundSecondary ?? this.backgroundSecondary,
+      backgroundElevated: backgroundElevated ?? this.backgroundElevated,
+      surface: surface ?? this.surface,
+      surfaceHover: surfaceHover ?? this.surfaceHover,
+      border: border ?? this.border,
+      borderActive: borderActive ?? this.borderActive,
+      textPrimary: textPrimary ?? this.textPrimary,
+      textSecondary: textSecondary ?? this.textSecondary,
+      textMuted: textMuted ?? this.textMuted,
+      textOnAccent: textOnAccent ?? this.textOnAccent,
+      accentPrimary: accentPrimary ?? this.accentPrimary,
+      accentSecondary: accentSecondary ?? this.accentSecondary,
+      success: success ?? this.success,
+      warning: warning ?? this.warning,
+      danger: danger ?? this.danger,
+      info: info ?? this.info,
+      priorityLow: priorityLow ?? this.priorityLow,
+      priorityMedium: priorityMedium ?? this.priorityMedium,
+      priorityHigh: priorityHigh ?? this.priorityHigh,
+      priorityCritical: priorityCritical ?? this.priorityCritical,
+      pool: pool ?? this.pool,
+      horses: horses ?? this.horses,
+      paintball: paintball ?? this.paintball,
+      shooting: shooting ?? this.shooting,
+      gym: gym ?? this.gym,
+      padel: padel ?? this.padel,
+    );
   }
 
-  // Helper method to get priority-specific color
-  static Color getPriorityColor(String priority) {
-    switch (priority.toLowerCase()) {
-      case 'faible':
-      case 'low':
-        return priorityLow;
-      case 'moyen':
-      case 'medium':
-        return priorityMedium;
-      case 'éleve':
-      case 'élevé':
-      case 'high':
-        return priorityHigh;
-      case 'critique':
-      case 'critical':
-        return priorityCritical;
-      default:
-        return textSecondary;
-    }
+  @override
+  AppSemanticColors lerp(AppSemanticColors? other, double t) {
+    if (other is! AppSemanticColors) return this;
+    return AppSemanticColors(
+      backgroundPrimary: Color.lerp(backgroundPrimary, other.backgroundPrimary, t)!,
+      backgroundSecondary: Color.lerp(backgroundSecondary, other.backgroundSecondary, t)!,
+      backgroundElevated: Color.lerp(backgroundElevated, other.backgroundElevated, t)!,
+      surface: Color.lerp(surface, other.surface, t)!,
+      surfaceHover: Color.lerp(surfaceHover, other.surfaceHover, t)!,
+      border: Color.lerp(border, other.border, t)!,
+      borderActive: Color.lerp(borderActive, other.borderActive, t)!,
+      textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
+      textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
+      textMuted: Color.lerp(textMuted, other.textMuted, t)!,
+      textOnAccent: Color.lerp(textOnAccent, other.textOnAccent, t)!,
+      accentPrimary: Color.lerp(accentPrimary, other.accentPrimary, t)!,
+      accentSecondary: Color.lerp(accentSecondary, other.accentSecondary, t)!,
+      success: Color.lerp(success, other.success, t)!,
+      warning: Color.lerp(warning, other.warning, t)!,
+      danger: Color.lerp(danger, other.danger, t)!,
+      info: Color.lerp(info, other.info, t)!,
+      priorityLow: Color.lerp(priorityLow, other.priorityLow, t)!,
+      priorityMedium: Color.lerp(priorityMedium, other.priorityMedium, t)!,
+      priorityHigh: Color.lerp(priorityHigh, other.priorityHigh, t)!,
+      priorityCritical: Color.lerp(priorityCritical, other.priorityCritical, t)!,
+      pool: Color.lerp(pool, other.pool, t)!,
+      horses: Color.lerp(horses, other.horses, t)!,
+      paintball: Color.lerp(paintball, other.paintball, t)!,
+      shooting: Color.lerp(shooting, other.shooting, t)!,
+      gym: Color.lerp(gym, other.gym, t)!,
+      padel: Color.lerp(padel, other.padel, t)!,
+    );
   }
 }
+
+/// Convenience getter so widgets can write `context.colors.xxx`.
+extension SemanticColorsX on BuildContext {
+  AppSemanticColors get colors =>
+      Theme.of(this).extension<AppSemanticColors>()!;
+}
+
+// ---------------------------------------------------------------------------
+// Theme builder
+// ---------------------------------------------------------------------------
 
 class AppTheme {
   static TextTheme _textTheme(Color primary, Color secondary) {
@@ -110,51 +270,54 @@ class AppTheme {
   }
 
   static ThemeData get lightTheme {
+    const c = AppSemanticColors.light;
+
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.accentPrimary,
+      seedColor: c.accentPrimary,
       brightness: Brightness.light,
-      primary: AppColors.accentPrimary,
-      secondary: AppColors.accentSecondary,
-      surface: AppColors.backgroundSecondary,
-      error: AppColors.danger,
+      primary: c.accentPrimary,
+      secondary: c.accentSecondary,
+      surface: c.backgroundSecondary,
+      error: c.danger,
     );
 
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColors.backgroundPrimary,
-      cardColor: AppColors.backgroundSecondary,
-      dividerColor: AppColors.border,
+      extensions: const [c],
+      scaffoldBackgroundColor: c.backgroundPrimary,
+      cardColor: c.backgroundSecondary,
+      dividerColor: c.border,
       colorScheme: scheme,
-      textTheme: _textTheme(AppColors.textPrimary, AppColors.textSecondary),
+      textTheme: _textTheme(c.textPrimary, c.textSecondary),
       visualDensity: VisualDensity.standard,
       cardTheme: CardThemeData(
-        color: AppColors.backgroundSecondary,
+        color: c.backgroundSecondary,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border, width: 1),
+          side: BorderSide(color: c.border, width: 1),
         ),
         margin: EdgeInsets.zero,
         elevation: 0,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.backgroundPrimary,
-        foregroundColor: AppColors.textPrimary,
+        backgroundColor: c.backgroundPrimary,
+        foregroundColor: c.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w800,
-          color: AppColors.textPrimary,
+          color: c.textPrimary,
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: c.textPrimary),
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
-        backgroundColor: AppColors.backgroundSecondary,
-        indicatorColor: AppColors.accentPrimary.withValues(alpha: 0.12),
+        backgroundColor: c.backgroundSecondary,
+        indicatorColor: c.accentPrimary.withValues(alpha: 0.12),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith(
@@ -164,56 +327,55 @@ class AppTheme {
                 ? FontWeight.w700
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
-                ? AppColors.accentPrimary
-                : AppColors.textSecondary,
+                ? c.accentPrimary
+                : c.textSecondary,
           ),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? AppColors.accentPrimary
-                : AppColors.textSecondary,
+                ? c.accentPrimary
+                : c.textSecondary,
           ),
         ),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.backgroundSecondary,
-        selectedItemColor: AppColors.accentPrimary,
-        unselectedItemColor: AppColors.textSecondary,
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: c.backgroundSecondary,
+        selectedItemColor: c.accentPrimary,
+        unselectedItemColor: c.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.backgroundSecondary,
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
-        prefixIconColor: AppColors.textSecondary,
-        suffixIconColor: AppColors.textSecondary,
+        fillColor: c.backgroundSecondary,
+        hintStyle: TextStyle(color: c.textMuted, fontSize: 14),
+        labelStyle: TextStyle(color: c.textSecondary),
+        prefixIconColor: c.textSecondary,
+        suffixIconColor: c.textSecondary,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: c.border, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border, width: 1),
+          borderSide: BorderSide(color: c.border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.borderActive, width: 1.5),
+          borderSide: BorderSide(color: c.borderActive, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.danger, width: 1),
+          borderSide: BorderSide(color: c.danger, width: 1),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accentPrimary,
-          foregroundColor: AppColors.textOnAccent,
+          backgroundColor: c.accentPrimary,
+          foregroundColor: c.textOnAccent,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -224,104 +386,107 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.accentPrimary,
+          foregroundColor: c.accentPrimary,
           textStyle: const TextStyle(fontWeight: FontWeight.w700),
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.backgroundSecondary,
-        selectedColor: AppColors.accentPrimary.withValues(alpha: 0.12),
-        side: const BorderSide(color: AppColors.border),
-        labelStyle: const TextStyle(
-            color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+        backgroundColor: c.backgroundSecondary,
+        selectedColor: c.accentPrimary.withValues(alpha: 0.12),
+        side: BorderSide(color: c.border),
+        labelStyle: TextStyle(
+            color: c.textSecondary, fontWeight: FontWeight.w600),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
     );
   }
 
   static ThemeData get darkTheme {
+    const c = AppSemanticColors.dark;
+
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: const Color(0xFF0B1220),
-      cardColor: const Color(0xFF111827),
-      dividerColor: const Color(0xFF1F2937),
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF60A5FA),
-        secondary: Color(0xFF2DD4BF),
-        surface: Color(0xFF111827),
-        error: Color(0xFFF87171),
-        onPrimary: AppColors.textOnAccent,
-        onSecondary: AppColors.textOnAccent,
-        onSurface: Color(0xFFF8FAFC),
+      extensions: const [c],
+      scaffoldBackgroundColor: c.backgroundPrimary,
+      cardColor: c.backgroundSecondary,
+      dividerColor: c.border,
+      colorScheme: ColorScheme.dark(
+        primary: c.accentPrimary,
+        secondary: c.accentSecondary,
+        surface: c.backgroundSecondary,
+        error: c.danger,
+        onPrimary: c.textOnAccent,
+        onSecondary: c.textOnAccent,
+        onSurface: c.textPrimary,
       ),
-      textTheme: _textTheme(const Color(0xFFF8FAFC), const Color(0xFFCBD5E1)),
+      textTheme: _textTheme(c.textPrimary, c.textSecondary),
       cardTheme: CardThemeData(
-        color: const Color(0xFF111827),
+        color: c.backgroundSecondary,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF1F2937), width: 1),
+          side: BorderSide(color: c.border, width: 1),
         ),
         margin: EdgeInsets.zero,
         elevation: 0,
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF0B1220),
-        foregroundColor: Color(0xFFF8FAFC),
+      appBarTheme: AppBarTheme(
+        backgroundColor: c.backgroundPrimary,
+        foregroundColor: c.textPrimary,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
-            color: Color(0xFFF8FAFC)),
-        iconTheme: IconThemeData(color: Color(0xFFF8FAFC)),
+            color: c.textPrimary),
+        iconTheme: IconThemeData(color: c.textPrimary),
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
-        backgroundColor: const Color(0xFF111827),
-        indicatorColor: const Color(0xFF60A5FA).withValues(alpha: 0.16),
+        backgroundColor: c.backgroundSecondary,
+        indicatorColor: c.accentPrimary.withValues(alpha: 0.16),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFF111827),
-        selectedItemColor: Color(0xFF60A5FA),
-        unselectedItemColor: Color(0xFF94A3B8),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: c.backgroundSecondary,
+        selectedItemColor: c.accentPrimary,
+        unselectedItemColor: c.textSecondary,
         selectedLabelStyle:
-            TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 12),
+            const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
         type: BottomNavigationBarType.fixed,
         elevation: 0,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF111827),
-        hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+        fillColor: c.backgroundSecondary,
+        hintStyle: TextStyle(color: c.textMuted, fontSize: 14),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF1F2937), width: 1),
+          borderSide: BorderSide(color: c.border, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF1F2937), width: 1),
+          borderSide: BorderSide(color: c.border, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF60A5FA), width: 1.5),
+          borderSide: BorderSide(color: c.accentPrimary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFF87171), width: 1),
+          borderSide: BorderSide(color: c.danger, width: 1),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF60A5FA),
-          foregroundColor: AppColors.textOnAccent,
+          backgroundColor: c.accentPrimary,
+          foregroundColor: c.textOnAccent,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

@@ -6,20 +6,20 @@ import '../providers/sync_provider.dart';
 import '../theme/app_theme.dart';
 
 class OfflineBanner extends ConsumerWidget {
-  const OfflineBanner({super.key});
+  OfflineBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncState = ref.watch(syncProvider);
 
     var showBanner = false;
-    var backgroundColor = AppColors.warning;
+    var backgroundColor = context.colors.warning;
     var icon = Icons.cloud_off;
     var text = '';
 
     if (!syncState.isOnline) {
       showBanner = true;
-      backgroundColor = AppColors.warning;
+      backgroundColor = context.colors.warning;
       icon = Icons.cloud_off;
 
       final timeStr = syncState.lastSyncTime != null
@@ -34,12 +34,12 @@ class OfflineBanner extends ConsumerWidget {
       }
     } else if (syncState.isSyncing) {
       showBanner = true;
-      backgroundColor = AppColors.info;
+      backgroundColor = context.colors.info;
       icon = Icons.sync;
       text = 'Synchronisation en cours avec Odoo ERP...';
     } else if (syncState.pendingSyncCount > 0) {
       showBanner = true;
-      backgroundColor = AppColors.accentSecondary;
+      backgroundColor = context.colors.accentSecondary;
       icon = Icons.sync_problem;
       text =
           'Modifications en attente de synchronisation (${syncState.pendingSyncCount})';
@@ -48,7 +48,7 @@ class OfflineBanner extends ConsumerWidget {
     return AnimatedCrossFade(
       firstChild: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: backgroundColor,
         child: SafeArea(
           top: false,
@@ -56,11 +56,11 @@ class OfflineBanner extends ConsumerWidget {
           child: Row(
             children: [
               Icon(icon, size: 16, color: Colors.white),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
@@ -70,7 +70,7 @@ class OfflineBanner extends ConsumerWidget {
                 ),
               ),
               if (syncState.isSyncing)
-                const SizedBox(
+                SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
@@ -82,7 +82,7 @@ class OfflineBanner extends ConsumerWidget {
           ),
         ),
       ),
-      secondChild: const SizedBox.shrink(),
+      secondChild: SizedBox.shrink(),
       crossFadeState:
           showBanner ? CrossFadeState.showFirst : CrossFadeState.showSecond,
       duration: const Duration(milliseconds: 300),

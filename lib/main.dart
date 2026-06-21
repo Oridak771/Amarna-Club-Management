@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'routes.dart';
 import 'theme/app_theme.dart';
 import 'services/database_service.dart';
+import 'providers/theme_mode_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,17 +25,19 @@ void main() async {
   );
 }
 
-class AmarnaClubApp extends StatelessWidget {
+class AmarnaClubApp extends ConsumerWidget {
   const AmarnaClubApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
     return MaterialApp.router(
       title: 'Amarna Club',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: themeMode,
       routerConfig: appRouter,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [

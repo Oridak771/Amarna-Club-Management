@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
-import '../theme/app_theme.dart';
 
 part 'work_ticket.g.dart';
 
@@ -74,20 +72,6 @@ class WorkTicket {
     this.syncPending = false,
   });
 
-  @ignore
-  Color get priorityColor {
-    switch (priority) {
-      case TicketPriority.low:
-        return AppColors.priorityLow;
-      case TicketPriority.medium:
-        return AppColors.priorityMedium;
-      case TicketPriority.high:
-        return AppColors.priorityHigh;
-      case TicketPriority.critical:
-        return AppColors.priorityCritical;
-    }
-  }
-
   String get priorityTextFrench {
     switch (priority) {
       case TicketPriority.low:
@@ -112,20 +96,6 @@ class WorkTicket {
     }
   }
 
-  @ignore
-  Color get statusColor {
-    switch (status) {
-      case TicketStatus.open:
-        return type == TicketType.anomaly
-            ? AppColors.danger
-            : AppColors.textSecondary;
-      case TicketStatus.inProgress:
-        return AppColors.warning;
-      case TicketStatus.resolved:
-        return AppColors.success;
-    }
-  }
-
   String get typeTextFrench {
     switch (type) {
       case TicketType.anomaly:
@@ -134,18 +104,6 @@ class WorkTicket {
         return "Préventif";
       case TicketType.corrective:
         return "Correctif";
-    }
-  }
-
-  @ignore
-  Color get typeColor {
-    switch (type) {
-      case TicketType.anomaly:
-        return AppColors.priorityCritical;
-      case TicketType.preventive:
-        return AppColors.info;
-      case TicketType.corrective:
-        return AppColors.accentSecondary;
     }
   }
 }

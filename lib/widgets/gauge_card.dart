@@ -12,7 +12,7 @@ class GaugeCard extends StatelessWidget {
   final double safeMax;
   final bool isHero;
 
-  const GaugeCard({
+  GaugeCard({
     super.key,
     required this.title,
     required this.value,
@@ -28,17 +28,17 @@ class GaugeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // Determine status color based on safe limits
     final bool isSafe = value >= safeMin && value <= safeMax;
-    final Color statusColor = isSafe ? AppColors.success : AppColors.danger;
+    final Color statusColor = isSafe ? context.colors.success : context.colors.danger;
     final String statusText = isSafe ? "Bon" : "Hors Norme";
 
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
           color: isSafe
-              ? AppColors.border
-              : AppColors.danger.withValues(alpha: 0.5),
+              ? context.colors.border
+              : context.colors.danger.withValues(alpha: 0.5),
           width: isSafe ? 1 : 1.5,
         ),
       ),
@@ -50,13 +50,13 @@ class GaugeCard extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 fontSize: isHero ? 14 : 12,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             // Custom Painter Gauge
             SizedBox(
@@ -78,7 +78,7 @@ class GaugeCard extends StatelessWidget {
                       Text(
                         value.toStringAsFixed(1),
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: isHero ? 24 : 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -86,7 +86,7 @@ class GaugeCard extends StatelessWidget {
                       Text(
                         unit,
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           fontSize: isHero ? 12 : 9,
                         ),
                       ),
@@ -96,12 +96,12 @@ class GaugeCard extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             // Status footer
             if (isHero) ...[
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -118,8 +118,8 @@ class GaugeCard extends StatelessWidget {
             ] else ...[
               Text(
                 'Limites : $safeMin - $safeMax',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: context.colors.textMuted,
                   fontSize: 10,
                 ),
               ),
@@ -152,11 +152,11 @@ class _GaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2);
-    const strokeWidth = 8.0;
+    strokeWidth = 8.0;
 
     // Paint for background track
     final trackPaint = Paint()
-      ..color = AppColors.surface
+      ..color = Colors.grey.withOpacity(0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -169,8 +169,8 @@ class _GaugePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // Draw background track (270 degrees arc starting at 135 degrees)
-    const startAngle = 135.0 * pi / 180.0;
-    const sweepAngleMax = 270.0 * pi / 180.0;
+    startAngle = 135.0 * pi / 180.0;
+    sweepAngleMax = 270.0 * pi / 180.0;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius - strokeWidth / 2),
       startAngle,

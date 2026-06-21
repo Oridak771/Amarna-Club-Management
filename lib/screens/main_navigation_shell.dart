@@ -6,10 +6,10 @@ import '../widgets/offline_banner.dart';
 class MainNavigationShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainNavigationShell({
+  MainNavigationShell({
     Key? key,
     required this.navigationShell,
-  }) : super(key: key ?? const ValueKey<String>('MainNavigationShell'));
+  }) : super(key: key ?? ValueKey<String>('MainNavigationShell'));
 
   void _onTap(BuildContext context, int index) {
     navigationShell.goBranch(
@@ -23,12 +23,12 @@ class MainNavigationShell extends StatelessWidget {
     return Scaffold(
       body: Column(
         children: [
-          const OfflineBanner(),
+          OfflineBanner(),
           Expanded(child: navigationShell),
         ],
       ),
       bottomNavigationBar: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           border: Border(
             top: BorderSide(color: Color(0xFFE2E8F0)),
           ),
@@ -36,7 +36,7 @@ class MainNavigationShell extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           onDestinationSelected: (index) => _onTap(context, index),
-          destinations: const [
+          destinations: [
             NavigationDestination(
               icon: Icon(Icons.space_dashboard_outlined),
               selectedIcon: Icon(Icons.space_dashboard_rounded),

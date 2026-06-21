@@ -17,11 +17,11 @@ class HorseProfileScreen extends StatelessWidget {
 
     Color statusColor;
     if (status == 'Disponible') {
-      statusColor = AppColors.success;
+      statusColor = context.colors.success;
     } else if (status == 'Au repos') {
-      statusColor = AppColors.warning;
+      statusColor = context.colors.warning;
     } else {
-      statusColor = AppColors.danger;
+      statusColor = context.colors.danger;
     }
 
     return Scaffold(
@@ -31,15 +31,15 @@ class HorseProfileScreen extends StatelessWidget {
           SliverAppBar(
             expandedHeight: 250.0,
             pinned: true,
-            backgroundColor: AppColors.backgroundPrimary,
+            backgroundColor: context.colors.backgroundPrimary,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: Icon(Icons.arrow_back),
               onPressed: () => context.pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 name,
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   shadows: [
@@ -54,10 +54,10 @@ class HorseProfileScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Container(
-                    color: AppColors.surface,
-                    child: const Center(
+                    color: context.colors.surface,
+                    child: Center(
                       child: Icon(Icons.pets,
-                          size: 100, color: AppColors.textMuted),
+                          size: 100, color: context.colors.textMuted),
                     ),
                   ),
                   Container(
@@ -67,7 +67,7 @@ class HorseProfileScreen extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          AppColors.backgroundPrimary.withValues(alpha: 0.9),
+                          context.colors.backgroundPrimary.withValues(alpha: 0.9),
                         ],
                       ),
                     ),
@@ -79,7 +79,7 @@ class HorseProfileScreen extends StatelessWidget {
 
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -87,18 +87,18 @@ class HorseProfileScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Column(
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Race: Selle Français',
-                              style: TextStyle(color: AppColors.textSecondary)),
+                              style: TextStyle(color: context.colors.textSecondary)),
                           SizedBox(height: 4),
                           Text('Âge: 8 ans',
-                              style: TextStyle(color: AppColors.textSecondary)),
+                              style: TextStyle(color: context.colors.textSecondary)),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
+                        padding: EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: statusColor.withValues(alpha: 0.15),
@@ -112,7 +112,7 @@ class HorseProfileScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // Quick Actions
                   SizedBox(
@@ -123,80 +123,80 @@ class HorseProfileScreen extends StatelessWidget {
                         QuickActionButton(
                           icon: Icons.nightlight_round,
                           label: 'Au Repos',
-                          color: AppColors.warning,
+                          color: context.colors.warning,
                           onTap: () {},
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         QuickActionButton(
                           icon: Icons.local_hospital,
                           label: 'Signaler Blessure',
-                          color: AppColors.danger,
+                          color: context.colors.danger,
                           onTap: () {},
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         QuickActionButton(
                           icon: Icons.restaurant,
                           label: 'Alimentation',
-                          color: AppColors.success,
+                          color: context.colors.success,
                           onTap: () {},
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: 12),
                         QuickActionButton(
                           icon: Icons.check_circle_outline,
                           label: 'Disponible',
-                          color: AppColors.success,
+                          color: context.colors.success,
                           onTap: () {},
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   // Health & Status Section
-                  const Text('Indicateurs de Santé',
+                  Text('Indicateurs de Santé',
                       style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   Card(
-                    color: AppColors.backgroundSecondary,
+                    color: context.colors.backgroundSecondary,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: const BorderSide(color: AppColors.border)),
+                        side: BorderSide(color: context.colors.border)),
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(16.0),
                       child: Column(
                         children: [
                           _buildProgressIndicator(
-                              'Fatigue', fatigue, AppColors.horses),
-                          const SizedBox(height: 16),
+                              context, 'Fatigue', fatigue, context.colors.horses),
+                          SizedBox(height: 16),
                           _buildProgressIndicator(
-                              'Hydratation', 0.9, AppColors.pool),
-                          const SizedBox(height: 16),
+                              context, 'Hydratation', 0.9, context.colors.pool),
+                          SizedBox(height: 16),
                           _buildProgressIndicator(
-                              'Poids (Idéal)', 0.95, AppColors.success),
+                              context, 'Poids (Idéal)', 0.95, context.colors.success),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   // Riding Log
-                  const Text("Journal de Monte (Aujourd'hui)",
+                  Text("Journal de Monte (Aujourd'hui)",
                       style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  _buildLogItem('09:00 - 10:00', 'Entraînement Saut',
+                  SizedBox(height: 16),
+                  _buildLogItem(context, '09:00 - 10:00', 'Entraînement Saut',
                       'Cavalier: Jean Dupont'),
                   _buildLogItem(
-                      '14:30 - 15:30', 'Balade Forêt', 'Cavalier: Marie Curie'),
+                      context, '14:30 - 15:30', 'Balade Forêt', 'Cavalier: Marie Curie'),
 
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40),
                 ],
               ),
             ),
@@ -206,7 +206,7 @@ class HorseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressIndicator(String label, double value, Color color) {
+  Widget _buildProgressIndicator(BuildContext context, String label, double value, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -214,21 +214,21 @@ class HorseProfileScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13)),
+                style: TextStyle(
+                    color: context.colors.textSecondary, fontSize: 13)),
             Text('${(value * 100).toInt()}%',
-                style: const TextStyle(
-                    color: AppColors.textPrimary,
+                style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.bold)),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: value,
-            backgroundColor: AppColors.surface,
+            backgroundColor: context.colors.surface,
             valueColor: AlwaysStoppedAnimation<Color>(color),
             minHeight: 8,
           ),
@@ -237,33 +237,33 @@ class HorseProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildLogItem(String time, String title, String subtitle) {
+  Widget _buildLogItem(BuildContext context, String time, String title, String subtitle) {
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       elevation: 0,
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: EdgeInsets.only(bottom: 8),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: AppColors.border)),
+          side: BorderSide(color: context.colors.border)),
       child: ListTile(
-        leading: const Icon(Icons.timer, color: AppColors.textMuted),
+        leading: Icon(Icons.timer, color: context.colors.textMuted),
         title: Text(title,
-            style: const TextStyle(
-                color: AppColors.textPrimary,
+            style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(time,
-                style: const TextStyle(
-                    color: AppColors.horses,
+                style: TextStyle(
+                    color: context.colors.horses,
                     fontSize: 12,
                     fontWeight: FontWeight.w600)),
             Text(subtitle,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 12)),
+                style: TextStyle(
+                    color: context.colors.textSecondary, fontSize: 12)),
           ],
         ),
       ),

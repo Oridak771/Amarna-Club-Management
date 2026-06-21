@@ -37,61 +37,61 @@ class HelpScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Aide & FAQ'),
+        title: Text('Aide & FAQ'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Center(
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
+            constraints: BoxConstraints(maxWidth: 800),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. Support Banner Card
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        AppColors.accentPrimary.withValues(alpha: 0.15),
-                        AppColors.accentSecondary.withValues(alpha: 0.05),
+                        context.colors.accentPrimary.withValues(alpha: 0.15),
+                        context.colors.accentSecondary.withValues(alpha: 0.05),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: AppColors.accentPrimary.withValues(alpha: 0.3),
+                        color: context.colors.accentPrimary.withValues(alpha: 0.3),
                         width: 1.5),
                   ),
                   child: Column(
                     children: [
-                      const Icon(Icons.help_center_outlined,
-                          color: AppColors.accentPrimary, size: 48),
-                      const SizedBox(height: 12),
-                      const Text(
+                      Icon(Icons.help_center_outlined,
+                          color: context.colors.accentPrimary, size: 48),
+                      SizedBox(height: 12),
+                      Text(
                         'Besoin d\'une assistance directe ?',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
+                      SizedBox(height: 8),
+                      Text(
                         'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels de 8h à 20h.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                           fontSize: 13,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: 16),
                       // Support actions (glove-friendly size)
                       Row(
                         children: [
@@ -100,13 +100,13 @@ class HelpScreen extends StatelessWidget {
                               height: 48,
                               child: ElevatedButton.icon(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.accentPrimary,
+                                  backgroundColor: context.colors.accentPrimary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: const Icon(Icons.phone),
-                                label: const Text('Appeler',
+                                icon: Icon(Icons.phone),
+                                label: Text('Appeler',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
                                 onPressed: () {
@@ -115,22 +115,22 @@ class HelpScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12),
                           Expanded(
                             child: SizedBox(
                               height: 48,
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   side:
-                                      const BorderSide(color: AppColors.border),
+                                      BorderSide(color: context.colors.border),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: const Icon(Icons.mail_outline,
-                                    color: AppColors.textPrimary),
-                                label: const Text('Email',
+                                icon: Icon(Icons.mail_outline,
+                                    color: context.colors.textPrimary),
+                                label: Text('Email',
                                     style: TextStyle(
-                                        color: AppColors.textPrimary,
+                                        color: context.colors.textPrimary,
                                         fontWeight: FontWeight.bold)),
                                 onPressed: () {
                                   // Action simulation
@@ -143,18 +143,18 @@ class HelpScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 28),
+                SizedBox(height: 28),
 
                 // 2. FAQ Section Header
-                const Text(
+                Text(
                   'Foire Aux Questions (FAQ)',
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
 
                 // 3. Expandable FAQ Accordion Cards
                 ListView.separated(
@@ -162,7 +162,7 @@ class HelpScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: faqs.length,
                   separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
+                      SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final faq = faqs[index];
                     return Theme(
@@ -170,28 +170,28 @@ class HelpScreen extends StatelessWidget {
                           .copyWith(dividerColor: Colors.transparent),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.backgroundSecondary,
+                          color: context.colors.backgroundSecondary,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: context.colors.border),
                         ),
                         child: ExpansionTile(
-                          iconColor: AppColors.accentPrimary,
-                          collapsedIconColor: AppColors.textSecondary,
+                          iconColor: context.colors.accentPrimary,
+                          collapsedIconColor: context.colors.textSecondary,
                           title: Text(
                             faq.question,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: context.colors.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           children: [
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
                               child: Text(
                                 faq.answer,
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                style: TextStyle(
+                                  color: context.colors.textSecondary,
                                   fontSize: 13,
                                   height: 1.5,
                                 ),
@@ -203,7 +203,7 @@ class HelpScreen extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
               ],
             ),
           ),

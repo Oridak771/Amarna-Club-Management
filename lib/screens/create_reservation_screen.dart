@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 
 /// Screen to create a new reservation.
 class CreateReservationScreen extends StatefulWidget {
-  const CreateReservationScreen({super.key});
+  CreateReservationScreen({super.key});
 
   @override
   State<CreateReservationScreen> createState() =>
@@ -18,15 +18,15 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
   // Form state
   String? _selectedActivity;
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
+  TimeOfDay _startTime = TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _endTime = TimeOfDay(hour: 10, minute: 0);
   final TextEditingController _clientNameCtrl = TextEditingController();
   int _peopleCount = 2;
   String _status = 'Confirmé';
   final TextEditingController _notesCtrl = TextEditingController();
   bool _isSaving = false;
 
-  static const _activities = [
+  static _activities = [
     _ActivityOption(id: 'pool', label: 'Piscine', icon: Icons.pool),
     _ActivityOption(id: 'horses', label: 'Équitation', icon: Icons.pets),
     _ActivityOption(
@@ -38,7 +38,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
         id: 'gym', label: 'Salle de Sport', icon: Icons.fitness_center),
   ];
 
-  static const _statuses = ['Confirmé', 'En attente', 'Annulé'];
+  static _statuses = ['Confirmé', 'En attente', 'Annulé'];
 
   @override
   void dispose() {
@@ -52,12 +52,12 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(days: 365)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.accentPrimary,
-            surface: AppColors.backgroundSecondary,
+          colorScheme: ColorScheme.dark(
+            primary: context.colors.accentPrimary,
+            surface: context.colors.backgroundSecondary,
           ),
         ),
         child: child!,
@@ -72,9 +72,9 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
       initialTime: isStart ? _startTime : _endTime,
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: AppColors.accentPrimary,
-            surface: AppColors.backgroundSecondary,
+          colorScheme: ColorScheme.dark(
+            primary: context.colors.accentPrimary,
+            surface: context.colors.backgroundSecondary,
           ),
         ),
         child: child!,
@@ -103,16 +103,16 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedActivity == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Veuillez sélectionner une activité'),
-          backgroundColor: AppColors.danger,
+          backgroundColor: context.colors.danger,
         ),
       );
       return;
     }
 
     setState(() => _isSaving = true);
-    await Future.delayed(const Duration(milliseconds: 600)); // Simulate save
+    await Future.delayed(Duration(milliseconds: 600)); // Simulate save
 
     if (!mounted) return;
     setState(() => _isSaving = false);
@@ -121,16 +121,16 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 18),
-            const SizedBox(width: 8),
+            Icon(Icons.check_circle, color: Colors.white, size: 18),
+            SizedBox(width: 8),
             Text(
               'Réservation créée pour ${_clientNameCtrl.text}',
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.white),
             ),
           ],
         ),
-        backgroundColor: AppColors.success,
-        duration: const Duration(seconds: 3),
+        backgroundColor: context.colors.success,
+        duration: Duration(seconds: 3),
       ),
     );
     context.pop();
@@ -140,24 +140,24 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nouvelle Réservation'),
+        title: Text('Nouvelle Réservation'),
         leading: IconButton(
-          icon: const Icon(Icons.close),
+          icon: Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _save,
             child: _isSaving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text(
+                : Text(
                     'Enregistrer',
                     style: TextStyle(
-                      color: AppColors.accentPrimary,
+                      color: context.colors.accentPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -180,7 +180,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                 children: [
                   // ── Activity Selector ──────────────────────────────
                   _sectionLabel('Activité *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -190,16 +190,16 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       return GestureDetector(
                         onTap: () => setState(() => _selectedActivity = act.id),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.symmetric(
+                          duration: Duration(milliseconds: 180),
+                          padding: EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? color.withValues(alpha: 0.18)
-                                : AppColors.backgroundSecondary,
+                                : context.colors.backgroundSecondary,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? color : AppColors.border,
+                              color: isSelected ? color : context.colors.border,
                               width: isSelected ? 1.5 : 1,
                             ),
                           ),
@@ -209,15 +209,15 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                               Icon(
                                 act.icon,
                                 size: 16,
-                                color: isSelected ? color : AppColors.textMuted,
+                                color: isSelected ? color : context.colors.textMuted,
                               ),
-                              const SizedBox(width: 6),
+                              SizedBox(width: 6),
                               Text(
                                 act.label,
                                 style: TextStyle(
                                   color: isSelected
                                       ? color
-                                      : AppColors.textSecondary,
+                                      : context.colors.textSecondary,
                                   fontSize: 13,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
@@ -230,38 +230,38 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // ── Date ──────────────────────────────────────────
                   _sectionLabel('Date *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _FieldCard(
                     onTap: _pickDate,
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today,
-                            color: AppColors.accentPrimary, size: 20),
-                        const SizedBox(width: 12),
+                        Icon(Icons.calendar_today,
+                            color: context.colors.accentPrimary, size: 20),
+                        SizedBox(width: 12),
                         Text(
                           DateFormat('EEEE d MMMM yyyy', 'fr_FR')
                               .format(_selectedDate),
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const Spacer(),
-                        const Icon(Icons.chevron_right,
-                            color: AppColors.textMuted, size: 18),
+                        Spacer(),
+                        Icon(Icons.chevron_right,
+                            color: context.colors.textMuted, size: 18),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
 
                   // ── Time slot ─────────────────────────────────────
                   _sectionLabel('Créneau horaire *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -270,21 +270,21 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Début',
                                 style: TextStyle(
-                                    color: AppColors.textMuted, fontSize: 11),
+                                    color: context.colors.textMuted, fontSize: 11),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(Icons.access_time,
-                                      color: AppColors.accentPrimary, size: 16),
-                                  const SizedBox(width: 6),
+                                  Icon(Icons.access_time,
+                                      color: context.colors.accentPrimary, size: 16),
+                                  SizedBox(width: 6),
                                   Text(
                                     _startTime.format(context),
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -295,10 +295,10 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           ),
                         ),
                       ),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 8),
                         child: Icon(Icons.arrow_forward,
-                            color: AppColors.textMuted, size: 18),
+                            color: context.colors.textMuted, size: 18),
                       ),
                       Expanded(
                         child: _FieldCard(
@@ -306,21 +306,21 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Fin',
                                 style: TextStyle(
-                                    color: AppColors.textMuted, fontSize: 11),
+                                    color: context.colors.textMuted, fontSize: 11),
                               ),
-                              const SizedBox(height: 2),
+                              SizedBox(height: 2),
                               Row(
                                 children: [
-                                  const Icon(Icons.access_time_filled,
-                                      color: AppColors.accentPrimary, size: 16),
-                                  const SizedBox(width: 6),
+                                  Icon(Icons.access_time_filled,
+                                      color: context.colors.accentPrimary, size: 16),
+                                  SizedBox(width: 6),
                                   Text(
                                     _endTime.format(context),
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -333,11 +333,11 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // ── Client Name ───────────────────────────────────
                   _sectionLabel('Client / Groupe *'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildTextField(
                     controller: _clientNameCtrl,
                     hint: 'Ex: M. Ahmed Bennani, Groupe famille…',
@@ -346,7 +346,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                         ? 'Ce champ est requis'
                         : null,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // ── People count & Status ─────────────────────────
                   Row(
@@ -358,7 +358,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _sectionLabel('Nb. personnes'),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             _FieldCard(
                               child: Row(
                                 mainAxisAlignment:
@@ -374,8 +374,8 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                                   ),
                                   Text(
                                     '$_peopleCount pers.',
-                                    style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 15,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -390,29 +390,29 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       // Status dropdown
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _sectionLabel('Statut'),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(
+                              padding: EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.backgroundSecondary,
+                                color: context.colors.backgroundSecondary,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: AppColors.border),
+                                border: Border.all(color: context.colors.border),
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _status,
                                   isExpanded: true,
-                                  dropdownColor: AppColors.backgroundSecondary,
-                                  style: const TextStyle(
-                                      color: AppColors.textPrimary,
+                                  dropdownColor: context.colors.backgroundSecondary,
+                                  style: TextStyle(
+                                      color: context.colors.textPrimary,
                                       fontSize: 14),
                                   items: _statuses
                                       .map((s) => DropdownMenuItem(
@@ -431,18 +431,18 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24),
 
                   // ── Notes ─────────────────────────────────────────
                   _sectionLabel('Notes (facultatif)'),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   _buildTextField(
                     controller: _notesCtrl,
                     hint: 'Besoins spéciaux, matériel requis…',
                     icon: Icons.note_alt_outlined,
                     maxLines: 3,
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
 
                   // ── Save Button ───────────────────────────────────
                   SizedBox(
@@ -451,33 +451,33 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _isSaving ? null : _save,
                       icon: _isSaving
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white),
                             )
-                          : const Icon(Icons.check_circle_outline,
+                          : Icon(Icons.check_circle_outline,
                               color: Colors.white),
                       label: Text(
                         _isSaving
                             ? 'Enregistrement…'
                             : 'Confirmer la réservation',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accentPrimary,
+                        backgroundColor: context.colors.accentPrimary,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
                         elevation: 0,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32),
                 ],
               ),
             ),
@@ -490,8 +490,8 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
   Widget _sectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
-        color: AppColors.textSecondary,
+      style: TextStyle(
+        color: context.colors.textSecondary,
         fontSize: 12,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.6,
@@ -510,36 +510,36 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
       controller: controller,
       maxLines: maxLines,
       validator: validator,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 13),
-        prefixIcon: Icon(icon, color: AppColors.textMuted, size: 20),
+        hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 13),
+        prefixIcon: Icon(icon, color: context.colors.textMuted, size: 20),
         filled: true,
-        fillColor: AppColors.backgroundSecondary,
+        fillColor: context.colors.backgroundSecondary,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.colors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: context.colors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide:
-              const BorderSide(color: AppColors.accentPrimary, width: 1.5),
+              BorderSide(color: context.colors.accentPrimary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger),
+          borderSide: BorderSide(color: context.colors.danger),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.danger, width: 1.5),
+          borderSide: BorderSide(color: context.colors.danger, width: 1.5),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
@@ -547,19 +547,19 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
   Color _activityColor(String id) {
     switch (id) {
       case 'pool':
-        return AppColors.pool;
+        return context.colors.pool;
       case 'horses':
-        return AppColors.horses;
+        return context.colors.horses;
       case 'shooting':
-        return AppColors.danger;
+        return context.colors.danger;
       case 'padel':
-        return AppColors.padel;
+        return context.colors.padel;
       case 'paintball':
-        return AppColors.paintball;
+        return context.colors.paintball;
       case 'gym':
-        return AppColors.gym;
+        return context.colors.gym;
       default:
-        return AppColors.accentPrimary;
+        return context.colors.accentPrimary;
     }
   }
 }
@@ -569,21 +569,21 @@ class _FieldCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  const _FieldCard({required this.child, this.onTap});
+  _FieldCard({required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.colors.border),
           ),
           child: child,
         ),
@@ -597,19 +597,19 @@ class _CounterButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CounterButton({required this.icon, required this.onTap});
+  _CounterButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(6.0),
-          child: Icon(icon, size: 18, color: AppColors.textPrimary),
+          padding: EdgeInsets.all(6.0),
+          child: Icon(icon, size: 18, color: context.colors.textPrimary),
         ),
       ),
     );
@@ -621,6 +621,6 @@ class _ActivityOption {
   final String label;
   final IconData icon;
 
-  const _ActivityOption(
+  _ActivityOption(
       {required this.id, required this.label, required this.icon});
 }

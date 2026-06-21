@@ -1,22 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import '../models/work_ticket.dart';
+import '../repositories/ticket_repository.dart';
 import '../services/database_service.dart';
 import 'sync_provider.dart';
 
+final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
+  return TicketRepository(ref.watch(isarProvider));
+});
+
 class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
-  final Isar _isar;
+  final TicketRepository _repo;
   final Ref _ref;
 
-  TicketsNotifier(this._isar, this._ref) : super([]) {
-    loadTickets();
+  TicketsNotifier(this._repo, this._ref) : super([]) {
+    _init();
   }
 
-  void loadTickets() {
-    state = _isar.workTickets.where().sortByDateCreatedDesc().findAllSync();
+  Future<void> _init() async {
+    await loadTickets();
   }
 
-  void addTicket({
+  Future<void> loadTickets() async {
+    state = await _repo.getAll();
+  }
+
+  Future<void> addTicket({
     required String title,
     required String description,
     required String activityId,
@@ -30,7 +38,7 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
     String? imageUrl,
     String? voiceNoteUrl,
     bool createdOffline = false,
-  }) {
+  }) async {
     final syncState = _ref.read(syncProvider);
     final isOffline = !syncState.isOnline || createdOffline;
 
@@ -56,10 +64,8 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
       syncPending: isOffline,
     );
 
-    _isar.writeTxnSync(() {
-      _isar.workTickets.putSync(newTicket);
-    });
-    loadTickets();
+    await _repo.put(newTicket);
+    await loadTickets();
 
     if (isOffline) {
       final label = type == TicketType.anomaly
@@ -69,37 +75,35 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
     }
   }
 
-  void updateTicketStatus(String id, TicketStatus status) {
-    final ticket = _isar.workTickets.filter().idEqualTo(id).findFirstSync();
+  Future<void> updateTicketStatus(String id, TicketStatus status) async {
+    final ticket = await _repo.getById(id);
     if (ticket != null) {
       final syncState = _ref.read(syncProvider);
 
-      _isar.writeTxnSync(() {
-        final updated = WorkTicket(
-          isarId: ticket.isarId,
-          id: ticket.id,
-          title: ticket.title,
-          description: ticket.description,
-          activityId: ticket.activityId,
-          activityName: ticket.activityName,
-          assetId: ticket.assetId,
-          assetName: ticket.assetName,
-          type: ticket.type,
-          priority: ticket.priority,
-          status: status,
-          dateCreated: ticket.dateCreated,
-          dateDue: ticket.dateDue,
-          dateCompleted: status == TicketStatus.resolved
-              ? DateTime.now()
-              : ticket.dateCompleted,
-          imageUrl: ticket.imageUrl,
-          voiceNoteUrl: ticket.voiceNoteUrl,
-          assignedTechnician: ticket.assignedTechnician,
-          syncPending: !syncState.isOnline || ticket.syncPending,
-        );
-        _isar.workTickets.putSync(updated);
-      });
-      loadTickets();
+      final updated = WorkTicket(
+        isarId: ticket.isarId,
+        id: ticket.id,
+        title: ticket.title,
+        description: ticket.description,
+        activityId: ticket.activityId,
+        activityName: ticket.activityName,
+        assetId: ticket.assetId,
+        assetName: ticket.assetName,
+        type: ticket.type,
+        priority: ticket.priority,
+        status: status,
+        dateCreated: ticket.dateCreated,
+        dateDue: ticket.dateDue,
+        dateCompleted: status == TicketStatus.resolved
+            ? DateTime.now()
+            : ticket.dateCompleted,
+        imageUrl: ticket.imageUrl,
+        voiceNoteUrl: ticket.voiceNoteUrl,
+        assignedTechnician: ticket.assignedTechnician,
+        syncPending: !syncState.isOnline || ticket.syncPending,
+      );
+      await _repo.put(updated);
+      await loadTickets();
 
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
@@ -111,6 +115,6 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
 
 final ticketsProvider =
     StateNotifierProvider<TicketsNotifier, List<WorkTicket>>((ref) {
-  final isar = ref.watch(isarProvider);
-  return TicketsNotifier(isar, ref);
+  final repo = ref.watch(ticketRepositoryProvider);
+  return TicketsNotifier(repo, ref);
 });

@@ -43,9 +43,9 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventaire Global'),
+        title: Text('Inventaire Global'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
@@ -53,24 +53,24 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
         children: [
           // 1. Search Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: context.colors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Rechercher un consommable...',
-                hintStyle: const TextStyle(color: AppColors.textMuted),
+                hintStyle: TextStyle(color: context.colors.textMuted),
                 prefixIcon:
-                    const Icon(Icons.search, color: AppColors.textSecondary),
+                    Icon(Icons.search, color: context.colors.textSecondary),
                 filled: true,
-                fillColor: AppColors.backgroundSecondary,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                fillColor: context.colors.backgroundSecondary,
+                contentPadding: EdgeInsets.symmetric(vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(color: context.colors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.accentPrimary),
+                  borderSide: BorderSide(color: context.colors.accentPrimary),
                 ),
               ),
               onChanged: (val) {
@@ -84,12 +84,12 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
           // 2. Horizontal Activity Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: activities.map((act) {
                 final isSelected = _selectedActivityId == act['id'];
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
+                  padding: EdgeInsets.only(right: 8.0),
                   child: ChoiceChip(
                     label: Text(act['name']!),
                     selected: isSelected,
@@ -98,11 +98,11 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                         _selectedActivityId = selected ? act['id']! : 'all';
                       });
                     },
-                    backgroundColor: AppColors.backgroundSecondary,
-                    selectedColor: AppColors.accentPrimary,
+                    backgroundColor: context.colors.backgroundSecondary,
+                    selectedColor: context.colors.accentPrimary,
                     labelStyle: TextStyle(
                       color:
-                          isSelected ? Colors.white : AppColors.textSecondary,
+                          isSelected ? Colors.white : context.colors.textSecondary,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -110,7 +110,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
                         color:
-                            isSelected ? Colors.transparent : AppColors.border,
+                            isSelected ? Colors.transparent : context.colors.border,
                       ),
                     ),
                   ),
@@ -131,7 +131,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       if (crossAxisCount > 1) {
                         // Tablet/Desktop Grid
                         return GridView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(16),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
@@ -147,10 +147,10 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       } else {
                         // Mobile List
                         return ListView.separated(
-                          padding: const EdgeInsets.all(16),
+                          padding: EdgeInsets.all(16),
                           itemCount: filteredItems.length,
                           separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12),
+                              SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             return _buildInventoryCard(filteredItems[index]);
                           },
@@ -165,19 +165,19 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.inventory_2_outlined,
-                size: 64, color: AppColors.textMuted),
+                size: 64, color: context.colors.textMuted),
             SizedBox(height: 16),
             Text(
               'Aucun article trouvé',
               style: TextStyle(
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
@@ -185,7 +185,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
             Text(
               'Essayez de modifier votre recherche ou le filtre d\'activité.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.colors.textSecondary),
             ),
           ],
         ),
@@ -198,16 +198,16 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
     final isOutOfStock = item.isOutOfStock;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isOutOfStock
-              ? AppColors.danger.withValues(alpha: 0.6)
+              ? context.colors.danger.withValues(alpha: 0.6)
               : isLowStock
-                  ? AppColors.warning.withValues(alpha: 0.6)
-                  : AppColors.border,
+                  ? context.colors.warning.withValues(alpha: 0.6)
+                  : context.colors.border,
           width: 1.5,
         ),
       ),
@@ -222,7 +222,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 // Activity Pill Tag
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getActivityColor(item.activityId)
                         .withValues(alpha: 0.15),
@@ -237,20 +237,20 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
 
                 // Item Name
                 Text(
                   item.name,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
 
                 // Stock Level Text
                 Row(
@@ -259,30 +259,30 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       'Stock : ${item.currentStock} ${item.unitName}',
                       style: TextStyle(
                         color: isOutOfStock
-                            ? AppColors.danger
+                            ? context.colors.danger
                             : isLowStock
-                                ? AppColors.warning
-                                : AppColors.textSecondary,
+                                ? context.colors.warning
+                                : context.colors.textSecondary,
                         fontSize: 13,
                         fontWeight:
                             isLowStock ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                     if (isOutOfStock) ...[
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         '⚠️ ÉPUISÉ',
                         style: TextStyle(
-                            color: AppColors.danger,
+                            color: context.colors.danger,
                             fontSize: 10,
                             fontWeight: FontWeight.bold),
                       ),
                     ] else if (isLowStock) ...[
-                      const SizedBox(width: 8),
-                      const Text(
+                      SizedBox(width: 8),
+                      Text(
                         '⚠️ SEUIL BAS',
                         style: TextStyle(
-                            color: AppColors.warning,
+                            color: context.colors.warning,
                             fontSize: 10,
                             fontWeight: FontWeight.bold),
                       ),
@@ -292,14 +292,14 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          SizedBox(width: 12),
 
           // Right Content: Quantitative Stepper (48x48px touch targets)
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: context.colors.border),
             ),
             child: Row(
               children: [
@@ -307,7 +307,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: const BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
                     ),
@@ -318,39 +318,39 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                                 .adjustStock(item.id, -1);
                           }
                         : null,
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 48,
                       height: 48,
                       child: Icon(
                         Icons.remove,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         size: 20,
                       ),
                     ),
                   ),
                 ),
                 // Divider
-                Container(width: 1, height: 28, color: AppColors.border),
+                Container(width: 1, height: 28, color: context.colors.border),
                 // Quantifier label
                 Container(
-                  constraints: const BoxConstraints(minWidth: 40),
+                  constraints: BoxConstraints(minWidth: 40),
                   alignment: Alignment.center,
                   child: Text(
                     '${item.currentStock}',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.colors.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
                   ),
                 ),
                 // Divider
-                Container(width: 1, height: 28, color: AppColors.border),
+                Container(width: 1, height: 28, color: context.colors.border),
                 // Increment Button
                 Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: const BorderRadius.only(
+                    borderRadius: BorderRadius.only(
                       topRight: Radius.circular(12),
                       bottomRight: Radius.circular(12),
                     ),
@@ -359,12 +359,12 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                           .read(inventoryProvider.notifier)
                           .adjustStock(item.id, 1);
                     },
-                    child: const SizedBox(
+                    child: SizedBox(
                       width: 48,
                       height: 48,
                       child: Icon(
                         Icons.add,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         size: 20,
                       ),
                     ),
@@ -393,7 +393,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
       case 'padel':
         return const Color(0xFF34D399); // Emerald
       default:
-        return AppColors.accentPrimary;
+        return context.colors.accentPrimary;
     }
   }
 }

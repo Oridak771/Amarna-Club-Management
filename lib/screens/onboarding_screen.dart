@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -13,27 +13,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<Map<String, dynamic>> _slides = [
+  List<Map<String, dynamic>> get _slides => [
     {
       'icon': Icons.space_dashboard_outlined,
       'title': 'Gestion Simplifiee',
       'description':
           "Suivez l'etat d'occupation, les KPIs critiques et les taches en cours d'Amarna Club en temps reel.",
-      'color': AppColors.accentPrimary,
+      'color': Theme.of(context).extension<AppSemanticColors>()!.accentPrimary,
     },
     {
       'icon': Icons.qr_code_scanner_outlined,
       'title': 'Scanner QR & NFC',
       'description':
           'Scannez instantanement les equipements pour consulter leur historique, signaler des pannes ou lancer des taches.',
-      'color': AppColors.pool,
+      'color': Theme.of(context).extension<AppSemanticColors>()!.pool,
     },
     {
       'icon': Icons.wifi_off_rounded,
       'title': 'Mode Hors-ligne',
       'description':
           'Travaillez sans interruption meme sans reseau. Vos modifications se synchronisent automatiquement avec Odoo ERP des reconnexion.',
-      'color': AppColors.warning,
+      'color': Theme.of(context).extension<AppSemanticColors>()!.warning,
     },
   ];
 
@@ -56,7 +56,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
@@ -64,13 +64,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(8.0),
                 child: TextButton(
                   onPressed: _completeOnboarding,
-                  child: const Text(
+                  child: Text(
                     'Passer',
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -88,7 +88,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (context, index) {
                   final slide = _slides[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    padding: EdgeInsets.symmetric(horizontal: 32.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -106,21 +106,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: slide['color'] as Color,
                           ),
                         ),
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
                         Text(
                           slide['title'] as String,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16),
                         Text(
                           slide['description'] as String,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
                             fontSize: 14,
                             height: 1.5,
                           ),
@@ -135,7 +135,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Pagination dots and Next/Complete button
             Padding(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                  EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -144,14 +144,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     children: List.generate(_slides.length, (index) {
                       final isSelected = _currentPage == index;
                       return AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(right: 8.0),
+                        duration: Duration(milliseconds: 200),
+                        margin: EdgeInsets.only(right: 8.0),
                         height: 8.0,
                         width: isSelected ? 24.0 : 8.0,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? AppColors.accentPrimary
-                              : AppColors.border,
+                              ? Theme.of(context).extension<AppSemanticColors>()!.accentPrimary
+                              : Theme.of(context).extension<AppSemanticColors>()!.border,
                           borderRadius: BorderRadius.circular(4.0),
                         ),
                       );
@@ -161,11 +161,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   // Next / Get Started button
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentPrimary,
-                      foregroundColor: AppColors.textOnAccent,
-                      padding: const EdgeInsets.symmetric(
+                      backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.accentPrimary,
+                      foregroundColor: Theme.of(context).extension<AppSemanticColors>()!.textOnAccent,
+                      padding: EdgeInsets.symmetric(
                           horizontal: 28, vertical: 14),
-                      minimumSize: const Size(
+                      minimumSize: Size(
                           0, 48), // custom minimal size for onboarding
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
@@ -174,7 +174,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: () {
                       if (_currentPage < _slides.length - 1) {
                         _pageController.nextPage(
-                          duration: const Duration(milliseconds: 300),
+                          duration: Duration(milliseconds: 300),
                           curve: Curves.easeInOut,
                         );
                       } else {
@@ -185,7 +185,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       _currentPage == _slides.length - 1
                           ? 'Commencer'
                           : 'Suivant',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),

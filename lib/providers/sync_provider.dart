@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
-import '../services/database_service.dart';
 import '../models/work_ticket.dart';
+import '../repositories/ticket_repository.dart';
 import 'tickets_provider.dart';
 
 class SyncState {
@@ -91,40 +90,36 @@ class SyncNotifier extends StateNotifier<SyncState> {
     // Simulate API network call
     await Future.delayed(const Duration(seconds: 2));
 
-    final isar = _ref.read(isarProvider);
+    final repo = _ref.read(ticketRepositoryProvider);
 
-    // Perform database sync updates
-    await isar.writeTxn(() async {
-      // Sync pending work tickets
-      final pendingTickets =
-          await isar.workTickets.filter().syncPendingEqualTo(true).findAll();
-      for (final ticket in pendingTickets) {
-        final updated = WorkTicket(
-          isarId: ticket.isarId,
-          id: ticket.id,
-          title: ticket.title,
-          description: ticket.description,
-          activityId: ticket.activityId,
-          activityName: ticket.activityName,
-          assetId: ticket.assetId,
-          assetName: ticket.assetName,
-          type: ticket.type,
-          priority: ticket.priority,
-          status: ticket.status,
-          dateCreated: ticket.dateCreated,
-          dateDue: ticket.dateDue,
-          dateCompleted: ticket.dateCompleted,
-          imageUrl: ticket.imageUrl,
-          voiceNoteUrl: ticket.voiceNoteUrl,
-          assignedTechnician: ticket.assignedTechnician,
-          syncPending: false,
-        );
-        await isar.workTickets.put(updated);
-      }
-    });
+    // Sync pending work tickets via repository
+    final pendingTickets = await repo.getPendingSync();
+    for (final ticket in pendingTickets) {
+      final updated = WorkTicket(
+        isarId: ticket.isarId,
+        id: ticket.id,
+        title: ticket.title,
+        description: ticket.description,
+        activityId: ticket.activityId,
+        activityName: ticket.activityName,
+        assetId: ticket.assetId,
+        assetName: ticket.assetName,
+        type: ticket.type,
+        priority: ticket.priority,
+        status: ticket.status,
+        dateCreated: ticket.dateCreated,
+        dateDue: ticket.dateDue,
+        dateCompleted: ticket.dateCompleted,
+        imageUrl: ticket.imageUrl,
+        voiceNoteUrl: ticket.voiceNoteUrl,
+        assignedTechnician: ticket.assignedTechnician,
+        syncPending: false,
+      );
+      await repo.put(updated);
+    }
 
     // Refresh providers to reflect synced state
-    _ref.read(ticketsProvider.notifier).loadTickets();
+    await _ref.read(ticketsProvider.notifier).loadTickets();
 
     newLogs.add('Synchronisation avec Odoo ERP réussie. Base locale à jour.');
     state = state.copyWith(

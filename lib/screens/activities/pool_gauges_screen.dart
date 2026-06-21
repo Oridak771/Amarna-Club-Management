@@ -31,14 +31,14 @@ class _PoolGaugesScreenState extends State<PoolGaugesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gauges Eau (Piscine)'),
+        title: Text('Gauges Eau (Piscine)'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -55,7 +55,7 @@ class _PoolGaugesScreenState extends State<PoolGaugesScreen> {
                 isHero: true,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Grid of smaller gauges
             LayoutBuilder(
@@ -109,16 +109,16 @@ class _PoolGaugesScreenState extends State<PoolGaugesScreen> {
               },
             ),
 
-            const SizedBox(height: 32),
-            const Text(
+            SizedBox(height: 32),
+            Text(
               'Ajustements Manuels (Simulation)',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             _buildSlider('Température (°C)', _temperature, 10, 40,
                 (val) => setState(() => _temperature = val)),
             _buildSlider('Chlore (ppm)', _chlorine, 0, 5,
@@ -139,14 +139,14 @@ class _PoolGaugesScreenState extends State<PoolGaugesScreen> {
       children: [
         Text(
           '$label: ${value.toStringAsFixed(1)}',
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
         ),
         Slider(
           value: value,
           min: min,
           max: max,
-          activeColor: AppColors.pool,
-          inactiveColor: AppColors.surface,
+          activeColor: context.colors.pool,
+          inactiveColor: context.colors.surface,
           onChanged: onChanged,
         ),
       ],

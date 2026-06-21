@@ -26,7 +26,7 @@ class _OfflineDashboardScreenState
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
+        duration: Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
@@ -45,28 +45,28 @@ class _OfflineDashboardScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mode Hors-ligne'),
+        title: Text('Mode Hors-ligne'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline),
+            icon: Icon(Icons.help_outline),
             onPressed: () {},
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Connection Simulation Card
             Card(
-              color: AppColors.backgroundSecondary,
+              color: context.colors.backgroundSecondary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
-                side: const BorderSide(color: AppColors.border, width: 1.5),
+                side: BorderSide(color: context.colors.border, width: 1.5),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -75,18 +75,18 @@ class _OfflineDashboardScreenState
                         Icon(
                           syncState.isOnline ? Icons.wifi : Icons.wifi_off,
                           color: syncState.isOnline
-                              ? AppColors.success
-                              : AppColors.warning,
+                              ? context.colors.success
+                              : context.colors.warning,
                           size: 28,
                         ),
-                        const SizedBox(width: 16),
+                        SizedBox(width: 16),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Simulation Réseau',
                               style: TextStyle(
-                                color: AppColors.textPrimary,
+                                color: context.colors.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -95,8 +95,8 @@ class _OfflineDashboardScreenState
                               syncState.isOnline
                                   ? 'Connecté (Simulation)'
                                   : 'Hors-ligne (Simulation)',
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -106,12 +106,12 @@ class _OfflineDashboardScreenState
                     ),
                     Switch.adaptive(
                       value: syncState.isOnline,
-                      activeThumbColor: AppColors.success,
+                      activeThumbColor: context.colors.success,
                       activeTrackColor:
-                          AppColors.success.withValues(alpha: 0.3),
-                      inactiveThumbColor: AppColors.warning,
+                          context.colors.success.withValues(alpha: 0.3),
+                      inactiveThumbColor: context.colors.warning,
                       inactiveTrackColor:
-                          AppColors.warning.withValues(alpha: 0.3),
+                          context.colors.warning.withValues(alpha: 0.3),
                       onChanged: (value) {
                         ref.read(syncProvider.notifier).setOnlineStatus(value);
                       },
@@ -120,7 +120,7 @@ class _OfflineDashboardScreenState
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Statistics Grid (2 Columns)
             Row(
@@ -132,11 +132,11 @@ class _OfflineDashboardScreenState
                     'En attente',
                     Icons.sync_problem,
                     syncState.pendingSyncCount > 0
-                        ? AppColors.warning
-                        : AppColors.success,
+                        ? context.colors.warning
+                        : context.colors.success,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _buildStatCard(
                     'Dernière Sync',
@@ -147,12 +147,12 @@ class _OfflineDashboardScreenState
                         ? 'Aujourd\'hui'
                         : 'Non synchronisé',
                     Icons.access_time,
-                    AppColors.info,
+                    context.colors.info,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Manual Sync Button
             SizedBox(
@@ -160,16 +160,16 @@ class _OfflineDashboardScreenState
               height: 56, // Touch target height
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentPrimary,
+                  backgroundColor: context.colors.accentPrimary,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  disabledBackgroundColor: AppColors.surface,
-                  disabledForegroundColor: AppColors.textMuted,
+                  disabledBackgroundColor: context.colors.surface,
+                  disabledForegroundColor: context.colors.textMuted,
                 ),
                 icon: syncState.isSyncing
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -178,12 +178,12 @@ class _OfflineDashboardScreenState
                               AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Icon(Icons.sync),
+                    : Icon(Icons.sync),
                 label: Text(
                   syncState.isSyncing
                       ? 'Synchronisation...'
                       : 'Synchroniser maintenant',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -197,18 +197,18 @@ class _OfflineDashboardScreenState
                       },
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Sync Logs Panel
-            const Text(
+            Text(
               'Journal de Synchronisation',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(
               height: 240,
               width: double.infinity,
@@ -216,28 +216,28 @@ class _OfflineDashboardScreenState
                 color:
                     const Color(0xFF070A0F), // Ultra dark terminal background
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border, width: 1.5),
+                border: Border.all(color: context.colors.border, width: 1.5),
               ),
-              padding: const EdgeInsets.all(12.0),
+              padding: EdgeInsets.all(12.0),
               child: ListView.builder(
                 controller: _scrollController,
                 itemCount: syncState.syncLogs.length,
                 itemBuilder: (context, index) {
                   final log = syncState.syncLogs[index];
                   // Simple log coloring based on content
-                  Color logColor = AppColors.textSecondary;
+                  Color logColor = context.colors.textSecondary;
                   if (log.contains('réussie') || log.contains('rétablie')) {
-                    logColor = AppColors.success;
+                    logColor = context.colors.success;
                   } else if (log.contains('perdue') ||
                       log.contains('Hors-ligne')) {
-                    logColor = AppColors.warning;
+                    logColor = context.colors.warning;
                   } else if (log.contains('Début') ||
                       log.contains('en cours')) {
-                    logColor = AppColors.info;
+                    logColor = context.colors.info;
                   }
 
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    padding: EdgeInsets.symmetric(vertical: 4.0),
                     child: Text(
                       log,
                       style: TextStyle(
@@ -250,11 +250,11 @@ class _OfflineDashboardScreenState
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               'Dernière synchro globale : $timeStr',
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.colors.textMuted,
                 fontSize: 12,
               ),
             ),
@@ -272,13 +272,13 @@ class _OfflineDashboardScreenState
     Color iconColor,
   ) {
     return Card(
-      color: AppColors.backgroundSecondary,
+      color: context.colors.backgroundSecondary,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border, width: 1.5),
+        side: BorderSide(color: context.colors.border, width: 1.5),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -287,8 +287,8 @@ class _OfflineDashboardScreenState
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -296,20 +296,20 @@ class _OfflineDashboardScreenState
                 Icon(icon, color: iconColor, size: 20),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
               value,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: context.colors.textPrimary,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: AppColors.textMuted,
+              style: TextStyle(
+                color: context.colors.textMuted,
                 fontSize: 12,
               ),
             ),

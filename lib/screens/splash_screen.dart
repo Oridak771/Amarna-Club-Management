@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 1),
+      duration: Duration(seconds: 1),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -29,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen>
     _animationController.forward();
 
     // Simulate checking auth status or biometric validation
-    Future.delayed(const Duration(milliseconds: 1800), () {
+    Future.delayed(Duration(milliseconds: 1800), () {
       if (mounted) {
         // Go to onboarding carousel for new session
         context.go('/onboarding');
@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.colors.backgroundPrimary,
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -58,21 +58,21 @@ class _SplashScreenState extends State<SplashScreen>
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: AppColors.accentSecondary.withValues(alpha: 0.12),
+                  color: context.colors.accentSecondary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.accentSecondary.withValues(alpha: 0.5),
+                    color: context.colors.accentSecondary.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.sports_hockey,
                   size: 50,
-                  color: AppColors.accentSecondary,
+                  color: context.colors.accentSecondary,
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text(
+              SizedBox(height: 24),
+              Text(
                 'AMARNA CLUB',
                 style: TextStyle(
                   color: Colors.white,
@@ -81,33 +81,33 @@ class _SplashScreenState extends State<SplashScreen>
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(height: 8),
-              const Text(
+              SizedBox(height: 8),
+              Text(
                 'Opérations en temps réel',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 48),
+              SizedBox(height: 48),
               // Simulated biometric scanning indicator
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.accentPrimary),
+                          context.colors.accentPrimary),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Text(
                     'Vérification biométrique...',
                     style: TextStyle(
-                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      color: context.colors.textSecondary.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                   ),

@@ -1,33 +1,38 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar/isar.dart';
 import '../models/inventory_item.dart';
+import '../repositories/inventory_repository.dart';
 import '../services/database_service.dart';
 import 'sync_provider.dart';
 
+final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
+  return InventoryRepository(ref.watch(isarProvider));
+});
+
 class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
-  final Isar _isar;
+  final InventoryRepository _repo;
   final Ref _ref;
 
-  InventoryNotifier(this._isar, this._ref) : super([]) {
-    _loadInventory();
+  InventoryNotifier(this._repo, this._ref) : super([]) {
+    _init();
   }
 
-  void _loadInventory() {
-    state = _isar.inventoryItems.where().findAllSync();
+  Future<void> _init() async {
+    await _loadInventory();
   }
 
-  void adjustStock(String itemId, int amount) {
-    final item =
-        _isar.inventoryItems.filter().idEqualTo(itemId).findFirstSync();
+  Future<void> _loadInventory() async {
+    state = await _repo.getAll();
+  }
+
+  Future<void> adjustStock(String itemId, int amount) async {
+    final item = await _repo.getById(itemId);
     if (item != null) {
       final syncState = _ref.read(syncProvider);
       final newStock = (item.currentStock + amount).clamp(0, 9999);
 
-      _isar.writeTxnSync(() {
-        final updated = item.copyWith(currentStock: newStock);
-        _isar.inventoryItems.putSync(updated);
-      });
-      _loadInventory();
+      final updated = item.copyWith(currentStock: newStock);
+      await _repo.put(updated);
+      await _loadInventory();
 
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
@@ -36,18 +41,15 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     }
   }
 
-  void updateStock(String itemId, int newQuantity) {
-    final item =
-        _isar.inventoryItems.filter().idEqualTo(itemId).findFirstSync();
+  Future<void> updateStock(String itemId, int newQuantity) async {
+    final item = await _repo.getById(itemId);
     if (item != null) {
       final syncState = _ref.read(syncProvider);
       final newStock = newQuantity.clamp(0, 9999);
 
-      _isar.writeTxnSync(() {
-        final updated = item.copyWith(currentStock: newStock);
-        _isar.inventoryItems.putSync(updated);
-      });
-      _loadInventory();
+      final updated = item.copyWith(currentStock: newStock);
+      await _repo.put(updated);
+      await _loadInventory();
 
       if (!syncState.isOnline) {
         _ref.read(syncProvider.notifier).incrementPendingCount(
@@ -59,6 +61,6 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
 
 final inventoryProvider =
     StateNotifierProvider<InventoryNotifier, List<InventoryItem>>((ref) {
-  final isar = ref.watch(isarProvider);
-  return InventoryNotifier(isar, ref);
+  final repo = ref.watch(inventoryRepositoryProvider);
+  return InventoryNotifier(repo, ref);
 });
