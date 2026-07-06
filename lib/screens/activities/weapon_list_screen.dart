@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/activity_panels.dart';
 import '../../widgets/priority_indicator.dart';
 import '../../models/work_ticket.dart';
 
@@ -22,7 +23,7 @@ class Weapon {
 }
 
 class WeaponListScreen extends StatefulWidget {
-  WeaponListScreen({super.key});
+  const WeaponListScreen({super.key});
 
   @override
   State<WeaponListScreen> createState() => _WeaponListScreenState();
@@ -40,25 +41,25 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
           serialNumber: 'SN-GLOCK-001',
           model: 'Glock 17',
           status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(Duration(days: 1))),
+          lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
       Weapon(
           id: 'w2',
           serialNumber: 'SN-GLOCK-002',
           model: 'Glock 17',
           status: 'En utilisation',
-          lastCleaned: DateTime.now().subtract(Duration(days: 5))),
+          lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
       Weapon(
           id: 'w3',
           serialNumber: 'SN-AR15-001',
           model: 'AR-15',
           status: 'Maintenance',
-          lastCleaned: DateTime.now().subtract(Duration(days: 30))),
+          lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
       Weapon(
           id: 'w4',
           serialNumber: 'SN-BERETTA-001',
           model: 'Beretta 92FS',
           status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(Duration(days: 2))),
+          lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
     ];
   }
 
@@ -75,7 +76,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text('Nettoyage enregistré'),
+          content: const Text('Nettoyage enregistré'),
           backgroundColor: context.colors.success),
     );
   }
@@ -84,25 +85,91 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Liste des Armes'),
+        title: const Text('Liste des Armes'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: const Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
             tooltip: 'Scanner une arme',
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: EdgeInsets.all(16.0),
-        itemCount: weapons.length,
-        separatorBuilder: (context, index) => SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final weapon = weapons[index];
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildArmoryHeader(),
+          const SizedBox(height: 14),
+          for (var index = 0; index < weapons.length; index++) ...[
+            _buildWeaponCard(index),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 12),
+          const ActivityTicketsPanel(activityId: 'shooting'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArmoryHeader() {
+    final colors = context.colors;
+    final available = weapons.where((w) => w.status == 'Disponible').length;
+    final needCleaning = weapons
+        .where((w) => DateTime.now().difference(w.lastCleaned).inDays > 7)
+        .length;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.shooting.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border:
+            Border.all(color: colors.shooting.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.gpp_good_outlined, color: colors.shooting, size: 26),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$available/${weapons.length} armes disponibles',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  needCleaning > 0
+                      ? '$needCleaning arme${needCleaning > 1 ? 's' : ''} en attente de nettoyage (scan QR obligatoire)'
+                      : 'Tous les nettoyages sont à jour.',
+                  style: TextStyle(
+                    color: needCleaning > 0
+                        ? colors.danger
+                        : colors.textSecondary,
+                    fontSize: 12.5,
+                    fontWeight: needCleaning > 0
+                        ? FontWeight.w700
+                        : FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWeaponCard(int index) {
+    final weapon = weapons[index];
 
           Color statusColor;
           TicketPriority priority;
@@ -136,7 +203,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
               ),
               child: ListTile(
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -149,7 +216,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.15),
@@ -168,10 +235,10 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Text(weapon.model,
                         style: TextStyle(color: context.colors.textSecondary)),
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
@@ -181,7 +248,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                               ? context.colors.danger
                               : context.colors.textMuted,
                         ),
-                        SizedBox(width: 4),
+                        const SizedBox(width: 4),
                         Text(
                           'Dernier nettoyage : ${DateFormat('dd/MM/yyyy').format(weapon.lastCleaned)}',
                           style: TextStyle(
@@ -205,10 +272,8 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                   onSelected: (value) {
                     if (value == 'clean') {
                       _cleanWeapon(index);
-                    } else if (value == 'maintain') {
-                      context.push('/maintenance/nouveau');
-                    } else if (value == 'report') {
-                      context.push('/incidents/nouveau');
+                    } else {
+                      context.go('/tickets/nouveau');
                     }
                   },
                   itemBuilder: (BuildContext context) =>
@@ -219,7 +284,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                         children: [
                           Icon(Icons.cleaning_services,
                               color: context.colors.textPrimary, size: 20),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text('Marquer nettoyé',
                               style: TextStyle(color: context.colors.textPrimary)),
                         ],
@@ -230,7 +295,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                       child: Row(
                         children: [
                           Icon(Icons.build, color: context.colors.warning, size: 20),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text('Créer Maintenance',
                               style: TextStyle(color: context.colors.textPrimary)),
                         ],
@@ -242,7 +307,7 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
                         children: [
                           Icon(Icons.warning,
                               color: context.colors.danger, size: 20),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text('Signaler Problème',
                               style: TextStyle(color: context.colors.textPrimary)),
                         ],
@@ -253,8 +318,5 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
               ),
             ),
           );
-        },
-      ),
-    );
   }
 }

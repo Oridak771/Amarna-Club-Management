@@ -6,7 +6,7 @@ class PriorityIndicator extends StatefulWidget {
   final TicketPriority priority;
   final Widget child;
 
-  PriorityIndicator({
+  const PriorityIndicator({
     super.key,
     required this.priority,
     required this.child,

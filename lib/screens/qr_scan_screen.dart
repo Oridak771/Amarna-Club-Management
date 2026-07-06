@@ -45,10 +45,10 @@ class _QRScanScreenState extends State<QRScanScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text('Scanner Code QR / NFC',
+        title: const Text('Scanner Code QR / NFC',
             style: TextStyle(color: Colors.white)),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -87,8 +87,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
               errorBuilder: (context, error, child) {
                 return Center(
                   child: Container(
-                    padding: EdgeInsets.all(24),
-                    margin: EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
                     decoration: BoxDecoration(
                       color: context.colors.backgroundSecondary,
                       borderRadius: BorderRadius.circular(16),
@@ -99,7 +99,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       children: [
                         Icon(Icons.videocam_off,
                             color: context.colors.danger, size: 48),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'Caméra non disponible',
                           style: TextStyle(
@@ -108,7 +108,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                             fontSize: 16,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Utilisez la saisie manuelle ci-dessous ou configurez les permissions de la caméra.',
                           textAlign: TextAlign.center,
@@ -155,12 +155,12 @@ class _QRScanScreenState extends State<QRScanScreen> {
             child: Center(
               child: Container(
                 padding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
+                child: const Text(
                   'Alignez le code QR dans le cadre',
                   style: TextStyle(
                       color: Colors.white,
@@ -177,10 +177,10 @@ class _QRScanScreenState extends State<QRScanScreen> {
             right: 0,
             bottom: 0,
             child: Container(
-              padding: EdgeInsets.all(24.0),
+              padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
                 color: context.colors.backgroundSecondary.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
@@ -197,7 +197,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     onTap: () {
                       // Simulate NFC Tap
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text(
                               'Simulation NFC : Badge détecté (ASSET-001)'),
                           duration: Duration(seconds: 1),
@@ -207,7 +207,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                     },
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       decoration: BoxDecoration(
                         color: context.colors.surface,
                         borderRadius: BorderRadius.circular(12),
@@ -218,7 +218,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                         children: [
                           Icon(Icons.contactless,
                               color: context.colors.accentSecondary, size: 28),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -243,7 +243,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
                   // Saisie manuelle toggle
                   if (!_showManualInput)
@@ -284,7 +284,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                                       color: context.colors.textMuted),
                                   filled: true,
                                   fillColor: context.colors.surface,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 16, vertical: 12),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
@@ -304,7 +304,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                                 },
                               ),
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             SizedBox(
                               height: 48,
                               child: ElevatedButton(
@@ -322,12 +322,12 @@ class _QRScanScreenState extends State<QRScanScreen> {
                                     _navigateToAsset(text);
                                   }
                                 },
-                                child: Icon(Icons.arrow_forward),
+                                child: const Icon(Icons.arrow_forward),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         TextButton(
                           onPressed: () {
                             setState(() {

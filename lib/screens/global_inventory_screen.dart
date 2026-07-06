@@ -43,9 +43,9 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Inventaire Global'),
+        title: const Text('Inventaire Global'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
@@ -53,7 +53,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
         children: [
           // 1. Search Bar
           Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: TextField(
               style: TextStyle(color: context.colors.textPrimary),
               decoration: InputDecoration(
@@ -63,7 +63,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                     Icon(Icons.search, color: context.colors.textSecondary),
                 filled: true,
                 fillColor: context.colors.backgroundSecondary,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: context.colors.border),
@@ -84,12 +84,12 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
           // 2. Horizontal Activity Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: activities.map((act) {
                 final isSelected = _selectedActivityId == act['id'];
                 return Padding(
-                  padding: EdgeInsets.only(right: 8.0),
+                  padding: const EdgeInsets.only(right: 8.0),
                   child: ChoiceChip(
                     label: Text(act['name']!),
                     selected: isSelected,
@@ -131,7 +131,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       if (crossAxisCount > 1) {
                         // Tablet/Desktop Grid
                         return GridView.builder(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: crossAxisCount,
@@ -147,10 +147,10 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       } else {
                         // Mobile List
                         return ListView.separated(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           itemCount: filteredItems.length,
                           separatorBuilder: (context, index) =>
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             return _buildInventoryCard(filteredItems[index]);
                           },
@@ -167,13 +167,13 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.inventory_2_outlined,
                 size: 64, color: context.colors.textMuted),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Aucun article trouvé',
               style: TextStyle(
@@ -181,7 +181,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Essayez de modifier votre recherche ou le filtre d\'activité.',
               textAlign: TextAlign.center,
@@ -198,7 +198,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
     final isOutOfStock = item.isOutOfStock;
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
@@ -222,7 +222,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 // Activity Pill Tag
                 Container(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getActivityColor(item.activityId)
                         .withValues(alpha: 0.15),
@@ -237,7 +237,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
 
                 // Item Name
                 Text(
@@ -250,7 +250,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
 
                 // Stock Level Text
                 Row(
@@ -269,7 +269,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                       ),
                     ),
                     if (isOutOfStock) ...[
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         '⚠️ ÉPUISÉ',
                         style: TextStyle(
@@ -278,7 +278,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                             fontWeight: FontWeight.bold),
                       ),
                     ] else if (isLowStock) ...[
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         '⚠️ SEUIL BAS',
                         style: TextStyle(
@@ -292,7 +292,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
               ],
             ),
           ),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
 
           // Right Content: Quantitative Stepper (48x48px touch targets)
           Container(
@@ -307,7 +307,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
                     ),
@@ -333,7 +333,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 Container(width: 1, height: 28, color: context.colors.border),
                 // Quantifier label
                 Container(
-                  constraints: BoxConstraints(minWidth: 40),
+                  constraints: const BoxConstraints(minWidth: 40),
                   alignment: Alignment.center,
                   child: Text(
                     '${item.currentStock}',
@@ -350,7 +350,7 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
                 Material(
                   type: MaterialType.transparency,
                   child: InkWell(
-                    borderRadius: BorderRadius.only(
+                    borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(12),
                       bottomRight: Radius.circular(12),
                     ),
@@ -379,21 +379,6 @@ class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
   }
 
   Color _getActivityColor(String activityId) {
-    switch (activityId.toLowerCase()) {
-      case 'pool':
-        return const Color(0xFF00D4FF); // Cyan
-      case 'horses':
-        return const Color(0xFFFFB347); // Amber
-      case 'paintball':
-        return const Color(0xFF7CFC00); // Lime
-      case 'shooting':
-        return const Color(0xFFFF4757); // Red
-      case 'gym':
-        return const Color(0xFFA855F7); // Purple
-      case 'padel':
-        return const Color(0xFF34D399); // Emerald
-      default:
-        return context.colors.accentPrimary;
-    }
+    return context.colors.getActivityColor(activityId);
   }
 }

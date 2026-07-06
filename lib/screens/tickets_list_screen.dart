@@ -23,15 +23,16 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
   static const List<String> _filters = [
     'Tout',
-    'Anomalies',
+    'Incidents',
     'Maintenances',
+    'En retard',
     'En cours',
     'Resolus',
   ];
 
   List<WorkTicket> _applyFilter(List<WorkTicket> tickets) {
     switch (_selectedFilter) {
-      case 'Anomalies':
+      case 'Incidents':
         return tickets.where((t) => t.type == TicketType.anomaly).toList();
       case 'Maintenances':
         return tickets
@@ -39,6 +40,8 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 t.type == TicketType.preventive ||
                 t.type == TicketType.corrective)
             .toList();
+      case 'En retard':
+        return tickets.where((t) => t.isOverdue).toList();
       case 'En cours':
         return tickets
             .where((t) => t.status == TicketStatus.inProgress)
@@ -74,15 +77,15 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tickets d\'intervention'),
+        title: const Text('Interventions'),
         actions: [
           IconButton(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: const Icon(Icons.qr_code_scanner),
             tooltip: 'Scanner QR',
             onPressed: () => context.push('/scan'),
           ),
           IconButton(
-            icon: Icon(Icons.notifications_none),
+            icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
             onPressed: () => context.push('/notifications'),
           ),
@@ -90,12 +93,12 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
       ),
       body: Center(
         child: Container(
-          constraints: BoxConstraints(maxWidth: 1000),
+          constraints: const BoxConstraints(maxWidth: 1000),
           child: Column(
             children: [
               // Create Ticket Button
               Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: SizedBox(
                   width: double.infinity,
                   height: 52,
@@ -107,8 +110,8 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: Icon(Icons.add_circle_outline, size: 22),
-                    label: Text(
+                    icon: const Icon(Icons.add_circle_outline, size: 22),
+                    label: const Text(
                       'Creer un ticket',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -122,10 +125,10 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
               SizedBox(
                 height: 48,
                 child: ListView.separated(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   scrollDirection: Axis.horizontal,
                   itemCount: _filters.length,
-                  separatorBuilder: (_, __) => SizedBox(width: 8),
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final label = _filters[index];
                     return AppFilterChip(
@@ -137,7 +140,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 ),
               ),
 
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               // Tickets list/grid
               Expanded(
@@ -148,10 +151,10 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                           final isWide = constraints.maxWidth > 600;
                           if (isWide) {
                             return GridView.builder(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 12,
                                 mainAxisSpacing: 12,
@@ -165,11 +168,11 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                             );
                           } else {
                             return ListView.separated(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 8),
                               itemCount: filteredTickets.length,
                               separatorBuilder: (_, __) =>
-                                  SizedBox(height: 12),
+                                  const SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final ticket = filteredTickets[index];
                                 return _buildTicketCard(ticket);
@@ -189,7 +192,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -198,7 +201,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
               size: 72,
               color: context.colors.success.withValues(alpha: 0.6),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Aucun ticket trouve - tout fonctionne.',
               textAlign: TextAlign.center,
@@ -219,7 +222,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
       child: PriorityIndicator(
         priority: ticket.priority,
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -238,19 +241,19 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   _buildPriorityBadge(ticket),
                 ],
               ),
 
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
 
               // Row 2: Type badge • Activity name
               Row(
                 children: [
                   Container(
                     padding:
-                        EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
@@ -264,7 +267,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Container(
                     width: 6,
                     height: 6,
@@ -273,7 +276,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   Text(
                     ticket.activityName,
                     style: TextStyle(
@@ -284,7 +287,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 ],
               ),
 
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
 
               // Row 3: asset details or date info
               Row(
@@ -312,7 +315,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                 ],
               ),
 
-              SizedBox(height: 6),
+              const SizedBox(height: 6),
 
               // Row 4: technician + status badge + sync icon
               Row(
@@ -323,7 +326,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       size: 14,
                       color: context.colors.textSecondary,
                     ),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         ticket.assignedTechnician!,
@@ -347,17 +350,6 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
                       ),
                     ),
                   _buildStatusChip(ticket),
-                  if (ticket.syncPending) ...[
-                    SizedBox(width: 8),
-                    Tooltip(
-                      message: 'En attente de synchronisation',
-                      child: Icon(
-                        Icons.cloud_upload_outlined,
-                        size: 16,
-                        color: context.colors.warning.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ],
@@ -369,7 +361,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
   Widget _buildPriorityBadge(WorkTicket ticket) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: ticket.priority.resolveColor(context).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
@@ -391,7 +383,7 @@ class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
 
   Widget _buildStatusChip(WorkTicket ticket) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: ticket.status.resolveColor(context).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),

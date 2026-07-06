@@ -53,14 +53,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        SizedBox(height: 40),
+                        const SizedBox(height: 40),
                         // Branded Placeholder Logo
                         Icon(
                           Icons.sports_hockey,
                           size: 64,
                           color: context.colors.accentPrimary,
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'AMARNA CLUB',
                           textAlign: TextAlign.center,
@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             letterSpacing: 1.5,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Gestion Operationnelle',
                           textAlign: TextAlign.center,
@@ -80,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: context.colors.textSecondary,
                           ),
                         ),
-                        SizedBox(height: 48),
+                        const SizedBox(height: 48),
 
                         // Username / Email Field
                         TextFormField(
@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
 
                         // Password Field
                         TextFormField(
@@ -137,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
                         // Remember me toggle
                         Row(
@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                               ),
                             ),
-                            SizedBox(width: 12),
+                            const SizedBox(width: 12),
                             Text(
                               'Se souvenir de moi',
                               style: TextStyle(
@@ -168,7 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
                         // Login button
                         ElevatedButton(
@@ -181,9 +181,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           onPressed: _handleLogin,
-                          child: Text('Connexion'),
+                          child: const Text('Connexion'),
                         ),
-                        SizedBox(height: 48),
+                        const SizedBox(height: 48),
 
                         // Biometrics hint
                         Row(
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   .withValues(alpha: 0.8),
                               size: 24,
                             ),
-                            SizedBox(width: 8),
+                            const SizedBox(width: 8),
                             Text(
                               'Connexion biometrique disponible',
                               style: TextStyle(
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 40),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),

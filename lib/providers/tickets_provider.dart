@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/app_environment.dart';
 import '../models/work_ticket.dart';
 import '../repositories/ticket_repository.dart';
 import '../services/database_service.dart';
-import 'sync_provider.dart';
+import '../services/ticket_sync_service.dart';
 
 final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
   return TicketRepository(ref.watch(isarProvider));
@@ -10,18 +12,31 @@ final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
 
 class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
   final TicketRepository _repo;
-  final Ref _ref;
+  final TicketSyncService _odooSync;
 
-  TicketsNotifier(this._repo, this._ref) : super([]) {
-    _init();
-  }
-
-  Future<void> _init() async {
-    await loadTickets();
+  TicketsNotifier(this._repo, this._odooSync) : super([]) {
+    loadTickets();
   }
 
   Future<void> loadTickets() async {
     state = await _repo.getAll();
+  }
+
+  /// Pushes the ticket to Odoo when configured; local state is the source
+  /// of truth for the UI, so remote failures are logged but non-blocking.
+  Future<void> _pushToOdoo(WorkTicket ticket) async {
+    if (!AppEnvironment.isOdooConfigured) return;
+    try {
+      await _odooSync.syncTicket(ticket);
+    } catch (error) {
+      debugPrint('Odoo push failed for ticket ${ticket.id}: $error');
+    }
+  }
+
+  Future<void> _saveAndPush(WorkTicket ticket) async {
+    await _repo.put(ticket);
+    await loadTickets();
+    await _pushToOdoo(ticket);
   }
 
   Future<void> addTicket({
@@ -35,13 +50,9 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
     String? assetName,
     DateTime? dateDue,
     String? assignedTechnician,
-    String? imageUrl,
-    String? voiceNoteUrl,
-    bool createdOffline = false,
+    List<String> photoPaths = const [],
+    String? author,
   }) async {
-    final syncState = _ref.read(syncProvider);
-    final isOffline = !syncState.isOnline || createdOffline;
-
     final newTicket = WorkTicket(
       id: '${type == TicketType.anomaly ? "inc" : "maint"}-${DateTime.now().millisecondsSinceEpoch}',
       title: title,
@@ -59,62 +70,123 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
               ? DateTime.now().add(const Duration(days: 3))
               : null),
       assignedTechnician: assignedTechnician,
-      imageUrl: imageUrl,
-      voiceNoteUrl: voiceNoteUrl,
-      syncPending: isOffline,
+      photoPaths: photoPaths,
+      events: [
+        TicketEvent.make(
+          type: TicketEventType.created,
+          message: type == TicketType.anomaly
+              ? 'Incident signalé'
+              : 'Intervention planifiée',
+          author: author,
+        ),
+        if (photoPaths.isNotEmpty)
+          TicketEvent.make(
+            type: TicketEventType.photoAdded,
+            message: '${photoPaths.length} photo(s) jointe(s)',
+            author: author,
+          ),
+        if (assignedTechnician != null && assignedTechnician.isNotEmpty)
+          TicketEvent.make(
+            type: TicketEventType.assigned,
+            message: 'Assigné à $assignedTechnician',
+            author: author,
+          ),
+      ],
     );
 
-    await _repo.put(newTicket);
-    await loadTickets();
-
-    if (isOffline) {
-      final label = type == TicketType.anomaly
-          ? "Signalement incident '$title' ($activityName)"
-          : "Planification maintenance '$title'";
-      _ref.read(syncProvider.notifier).incrementPendingCount(label);
-    }
+    await _saveAndPush(newTicket);
   }
 
-  Future<void> updateTicketStatus(String id, TicketStatus status) async {
+  Future<void> updateTicketStatus(String id, TicketStatus status,
+      {String? author}) async {
     final ticket = await _repo.getById(id);
-    if (ticket != null) {
-      final syncState = _ref.read(syncProvider);
+    if (ticket == null || ticket.status == status) return;
 
-      final updated = WorkTicket(
-        isarId: ticket.isarId,
-        id: ticket.id,
-        title: ticket.title,
-        description: ticket.description,
-        activityId: ticket.activityId,
-        activityName: ticket.activityName,
-        assetId: ticket.assetId,
-        assetName: ticket.assetName,
-        type: ticket.type,
-        priority: ticket.priority,
-        status: status,
-        dateCreated: ticket.dateCreated,
-        dateDue: ticket.dateDue,
-        dateCompleted: status == TicketStatus.resolved
-            ? DateTime.now()
-            : ticket.dateCompleted,
-        imageUrl: ticket.imageUrl,
-        voiceNoteUrl: ticket.voiceNoteUrl,
-        assignedTechnician: ticket.assignedTechnician,
-        syncPending: !syncState.isOnline || ticket.syncPending,
-      );
-      await _repo.put(updated);
-      await loadTickets();
+    final updated = ticket.copyWith(
+      status: status,
+      dateCompleted:
+          status == TicketStatus.resolved ? DateTime.now() : ticket.dateCompleted,
+      events: [
+        ...ticket.events,
+        TicketEvent.make(
+          type: TicketEventType.statusChanged,
+          message: _statusLabel(ticket.type, status),
+          author: author,
+        ),
+      ],
+    );
+    await _saveAndPush(updated);
+  }
 
-      if (!syncState.isOnline) {
-        _ref.read(syncProvider.notifier).incrementPendingCount(
-            "Mise à jour ticket '${ticket.title}' -> ${status.toString().split('.').last}");
-      }
+  Future<void> addComment(String id, String message, {String? author}) async {
+    final ticket = await _repo.getById(id);
+    if (ticket == null || message.trim().isEmpty) return;
+
+    await _saveAndPush(ticket.copyWith(
+      events: [
+        ...ticket.events,
+        TicketEvent.make(
+          type: TicketEventType.commented,
+          message: message.trim(),
+          author: author,
+        ),
+      ],
+    ));
+  }
+
+  Future<void> addPhoto(String id, String photoPath, {String? author}) async {
+    final ticket = await _repo.getById(id);
+    if (ticket == null) return;
+
+    await _saveAndPush(ticket.copyWith(
+      photoPaths: [...ticket.photoPaths, photoPath],
+      events: [
+        ...ticket.events,
+        TicketEvent.make(
+          type: TicketEventType.photoAdded,
+          message: 'Photo ajoutée',
+          author: author,
+        ),
+      ],
+    ));
+  }
+
+  Future<void> assignTechnician(String id, String technician,
+      {String? author}) async {
+    final ticket = await _repo.getById(id);
+    if (ticket == null) return;
+
+    await _saveAndPush(ticket.copyWith(
+      assignedTechnician: technician,
+      events: [
+        ...ticket.events,
+        TicketEvent.make(
+          type: TicketEventType.assigned,
+          message: 'Assigné à $technician',
+          author: author,
+        ),
+      ],
+    ));
+  }
+
+  String _statusLabel(TicketType type, TicketStatus status) {
+    switch (status) {
+      case TicketStatus.open:
+        return 'Ticket rouvert';
+      case TicketStatus.inProgress:
+        return 'Prise en charge';
+      case TicketStatus.resolved:
+        return type == TicketType.anomaly
+            ? 'Incident résolu'
+            : 'Intervention réalisée';
     }
   }
 }
 
 final ticketsProvider =
     StateNotifierProvider<TicketsNotifier, List<WorkTicket>>((ref) {
-  final repo = ref.watch(ticketRepositoryProvider);
-  return TicketsNotifier(repo, ref);
+  return TicketsNotifier(
+    ref.watch(ticketRepositoryProvider),
+    ref.watch(ticketSyncServiceProvider),
+  );
 });

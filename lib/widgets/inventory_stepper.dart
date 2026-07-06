@@ -28,7 +28,7 @@ class InventoryStepper extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,7 +51,7 @@ class InventoryStepper extends StatelessWidget {
                 if (isLow)
                   Container(
                     padding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: context.colors.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(4),
@@ -67,7 +67,7 @@ class InventoryStepper extends StatelessWidget {
                   ),
               ],
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
 
             // Current stock details
             Row(
@@ -87,7 +87,7 @@ class InventoryStepper extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             // Interactive Stepper Row
             Row(
@@ -164,7 +164,7 @@ class InventoryStepper extends StatelessWidget {
             ),
 
             // Warning threshold details
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Seuil d\'alerte: ${item.lowThreshold} ${item.unitName}',
               style: TextStyle(

@@ -77,7 +77,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
           content:
               Text('Toutes les notifications ont été marquées comme lues.')),
     );
@@ -90,9 +90,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifications'),
+        title: const Text('Notifications'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
@@ -111,10 +111,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       body: _notifications.isEmpty
           ? _buildEmptyState()
           : SingleChildScrollView(
-              padding: EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Center(
                 child: Container(
-                  constraints: BoxConstraints(maxWidth: 800),
+                  constraints: const BoxConstraints(maxWidth: 800),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -123,11 +123,11 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                         ...todayNotifs.map((n) => _buildNotificationRow(n)),
                       ],
                       if (earlierNotifs.isNotEmpty) ...[
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildSectionHeader('Plus tôt'),
                         ...earlierNotifs.map((n) => _buildNotificationRow(n)),
                       ],
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -138,7 +138,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       child: Text(
         title,
         style: TextStyle(
@@ -158,7 +158,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         children: [
           Icon(Icons.notifications_off_outlined,
               size: 64, color: context.colors.textMuted),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Aucune notification',
             style: TextStyle(
@@ -166,7 +166,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Vous êtes à jour ! Vos alertes apparaîtront ici.',
             style: TextStyle(color: context.colors.textSecondary),
@@ -187,7 +187,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
         }
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
         decoration: BoxDecoration(
           color: notif.isRead
               ? Colors.transparent
@@ -201,7 +201,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           children: [
             // Category Icon Badge
             Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color:
                     _getCategoryColor(notif.category).withValues(alpha: 0.15),
@@ -213,7 +213,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 size: 20,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
 
             // Content
             Expanded(
@@ -242,7 +242,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     notif.description,
                     style: TextStyle(
@@ -254,12 +254,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 ],
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
 
             // Unread Dot
             if (!notif.isRead)
               Container(
-                margin: EdgeInsets.only(top: 6),
+                margin: const EdgeInsets.only(top: 6),
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(

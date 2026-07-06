@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/activity_panels.dart';
 import '../../widgets/priority_indicator.dart';
 import '../../models/work_ticket.dart';
 
@@ -21,7 +22,7 @@ class GymMachine {
 }
 
 class GymEquipmentScreen extends StatefulWidget {
-  GymEquipmentScreen({super.key});
+  const GymEquipmentScreen({super.key});
 
   @override
   State<GymEquipmentScreen> createState() => _GymEquipmentScreenState();
@@ -78,7 +79,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(
+          content: const Text(
               'Toutes les machines fonctionnelles marquées comme nettoyées'),
           backgroundColor: context.colors.success),
     );
@@ -88,31 +89,97 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Équipement Gym'),
+        title: const Text('Équipement Gym'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.cleaning_services),
+            icon: const Icon(Icons.cleaning_services),
             onPressed: _markAllCleaned,
             tooltip: 'Tout marquer nettoyé',
           ),
           IconButton(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: const Icon(Icons.qr_code_scanner),
             onPressed: () => context.push('/scan'),
           ),
         ],
       ),
-      body: ListView.separated(
-        padding: EdgeInsets.all(16.0),
-        itemCount: machines.length,
-        separatorBuilder: (context, index) => SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final machine = machines[index];
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildCleaningHeader(),
+          const SizedBox(height: 14),
+          for (final machine in machines) ...[
+            _buildMachineCard(machine),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 12),
+          const ActivityTicketsPanel(activityId: 'gym'),
+        ],
+      ),
+    );
+  }
 
-          return PriorityIndicator(
+  Widget _buildCleaningHeader() {
+    final total = machines.where((m) => !m.isBroken).length;
+    final cleaned = machines.where((m) => !m.isBroken && m.isCleaned).length;
+    final brokenCount = machines.where((m) => m.isBroken).length;
+    final colors = context.colors;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Nettoyage du jour : $cleaned/$total machines',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ),
+              if (brokenCount > 0)
+                Text(
+                  '$brokenCount HS',
+                  style: TextStyle(
+                    color: colors.danger,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: total > 0 ? cleaned / total : 0,
+              minHeight: 8,
+              backgroundColor: colors.surfaceHover,
+              valueColor: AlwaysStoppedAnimation(
+                cleaned == total ? colors.success : colors.gym,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMachineCard(GymMachine machine) {
+    return PriorityIndicator(
             priority:
                 machine.isBroken ? TicketPriority.high : TicketPriority.low,
             child: Card(
@@ -126,7 +193,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                 ),
               ),
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Row(
                   children: [
                     Expanded(
@@ -149,9 +216,9 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                                 ),
                               ),
                               if (machine.isBroken) ...[
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Container(
-                                  padding: EdgeInsets.symmetric(
+                                  padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
                                     color:
@@ -167,7 +234,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                               ],
                             ],
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             machine.category,
                             style: TextStyle(
@@ -189,7 +256,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                                 ? context.colors.success
                                 : context.colors.textMuted,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text('Nettoyé',
                               style: TextStyle(
                                   color: context.colors.textSecondary,
@@ -211,16 +278,13 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: context.colors.surface,
                           foregroundColor: context.colors.textPrimary,
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                         ),
-                        onPressed: () {
-                          // Could resolve the issue or show details
-                          context.push('/maintenance/nouveau');
-                        },
+                        onPressed: () => context.go('/tickets/nouveau'),
                         icon: Icon(Icons.build,
                             size: 16, color: context.colors.warning),
-                        label: Text('Réparer',
+                        label: const Text('Réparer',
                             style: TextStyle(fontSize: 12)),
                       ),
                     ],
@@ -237,7 +301,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                             machine.isCleaned =
                                 false; // logic: if broken, cleaning isn't relevant
                           });
-                          context.push('/incidents/nouveau');
+                          context.go('/tickets/nouveau');
                         } else if (val == 'resolve') {
                           setState(() {
                             machine.isBroken = false;
@@ -253,7 +317,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                               children: [
                                 Icon(Icons.warning,
                                     color: context.colors.danger, size: 20),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Text('Signaler Panne',
                                     style: TextStyle(
                                         color: context.colors.textPrimary)),
@@ -267,7 +331,7 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                               children: [
                                 Icon(Icons.check,
                                     color: context.colors.success, size: 20),
-                                SizedBox(width: 8),
+                                const SizedBox(width: 8),
                                 Text('Marquer Fonctionnel',
                                     style: TextStyle(
                                         color: context.colors.textPrimary)),
@@ -281,8 +345,5 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
               ),
             ),
           );
-        },
-      ),
-    );
   }
 }

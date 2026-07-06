@@ -9,9 +9,9 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final faqs = [
       _FAQ(
-        question: 'Comment fonctionne le mode hors-ligne ?',
+        question: 'Mes données sont-elles synchronisées avec Odoo ?',
         answer:
-            'L\'application stocke localement toutes vos modifications (tickets créés, relevés de piscine, checklist cochées). Dès que votre appareil détecte du réseau, les données sont synchronisées automatiquement. Vous pouvez suivre l\'état des fichiers en attente ou forcer une synchronisation dans le menu "Plus" -> "Mode hors-ligne".',
+            'Oui. Les tickets et réservations créés depuis la tablette sont envoyés directement au serveur Odoo du club. En cas d\'erreur réseau ponctuelle, la donnée reste visible localement et sera renvoyée lors de la prochaine modification.',
       ),
       _FAQ(
         question: 'Comment scanner un équipement ?',
@@ -24,9 +24,9 @@ class HelpScreen extends StatelessWidget {
             'Pour tout incident critique (danger immédiat, blessure grave, défaillance technique majeure), créez immédiatement un ticket via le bouton "Créer un ticket" de l\'onglet Tickets. Marquez la priorité comme "Critique". Cela affichera une alerte clignotante rouge sur le tableau de bord de tous les managers.',
       ),
       _FAQ(
-        question: 'Comment valider le contrôle quotidien d\'une activité ?',
+        question: 'Comment suivre l\'état d\'une activité ?',
         answer:
-            'Allez dans l\'onglet "Activités", choisissez l\'activité concernée, et appuyez sur le bouton "Lancer le contrôle". Répondez aux points requis en swipant les cartes (Droite pour Validé, Gauche pour Problème). Validez à la fin pour enregistrer le rapport.',
+            'Allez dans l\'onglet "Activités" et choisissez l\'activité concernée. Vous y trouvez l\'occupation en temps réel, les sessions réservées du jour, l\'inventaire, les équipements et les interventions ouvertes. Chaque module (piscine, écurie, stand de tir…) propose en plus ses indicateurs spécifiques.',
       ),
       _FAQ(
         question: 'Où trouver les rapports de statistiques ?',
@@ -37,23 +37,23 @@ class HelpScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Aide & FAQ'),
+        title: const Text('Aide & FAQ'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Container(
-            constraints: BoxConstraints(maxWidth: 800),
+            constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. Support Banner Card
                 Container(
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -72,7 +72,7 @@ class HelpScreen extends StatelessWidget {
                     children: [
                       Icon(Icons.help_center_outlined,
                           color: context.colors.accentPrimary, size: 48),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         'Besoin d\'une assistance directe ?',
                         textAlign: TextAlign.center,
@@ -82,7 +82,7 @@ class HelpScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
                         'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels de 8h à 20h.',
                         textAlign: TextAlign.center,
@@ -91,7 +91,7 @@ class HelpScreen extends StatelessWidget {
                           fontSize: 13,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Support actions (glove-friendly size)
                       Row(
                         children: [
@@ -105,8 +105,8 @@ class HelpScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8)),
                                 ),
-                                icon: Icon(Icons.phone),
-                                label: Text('Appeler',
+                                icon: const Icon(Icons.phone),
+                                label: const Text('Appeler',
                                     style:
                                         TextStyle(fontWeight: FontWeight.bold)),
                                 onPressed: () {
@@ -115,7 +115,7 @@ class HelpScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: SizedBox(
                               height: 48,
@@ -143,7 +143,7 @@ class HelpScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 28),
+                const SizedBox(height: 28),
 
                 // 2. FAQ Section Header
                 Text(
@@ -154,7 +154,7 @@ class HelpScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
 
                 // 3. Expandable FAQ Accordion Cards
                 ListView.separated(
@@ -162,7 +162,7 @@ class HelpScreen extends StatelessWidget {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: faqs.length,
                   separatorBuilder: (context, index) =>
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final faq = faqs[index];
                     return Theme(
@@ -187,7 +187,7 @@ class HelpScreen extends StatelessWidget {
                           ),
                           children: [
                             Padding(
-                              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                               child: Text(
                                 faq.answer,
                                 style: TextStyle(
@@ -203,7 +203,7 @@ class HelpScreen extends StatelessWidget {
                     );
                   },
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
               ],
             ),
           ),

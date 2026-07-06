@@ -3,7 +3,7 @@ import 'package:isar/isar.dart';
 part 'work_ticket.g.dart';
 
 enum TicketType {
-  anomaly, // Quick operational issues / anomalies reported on the fly
+  anomaly, // Incident / anomaly reported on the fly
   preventive, // Scheduled inspection / check task
   corrective, // Work order / repair task
 }
@@ -19,6 +19,33 @@ enum TicketStatus {
   open, // Ouvert / À faire
   inProgress, // En cours
   resolved, // Résolu / Réalisé
+}
+
+enum TicketEventType {
+  created,
+  statusChanged,
+  commented,
+  photoAdded,
+  assigned,
+}
+
+/// A single entry in a ticket's history timeline.
+@embedded
+class TicketEvent {
+  @enumerated
+  TicketEventType type = TicketEventType.commented;
+  String? message;
+  String? author;
+  DateTime? at;
+
+  TicketEvent();
+
+  TicketEvent.make({
+    required this.type,
+    this.message,
+    this.author,
+    DateTime? at,
+  }) : at = at ?? DateTime.now();
 }
 
 @collection
@@ -46,10 +73,9 @@ class WorkTicket {
   final DateTime dateCreated;
   final DateTime? dateDue; // For scheduled tasks
   final DateTime? dateCompleted; // For resolved tasks
-  final String? imageUrl;
-  final String? voiceNoteUrl;
+  final List<String> photoPaths;
+  final List<TicketEvent> events;
   final String? assignedTechnician;
-  final bool syncPending;
 
   WorkTicket({
     this.isarId = Isar.autoIncrement,
@@ -66,11 +92,44 @@ class WorkTicket {
     required this.dateCreated,
     this.dateDue,
     this.dateCompleted,
-    this.imageUrl,
-    this.voiceNoteUrl,
+    this.photoPaths = const [],
+    this.events = const [],
     this.assignedTechnician,
-    this.syncPending = false,
   });
+
+  WorkTicket copyWith({
+    TicketStatus? status,
+    TicketPriority? priority,
+    DateTime? dateCompleted,
+    List<String>? photoPaths,
+    List<TicketEvent>? events,
+    String? assignedTechnician,
+  }) {
+    return WorkTicket(
+      isarId: isarId,
+      id: id,
+      title: title,
+      description: description,
+      activityId: activityId,
+      activityName: activityName,
+      assetId: assetId,
+      assetName: assetName,
+      type: type,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+      dateCreated: dateCreated,
+      dateDue: dateDue,
+      dateCompleted: dateCompleted ?? this.dateCompleted,
+      photoPaths: photoPaths ?? this.photoPaths,
+      events: events ?? this.events,
+      assignedTechnician: assignedTechnician ?? this.assignedTechnician,
+    );
+  }
+
+  bool get isOverdue =>
+      status != TicketStatus.resolved &&
+      dateDue != null &&
+      dateDue!.isBefore(DateTime.now());
 
   String get priorityTextFrench {
     switch (priority) {

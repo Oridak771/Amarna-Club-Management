@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/activity_panels.dart';
 import '../../widgets/quick_action_button.dart';
 
 class PaintballFieldScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
     if (!_netsOk || !_obstaclesOk) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('Impossible de démarrer: Terrain non sécurisé.'),
+            content: const Text('Impossible de démarrer: Terrain non sécurisé.'),
             backgroundColor: context.colors.danger),
       );
       return;
@@ -40,14 +41,14 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Terrain Paintball'),
+        title: const Text('Terrain Paintball'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -66,7 +67,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                 ),
               ),
               child: Padding(
-                padding: EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(24.0),
                 child: Column(
                   children: [
                     Text(
@@ -81,26 +82,26 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
                     if (_isSessionActive) ...[
                       Text(
                         'Joueurs sur le terrain',
                         style: TextStyle(
                             color: context.colors.textSecondary, fontSize: 14),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
-                            icon: Icon(Icons.remove_circle_outline,
+                            icon: const Icon(Icons.remove_circle_outline,
                                 size: 40),
                             color: context.colors.textMuted,
                             onPressed: _playerCount > 0
                                 ? () => setState(() => _playerCount--)
                                 : null,
                           ),
-                          SizedBox(width: 24),
+                          const SizedBox(width: 24),
                           Text(
                             '$_playerCount / $_maxPlayers',
                             style: TextStyle(
@@ -109,10 +110,10 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(width: 24),
+                          const SizedBox(width: 24),
                           IconButton(
                             icon:
-                                Icon(Icons.add_circle_outline, size: 40),
+                                const Icon(Icons.add_circle_outline, size: 40),
                             color: context.colors.textPrimary,
                             onPressed: _playerCount < _maxPlayers
                                 ? () => setState(() => _playerCount++)
@@ -120,7 +121,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
@@ -134,7 +135,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           minHeight: 8,
                         ),
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                     ],
                     SizedBox(
                       width: double.infinity,
@@ -152,7 +153,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                           _isSessionActive
                               ? 'Terminer la session'
                               : 'Démarrer une session',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               color: Colors.white),
@@ -164,7 +165,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               ),
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
 
             // Field Status Overview
             Text(
@@ -174,7 +175,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                   fontSize: 18,
                   fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             _buildStatusToggle(
               'Filets de protection',
@@ -182,7 +183,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               Icons.grid_4x4,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content:
                           Text('Impossible de modifier pendant une session.')));
                   return;
@@ -190,14 +191,14 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                 setState(() => _netsOk = val);
               },
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildStatusToggle(
               'Obstacles gonflables',
               _obstaclesOk,
               Icons.sports_gymnastics,
               (val) {
                 if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                       content:
                           Text('Impossible de modifier pendant une session.')));
                   return;
@@ -206,7 +207,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
               },
             ),
 
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
@@ -214,20 +215,27 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
                     icon: Icons.warning,
                     label: 'Signaler Dégât',
                     color: context.colors.danger,
-                    onTap: () => context.push('/incidents/nouveau'),
+                    onTap: () => context.go('/tickets/nouveau'),
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: QuickActionButton(
                     icon: Icons.inventory,
-                    label: 'Voir Lanceurs',
+                    label: 'Stocks (billes, CO2)',
                     color: context.colors.info,
-                    onTap: () => context.push('/activites/paintball'),
+                    onTap: () => context.go('/plus/inventaire'),
                   ),
                 ),
               ],
-            )
+            ),
+            const SizedBox(height: 28),
+            const ActivityReservationsPanel(
+              activityId: 'paintball',
+              activityName: 'Paintball',
+            ),
+            const SizedBox(height: 20),
+            const ActivityTicketsPanel(activityId: 'paintball'),
           ],
         ),
       ),
@@ -245,7 +253,7 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
       ),
       child: ListTile(
         leading: Container(
-          padding: EdgeInsets.all(8),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: (isOk ? context.colors.success : context.colors.danger)
                 .withValues(alpha: 0.15),

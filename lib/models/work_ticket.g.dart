@@ -62,62 +62,63 @@ const WorkTicketSchema = CollectionSchema(
       name: r'description',
       type: IsarType.string,
     ),
-    r'id': PropertySchema(
+    r'events': PropertySchema(
       id: 9,
+      name: r'events',
+      type: IsarType.objectList,
+      target: r'TicketEvent',
+    ),
+    r'id': PropertySchema(
+      id: 10,
       name: r'id',
       type: IsarType.string,
     ),
-    r'imageUrl': PropertySchema(
-      id: 10,
-      name: r'imageUrl',
-      type: IsarType.string,
+    r'isOverdue': PropertySchema(
+      id: 11,
+      name: r'isOverdue',
+      type: IsarType.bool,
+    ),
+    r'photoPaths': PropertySchema(
+      id: 12,
+      name: r'photoPaths',
+      type: IsarType.stringList,
     ),
     r'priority': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'priority',
       type: IsarType.byte,
       enumMap: _WorkTicketpriorityEnumValueMap,
     ),
     r'priorityTextFrench': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'priorityTextFrench',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'status',
       type: IsarType.byte,
       enumMap: _WorkTicketstatusEnumValueMap,
     ),
     r'statusTextFrench': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'statusTextFrench',
       type: IsarType.string,
     ),
-    r'syncPending': PropertySchema(
-      id: 15,
-      name: r'syncPending',
-      type: IsarType.bool,
-    ),
     r'title': PropertySchema(
-      id: 16,
+      id: 17,
       name: r'title',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 17,
+      id: 18,
       name: r'type',
       type: IsarType.byte,
       enumMap: _WorkTickettypeEnumValueMap,
     ),
     r'typeTextFrench': PropertySchema(
-      id: 18,
-      name: r'typeTextFrench',
-      type: IsarType.string,
-    ),
-    r'voiceNoteUrl': PropertySchema(
       id: 19,
-      name: r'voiceNoteUrl',
+      name: r'typeTextFrench',
       type: IsarType.string,
     )
   },
@@ -142,7 +143,7 @@ const WorkTicketSchema = CollectionSchema(
     )
   },
   links: {},
-  embeddedSchemas: {},
+  embeddedSchemas: {r'TicketEvent': TicketEventSchema},
   getId: _workTicketGetId,
   getLinks: _workTicketGetLinks,
   attach: _workTicketAttach,
@@ -176,23 +177,26 @@ int _workTicketEstimateSize(
     }
   }
   bytesCount += 3 + object.description.length * 3;
-  bytesCount += 3 + object.id.length * 3;
+  bytesCount += 3 + object.events.length * 3;
   {
-    final value = object.imageUrl;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
+    final offsets = allOffsets[TicketEvent]!;
+    for (var i = 0; i < object.events.length; i++) {
+      final value = object.events[i];
+      bytesCount += TicketEventSchema.estimateSize(value, offsets, allOffsets);
+    }
+  }
+  bytesCount += 3 + object.id.length * 3;
+  bytesCount += 3 + object.photoPaths.length * 3;
+  {
+    for (var i = 0; i < object.photoPaths.length; i++) {
+      final value = object.photoPaths[i];
+      bytesCount += value.length * 3;
     }
   }
   bytesCount += 3 + object.priorityTextFrench.length * 3;
   bytesCount += 3 + object.statusTextFrench.length * 3;
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.typeTextFrench.length * 3;
-  {
-    final value = object.voiceNoteUrl;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
   return bytesCount;
 }
 
@@ -211,17 +215,22 @@ void _workTicketSerialize(
   writer.writeDateTime(offsets[6], object.dateCreated);
   writer.writeDateTime(offsets[7], object.dateDue);
   writer.writeString(offsets[8], object.description);
-  writer.writeString(offsets[9], object.id);
-  writer.writeString(offsets[10], object.imageUrl);
-  writer.writeByte(offsets[11], object.priority.index);
-  writer.writeString(offsets[12], object.priorityTextFrench);
-  writer.writeByte(offsets[13], object.status.index);
-  writer.writeString(offsets[14], object.statusTextFrench);
-  writer.writeBool(offsets[15], object.syncPending);
-  writer.writeString(offsets[16], object.title);
-  writer.writeByte(offsets[17], object.type.index);
-  writer.writeString(offsets[18], object.typeTextFrench);
-  writer.writeString(offsets[19], object.voiceNoteUrl);
+  writer.writeObjectList<TicketEvent>(
+    offsets[9],
+    allOffsets,
+    TicketEventSchema.serialize,
+    object.events,
+  );
+  writer.writeString(offsets[10], object.id);
+  writer.writeBool(offsets[11], object.isOverdue);
+  writer.writeStringList(offsets[12], object.photoPaths);
+  writer.writeByte(offsets[13], object.priority.index);
+  writer.writeString(offsets[14], object.priorityTextFrench);
+  writer.writeByte(offsets[15], object.status.index);
+  writer.writeString(offsets[16], object.statusTextFrench);
+  writer.writeString(offsets[17], object.title);
+  writer.writeByte(offsets[18], object.type.index);
+  writer.writeString(offsets[19], object.typeTextFrench);
 }
 
 WorkTicket _workTicketDeserialize(
@@ -240,19 +249,24 @@ WorkTicket _workTicketDeserialize(
     dateCreated: reader.readDateTime(offsets[6]),
     dateDue: reader.readDateTimeOrNull(offsets[7]),
     description: reader.readString(offsets[8]),
-    id: reader.readString(offsets[9]),
-    imageUrl: reader.readStringOrNull(offsets[10]),
+    events: reader.readObjectList<TicketEvent>(
+          offsets[9],
+          TicketEventSchema.deserialize,
+          allOffsets,
+          TicketEvent(),
+        ) ??
+        const [],
+    id: reader.readString(offsets[10]),
     isarId: id,
+    photoPaths: reader.readStringList(offsets[12]) ?? const [],
     priority:
-        _WorkTicketpriorityValueEnumMap[reader.readByteOrNull(offsets[11])] ??
+        _WorkTicketpriorityValueEnumMap[reader.readByteOrNull(offsets[13])] ??
             TicketPriority.low,
-    status: _WorkTicketstatusValueEnumMap[reader.readByteOrNull(offsets[13])] ??
+    status: _WorkTicketstatusValueEnumMap[reader.readByteOrNull(offsets[15])] ??
         TicketStatus.open,
-    syncPending: reader.readBoolOrNull(offsets[15]) ?? false,
-    title: reader.readString(offsets[16]),
-    type: _WorkTickettypeValueEnumMap[reader.readByteOrNull(offsets[17])] ??
+    title: reader.readString(offsets[17]),
+    type: _WorkTickettypeValueEnumMap[reader.readByteOrNull(offsets[18])] ??
         TicketType.anomaly,
-    voiceNoteUrl: reader.readStringOrNull(offsets[19]),
   );
   return object;
 }
@@ -283,30 +297,36 @@ P _workTicketDeserializeProp<P>(
     case 8:
       return (reader.readString(offset)) as P;
     case 9:
-      return (reader.readString(offset)) as P;
+      return (reader.readObjectList<TicketEvent>(
+            offset,
+            TicketEventSchema.deserialize,
+            allOffsets,
+            TicketEvent(),
+          ) ??
+          const []) as P;
     case 10:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
+      return (reader.readBool(offset)) as P;
+    case 12:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 13:
       return (_WorkTicketpriorityValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketPriority.low) as P;
-    case 12:
-      return (reader.readString(offset)) as P;
-    case 13:
-      return (_WorkTicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          TicketStatus.open) as P;
     case 14:
       return (reader.readString(offset)) as P;
     case 15:
-      return (reader.readBoolOrNull(offset) ?? false) as P;
+      return (_WorkTicketstatusValueEnumMap[reader.readByteOrNull(offset)] ??
+          TicketStatus.open) as P;
     case 16:
       return (reader.readString(offset)) as P;
     case 17:
+      return (reader.readString(offset)) as P;
+    case 18:
       return (_WorkTickettypeValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketType.anomaly) as P;
-    case 18:
-      return (reader.readString(offset)) as P;
     case 19:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1601,6 +1621,94 @@ extension WorkTicketQueryFilter
     });
   }
 
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      eventsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> eventsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      eventsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      eventsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      eventsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      eventsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'events',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> idEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1731,153 +1839,12 @@ extension WorkTicketQueryFilter
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'imageUrl',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      imageUrlIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'imageUrl',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> isOverdueEqualTo(
+      bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'imageUrl',
+        property: r'isOverdue',
         value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      imageUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'imageUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'imageUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'imageUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      imageUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'imageUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'imageUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'imageUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> imageUrlMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'imageUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      imageUrlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'imageUrl',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      imageUrlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'imageUrl',
-        value: '',
       ));
     });
   }
@@ -1932,6 +1899,231 @@ extension WorkTicketQueryFilter
         upper: upper,
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'photoPaths',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'photoPaths',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'photoPaths',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'photoPaths',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'photoPaths',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsLengthEqualTo(int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      photoPathsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'photoPaths',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
     });
   }
 
@@ -2314,16 +2506,6 @@ extension WorkTicketQueryFilter
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      syncPendingEqualTo(bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'syncPending',
-        value: value,
-      ));
-    });
-  }
-
   QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> titleEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -2643,164 +2825,17 @@ extension WorkTicketQueryFilter
       ));
     });
   }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'voiceNoteUrl',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'voiceNoteUrl',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'voiceNoteUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'voiceNoteUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'voiceNoteUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'voiceNoteUrl',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
-      voiceNoteUrlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'voiceNoteUrl',
-        value: '',
-      ));
-    });
-  }
 }
 
 extension WorkTicketQueryObject
-    on QueryBuilder<WorkTicket, WorkTicket, QFilterCondition> {}
+    on QueryBuilder<WorkTicket, WorkTicket, QFilterCondition> {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> eventsElement(
+      FilterQuery<TicketEvent> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'events');
+    });
+  }
+}
 
 extension WorkTicketQueryLinks
     on QueryBuilder<WorkTicket, WorkTicket, QFilterCondition> {}
@@ -2929,15 +2964,15 @@ extension WorkTicketQuerySortBy
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByImageUrl() {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageUrl', Sort.asc);
+      return query.addSortBy(r'isOverdue', Sort.asc);
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByImageUrlDesc() {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByIsOverdueDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageUrl', Sort.desc);
+      return query.addSortBy(r'isOverdue', Sort.desc);
     });
   }
 
@@ -2992,18 +3027,6 @@ extension WorkTicketQuerySortBy
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortBySyncPending() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'syncPending', Sort.asc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortBySyncPendingDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'syncPending', Sort.desc);
-    });
-  }
-
   QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3038,18 +3061,6 @@ extension WorkTicketQuerySortBy
       sortByTypeTextFrenchDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'typeTextFrench', Sort.desc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByVoiceNoteUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'voiceNoteUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByVoiceNoteUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'voiceNoteUrl', Sort.desc);
     });
   }
 }
@@ -3178,15 +3189,15 @@ extension WorkTicketQuerySortThenBy
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByImageUrl() {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageUrl', Sort.asc);
+      return query.addSortBy(r'isOverdue', Sort.asc);
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByImageUrlDesc() {
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByIsOverdueDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'imageUrl', Sort.desc);
+      return query.addSortBy(r'isOverdue', Sort.desc);
     });
   }
 
@@ -3253,18 +3264,6 @@ extension WorkTicketQuerySortThenBy
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenBySyncPending() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'syncPending', Sort.asc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenBySyncPendingDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'syncPending', Sort.desc);
-    });
-  }
-
   QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3299,18 +3298,6 @@ extension WorkTicketQuerySortThenBy
       thenByTypeTextFrenchDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'typeTextFrench', Sort.desc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByVoiceNoteUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'voiceNoteUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByVoiceNoteUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'voiceNoteUrl', Sort.desc);
     });
   }
 }
@@ -3385,10 +3372,15 @@ extension WorkTicketQueryWhereDistinct
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByImageUrl(
-      {bool caseSensitive = true}) {
+  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByIsOverdue() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'imageUrl', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByPhotoPaths() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'photoPaths');
     });
   }
 
@@ -3420,12 +3412,6 @@ extension WorkTicketQueryWhereDistinct
     });
   }
 
-  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctBySyncPending() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'syncPending');
-    });
-  }
-
   QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -3444,13 +3430,6 @@ extension WorkTicketQueryWhereDistinct
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'typeTextFrench',
           caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByVoiceNoteUrl(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'voiceNoteUrl', caseSensitive: caseSensitive);
     });
   }
 }
@@ -3519,15 +3498,29 @@ extension WorkTicketQueryProperty
     });
   }
 
+  QueryBuilder<WorkTicket, List<TicketEvent>, QQueryOperations>
+      eventsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'events');
+    });
+  }
+
   QueryBuilder<WorkTicket, String, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
     });
   }
 
-  QueryBuilder<WorkTicket, String?, QQueryOperations> imageUrlProperty() {
+  QueryBuilder<WorkTicket, bool, QQueryOperations> isOverdueProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'imageUrl');
+      return query.addPropertyName(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<WorkTicket, List<String>, QQueryOperations>
+      photoPathsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'photoPaths');
     });
   }
 
@@ -3558,12 +3551,6 @@ extension WorkTicketQueryProperty
     });
   }
 
-  QueryBuilder<WorkTicket, bool, QQueryOperations> syncPendingProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'syncPending');
-    });
-  }
-
   QueryBuilder<WorkTicket, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
@@ -3581,10 +3568,559 @@ extension WorkTicketQueryProperty
       return query.addPropertyName(r'typeTextFrench');
     });
   }
+}
 
-  QueryBuilder<WorkTicket, String?, QQueryOperations> voiceNoteUrlProperty() {
+// **************************************************************************
+// IsarEmbeddedGenerator
+// **************************************************************************
+
+// coverage:ignore-file
+// ignore_for_file: duplicate_ignore, non_constant_identifier_names, constant_identifier_names, invalid_use_of_protected_member, unnecessary_cast, prefer_const_constructors, lines_longer_than_80_chars, require_trailing_commas, inference_failure_on_function_invocation, unnecessary_parenthesis, unnecessary_raw_strings, unnecessary_null_checks, join_return_with_assignment, prefer_final_locals, avoid_js_rounded_ints, avoid_positional_boolean_parameters, always_specify_types
+
+const TicketEventSchema = Schema(
+  name: r'TicketEvent',
+  id: 2391569357153076836,
+  properties: {
+    r'at': PropertySchema(
+      id: 0,
+      name: r'at',
+      type: IsarType.dateTime,
+    ),
+    r'author': PropertySchema(
+      id: 1,
+      name: r'author',
+      type: IsarType.string,
+    ),
+    r'message': PropertySchema(
+      id: 2,
+      name: r'message',
+      type: IsarType.string,
+    ),
+    r'type': PropertySchema(
+      id: 3,
+      name: r'type',
+      type: IsarType.byte,
+      enumMap: _TicketEventtypeEnumValueMap,
+    )
+  },
+  estimateSize: _ticketEventEstimateSize,
+  serialize: _ticketEventSerialize,
+  deserialize: _ticketEventDeserialize,
+  deserializeProp: _ticketEventDeserializeProp,
+);
+
+int _ticketEventEstimateSize(
+  TicketEvent object,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  var bytesCount = offsets.last;
+  {
+    final value = object.author;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
+    final value = object.message;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  return bytesCount;
+}
+
+void _ticketEventSerialize(
+  TicketEvent object,
+  IsarWriter writer,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  writer.writeDateTime(offsets[0], object.at);
+  writer.writeString(offsets[1], object.author);
+  writer.writeString(offsets[2], object.message);
+  writer.writeByte(offsets[3], object.type.index);
+}
+
+TicketEvent _ticketEventDeserialize(
+  Id id,
+  IsarReader reader,
+  List<int> offsets,
+  Map<Type, List<int>> allOffsets,
+) {
+  final object = TicketEvent();
+  object.at = reader.readDateTimeOrNull(offsets[0]);
+  object.author = reader.readStringOrNull(offsets[1]);
+  object.message = reader.readStringOrNull(offsets[2]);
+  object.type =
+      _TicketEventtypeValueEnumMap[reader.readByteOrNull(offsets[3])] ??
+          TicketEventType.created;
+  return object;
+}
+
+P _ticketEventDeserializeProp<P>(
+  IsarReader reader,
+  int propertyId,
+  int offset,
+  Map<Type, List<int>> allOffsets,
+) {
+  switch (propertyId) {
+    case 0:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 1:
+      return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readStringOrNull(offset)) as P;
+    case 3:
+      return (_TicketEventtypeValueEnumMap[reader.readByteOrNull(offset)] ??
+          TicketEventType.created) as P;
+    default:
+      throw IsarError('Unknown property with id $propertyId');
+  }
+}
+
+const _TicketEventtypeEnumValueMap = {
+  'created': 0,
+  'statusChanged': 1,
+  'commented': 2,
+  'photoAdded': 3,
+  'assigned': 4,
+};
+const _TicketEventtypeValueEnumMap = {
+  0: TicketEventType.created,
+  1: TicketEventType.statusChanged,
+  2: TicketEventType.commented,
+  3: TicketEventType.photoAdded,
+  4: TicketEventType.assigned,
+};
+
+extension TicketEventQueryFilter
+    on QueryBuilder<TicketEvent, TicketEvent, QFilterCondition> {
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'voiceNoteUrl');
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'at',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'at',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'at',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'at',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'at',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> atBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'at',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'author',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      authorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'author',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      authorGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'author',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      authorStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'author',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> authorMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'author',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      authorIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'author',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      authorIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'author',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'message',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'message',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'message',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'message',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> messageMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'message',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'message',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition>
+      messageIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'message',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> typeEqualTo(
+      TicketEventType value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> typeGreaterThan(
+    TicketEventType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> typeLessThan(
+    TicketEventType value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'type',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TicketEvent, TicketEvent, QAfterFilterCondition> typeBetween(
+    TicketEventType lower,
+    TicketEventType upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'type',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
+
+extension TicketEventQueryObject
+    on QueryBuilder<TicketEvent, TicketEvent, QFilterCondition> {}

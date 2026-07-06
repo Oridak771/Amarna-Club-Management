@@ -1,44 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+
+import '../providers/reservations_provider.dart';
+import '../services/odoo_reservation_service.dart';
 import '../theme/app_theme.dart';
 
-/// Screen to create a new reservation.
-class CreateReservationScreen extends StatefulWidget {
-  CreateReservationScreen({super.key});
+class CreateReservationScreen extends ConsumerStatefulWidget {
+  const CreateReservationScreen({super.key});
 
   @override
-  State<CreateReservationScreen> createState() =>
+  ConsumerState<CreateReservationScreen> createState() =>
       _CreateReservationScreenState();
 }
 
-class _CreateReservationScreenState extends State<CreateReservationScreen> {
+class _CreateReservationScreenState
+    extends ConsumerState<CreateReservationScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  // Form state
   String? _selectedActivity;
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _startTime = TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _endTime = TimeOfDay(hour: 10, minute: 0);
+  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
   final TextEditingController _clientNameCtrl = TextEditingController();
   int _peopleCount = 2;
-  String _status = 'Confirmé';
+  String _status = 'Confirme';
   final TextEditingController _notesCtrl = TextEditingController();
   bool _isSaving = false;
 
-  static _activities = [
-    _ActivityOption(id: 'pool', label: 'Piscine', icon: Icons.pool),
-    _ActivityOption(id: 'horses', label: 'Équitation', icon: Icons.pets),
-    _ActivityOption(
-        id: 'shooting', label: 'Stand de Tir', icon: Icons.gps_fixed),
-    _ActivityOption(
-        id: 'padel', label: 'Terrains de Padel', icon: Icons.sports_tennis),
-    _ActivityOption(id: 'paintball', label: 'Paintball', icon: Icons.adjust),
-    _ActivityOption(
-        id: 'gym', label: 'Salle de Sport', icon: Icons.fitness_center),
+  static final _activities = [
+    const _ActivityOption(id: 'pool', label: 'Piscine', icon: Icons.pool),
+    const _ActivityOption(id: 'horses', label: 'Equitation', icon: Icons.pets),
+    const _ActivityOption(
+      id: 'shooting',
+      label: 'Stand de Tir',
+      icon: Icons.gps_fixed,
+    ),
+    const _ActivityOption(
+      id: 'padel',
+      label: 'Terrains de Padel',
+      icon: Icons.sports_tennis,
+    ),
+    const _ActivityOption(id: 'paintball', label: 'Paintball', icon: Icons.adjust),
+    const _ActivityOption(
+      id: 'gym',
+      label: 'Salle de Sport',
+      icon: Icons.fitness_center,
+    ),
   ];
 
-  static _statuses = ['Confirmé', 'En attente', 'Annulé'];
+  static const _statuses = ['Confirme', 'En attente', 'Annule'];
 
   @override
   void dispose() {
@@ -52,7 +64,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.dark(
@@ -63,7 +75,9 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
         child: child!,
       ),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    if (picked != null) {
+      setState(() => _selectedDate = picked);
+    }
   }
 
   Future<void> _pickTime({required bool isStart}) async {
@@ -80,76 +94,123 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
         child: child!,
       ),
     );
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          _startTime = picked;
-          // Auto-advance end time by 1 hour if it's before/same start
-          final startMinutes = picked.hour * 60 + picked.minute;
-          final endMinutes = _endTime.hour * 60 + _endTime.minute;
-          if (endMinutes <= startMinutes) {
-            final newEnd = startMinutes + 60;
-            _endTime =
-                TimeOfDay(hour: (newEnd ~/ 60) % 24, minute: newEnd % 60);
-          }
-        } else {
-          _endTime = picked;
-        }
-      });
+    if (picked == null) {
+      return;
     }
+
+    setState(() {
+      if (isStart) {
+        _startTime = picked;
+        final startMinutes = picked.hour * 60 + picked.minute;
+        final endMinutes = _endTime.hour * 60 + _endTime.minute;
+        if (endMinutes <= startMinutes) {
+          final newEnd = startMinutes + 60;
+          _endTime = TimeOfDay(hour: (newEnd ~/ 60) % 24, minute: newEnd % 60);
+        }
+      } else {
+        _endTime = picked;
+      }
+    });
   }
 
-  void _save() async {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
     if (_selectedActivity == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Veuillez sélectionner une activité'),
-          backgroundColor: context.colors.danger,
-        ),
+      _showSnack(
+        'Veuillez selectionner une activite',
+        context.colors.danger,
+      );
+      return;
+    }
+
+    final activity =
+        _activities.firstWhere((item) => item.id == _selectedActivity);
+    final startAt = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _startTime.hour,
+      _startTime.minute,
+    );
+    final endAt = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _endTime.hour,
+      _endTime.minute,
+    );
+
+    if (!endAt.isAfter(startAt)) {
+      _showSnack(
+        'L heure de fin doit etre apres l heure de debut.',
+        context.colors.warning,
       );
       return;
     }
 
     setState(() => _isSaving = true);
-    await Future.delayed(Duration(milliseconds: 600)); // Simulate save
+    try {
+      await ref.read(odooReservationServiceProvider).createReservation(
+            activityId: activity.id,
+            activityName: activity.label,
+            clientName: _clientNameCtrl.text.trim(),
+            peopleCount: _peopleCount,
+            status: _status,
+            startAt: startAt,
+            endAt: endAt,
+            notes: _notesCtrl.text.trim(),
+          );
 
-    if (!mounted) return;
-    setState(() => _isSaving = false);
+      ref.read(reservationsRefreshProvider.notifier).state++;
 
+      if (!mounted) {
+        return;
+      }
+      _showSnack(
+        'Reservation creee pour ${_clientNameCtrl.text.trim()}',
+        context.colors.success,
+      );
+      context.pop();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      _showSnack(
+        'Creation impossible : $error',
+        context.colors.danger,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
+  }
+
+  void _showSnack(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.white, size: 18),
-            SizedBox(width: 8),
-            Text(
-              'Réservation créée pour ${_clientNameCtrl.text}',
-              style: TextStyle(color: Colors.white),
-            ),
-          ],
-        ),
-        backgroundColor: context.colors.success,
-        duration: Duration(seconds: 3),
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: backgroundColor,
       ),
     );
-    context.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Nouvelle Réservation'),
+        title: const Text('Nouvelle Reservation'),
         leading: IconButton(
-          icon: Icon(Icons.close),
+          icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _save,
             child: _isSaving
-                ? SizedBox(
+                ? const SizedBox(
                     width: 18,
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
@@ -178,9 +239,8 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── Activity Selector ──────────────────────────────
-                  _sectionLabel('Activité *'),
-                  SizedBox(height: 8),
+                  _sectionLabel('Activite *'),
+                  const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -190,9 +250,11 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       return GestureDetector(
                         onTap: () => setState(() => _selectedActivity = act.id),
                         child: AnimatedContainer(
-                          duration: Duration(milliseconds: 180),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? color.withValues(alpha: 0.18)
@@ -209,9 +271,11 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                               Icon(
                                 act.icon,
                                 size: 16,
-                                color: isSelected ? color : context.colors.textMuted,
+                                color: isSelected
+                                    ? color
+                                    : context.colors.textMuted,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
                                 act.label,
                                 style: TextStyle(
@@ -230,18 +294,16 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       );
                     }).toList(),
                   ),
-                  SizedBox(height: 24),
-
-                  // ── Date ──────────────────────────────────────────
+                  const SizedBox(height: 24),
                   _sectionLabel('Date *'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   _FieldCard(
                     onTap: _pickDate,
                     child: Row(
                       children: [
                         Icon(Icons.calendar_today,
                             color: context.colors.accentPrimary, size: 20),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         Text(
                           DateFormat('EEEE d MMMM yyyy', 'fr_FR')
                               .format(_selectedDate),
@@ -251,17 +313,15 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Spacer(),
+                        const Spacer(),
                         Icon(Icons.chevron_right,
                             color: context.colors.textMuted, size: 18),
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
-
-                  // ── Time slot ─────────────────────────────────────
-                  _sectionLabel('Créneau horaire *'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 16),
+                  _sectionLabel('Creneau horaire *'),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -271,16 +331,19 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Début',
+                                'Debut',
                                 style: TextStyle(
-                                    color: context.colors.textMuted, fontSize: 11),
+                                  color: context.colors.textMuted,
+                                  fontSize: 11,
+                                ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Row(
                                 children: [
                                   Icon(Icons.access_time,
-                                      color: context.colors.accentPrimary, size: 16),
-                                  SizedBox(width: 6),
+                                      color: context.colors.accentPrimary,
+                                      size: 16),
+                                  const SizedBox(width: 6),
                                   Text(
                                     _startTime.format(context),
                                     style: TextStyle(
@@ -296,7 +359,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Icon(Icons.arrow_forward,
                             color: context.colors.textMuted, size: 18),
                       ),
@@ -309,14 +372,17 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                               Text(
                                 'Fin',
                                 style: TextStyle(
-                                    color: context.colors.textMuted, fontSize: 11),
+                                  color: context.colors.textMuted,
+                                  fontSize: 11,
+                                ),
                               ),
-                              SizedBox(height: 2),
+                              const SizedBox(height: 2),
                               Row(
                                 children: [
                                   Icon(Icons.access_time_filled,
-                                      color: context.colors.accentPrimary, size: 16),
-                                  SizedBox(width: 6),
+                                      color: context.colors.accentPrimary,
+                                      size: 16),
+                                  const SizedBox(width: 6),
                                   Text(
                                     _endTime.format(context),
                                     style: TextStyle(
@@ -333,32 +399,27 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
-
-                  // ── Client Name ───────────────────────────────────
+                  const SizedBox(height: 24),
                   _sectionLabel('Client / Groupe *'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   _buildTextField(
                     controller: _clientNameCtrl,
-                    hint: 'Ex: M. Ahmed Bennani, Groupe famille…',
+                    hint: 'Ex: Groupe famille, client entreprise...',
                     icon: Icons.person_outline,
                     validator: (v) => v == null || v.trim().isEmpty
                         ? 'Ce champ est requis'
                         : null,
                   ),
-                  SizedBox(height: 24),
-
-                  // ── People count & Status ─────────────────────────
+                  const SizedBox(height: 24),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // People count
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _sectionLabel('Nb. personnes'),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             _FieldCard(
                               child: Row(
                                 mainAxisAlignment:
@@ -390,33 +451,41 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                           ],
                         ),
                       ),
-                      SizedBox(width: 12),
-                      // Status dropdown
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _sectionLabel('Statut'),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 14, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: context.colors.backgroundSecondary,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.colors.border),
+                                border:
+                                    Border.all(color: context.colors.border),
                               ),
                               child: DropdownButtonHideUnderline(
                                 child: DropdownButton<String>(
                                   value: _status,
                                   isExpanded: true,
-                                  dropdownColor: context.colors.backgroundSecondary,
+                                  dropdownColor:
+                                      context.colors.backgroundSecondary,
                                   style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 14),
+                                    color: context.colors.textPrimary,
+                                    fontSize: 14,
+                                  ),
                                   items: _statuses
-                                      .map((s) => DropdownMenuItem(
-                                          value: s, child: Text(s)))
+                                      .map(
+                                        (s) => DropdownMenuItem(
+                                          value: s,
+                                          child: Text(s),
+                                        ),
+                                      )
                                       .toList(),
                                   onChanged: (val) {
                                     if (val != null) {
@@ -431,39 +500,37 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 24),
-
-                  // ── Notes ─────────────────────────────────────────
-                  _sectionLabel('Notes (facultatif)'),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 24),
+                  _sectionLabel('Notes'),
+                  const SizedBox(height: 8),
                   _buildTextField(
                     controller: _notesCtrl,
-                    hint: 'Besoins spéciaux, matériel requis…',
+                    hint: 'Besoins speciaux, materiel requis...',
                     icon: Icons.note_alt_outlined,
                     maxLines: 3,
                   ),
-                  SizedBox(height: 32),
-
-                  // ── Save Button ───────────────────────────────────
+                  const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton.icon(
                       onPressed: _isSaving ? null : _save,
                       icon: _isSaving
-                          ? SizedBox(
+                          ? const SizedBox(
                               width: 18,
                               height: 18,
                               child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Icon(Icons.check_circle_outline,
+                          : const Icon(Icons.check_circle_outline,
                               color: Colors.white),
                       label: Text(
                         _isSaving
-                            ? 'Enregistrement…'
-                            : 'Confirmer la réservation',
-                        style: TextStyle(
+                            ? 'Enregistrement...'
+                            : 'Confirmer la reservation',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
@@ -472,12 +539,13 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: context.colors.accentPrimary,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
                         elevation: 0,
                       ),
                     ),
                   ),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                 ],
               ),
             ),
@@ -539,7 +607,7 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
           borderSide: BorderSide(color: context.colors.danger, width: 1.5),
         ),
         contentPadding:
-            EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
@@ -564,12 +632,11 @@ class _CreateReservationScreenState extends State<CreateReservationScreen> {
   }
 }
 
-/// Simple tappable card wrapper for form "fields" that open a picker.
 class _FieldCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
 
-  _FieldCard({required this.child, this.onTap});
+  const _FieldCard({required this.child, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -580,7 +647,7 @@ class _FieldCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: context.colors.border),
@@ -592,12 +659,11 @@ class _FieldCard extends StatelessWidget {
   }
 }
 
-/// +/- counter button
 class _CounterButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  _CounterButton({required this.icon, required this.onTap});
+  const _CounterButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -608,7 +674,7 @@ class _CounterButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Padding(
-          padding: EdgeInsets.all(6.0),
+          padding: const EdgeInsets.all(6),
           child: Icon(icon, size: 18, color: context.colors.textPrimary),
         ),
       ),
@@ -621,6 +687,9 @@ class _ActivityOption {
   final String label;
   final IconData icon;
 
-  _ActivityOption(
-      {required this.id, required this.label, required this.icon});
+  const _ActivityOption({
+    required this.id,
+    required this.label,
+    required this.icon,
+  });
 }

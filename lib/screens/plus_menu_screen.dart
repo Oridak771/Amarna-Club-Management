@@ -48,13 +48,6 @@ class PlusMenuScreen extends StatelessWidget {
         route: '/plus/rapports',
       ),
       _PlusMenuItem(
-        icon: Icons.wifi_off_rounded,
-        iconColor: context.colors.warning, // amber
-        label: 'Mode hors-ligne',
-        subtitle: 'Statut de synchronisation',
-        route: '/plus/hors-ligne',
-      ),
-      _PlusMenuItem(
         icon: Icons.help_outline_rounded,
         iconColor: context.colors.padel, // teal
         label: 'Aide',
@@ -75,15 +68,15 @@ class PlusMenuScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Plus'),
+        title: const Text('Plus'),
         actions: [
           IconButton(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: const Icon(Icons.qr_code_scanner),
             tooltip: 'Scanner QR',
             onPressed: () => context.push('/scan'),
           ),
           IconButton(
-            icon: Icon(Icons.notifications_none),
+            icon: const Icon(Icons.notifications_none),
             tooltip: 'Notifications',
             onPressed: () => context.push('/notifications'),
           ),
@@ -95,10 +88,10 @@ class PlusMenuScreen extends StatelessWidget {
           if (isWide) {
             return Center(
               child: Container(
-                constraints: BoxConstraints(maxWidth: 900),
-                padding: EdgeInsets.all(16.0),
+                constraints: const BoxConstraints(maxWidth: 900),
+                padding: const EdgeInsets.all(16.0),
                 child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
@@ -114,9 +107,9 @@ class PlusMenuScreen extends StatelessWidget {
             );
           } else {
             return ListView.separated(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               itemCount: _getMenuItems(context).length,
-              separatorBuilder: (_, __) => SizedBox(height: 10),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final item = _getMenuItems(context)[index];
                 return _buildMenuItem(context, item);
@@ -140,13 +133,13 @@ class PlusMenuScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         onTap: () => context.push(item.route),
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: ListTile(
             leading: Container(
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: item.iconColor.withOpacity(0.12),
+                color: item.iconColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
@@ -176,7 +169,7 @@ class PlusMenuScreen extends StatelessWidget {
               size: 24,
             ),
             contentPadding:
-                EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
             minVerticalPadding: 0,
           ),
         ),

@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/theme_mode_provider.dart';
 import '../theme/app_theme.dart';
 
-class ProfileScreen extends StatefulWidget {
-  ProfileScreen({super.key});
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _pushNotifications = true;
   bool _biometrics = false;
 
@@ -17,23 +19,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profil & Paramètres'),
+        title: const Text('Profil & Paramètres'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Container(
-            constraints: BoxConstraints(maxWidth: 800),
+            constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. User Info Card
                 Container(
-                  padding: EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
                     color: context.colors.backgroundSecondary,
                     borderRadius: BorderRadius.circular(16),
@@ -44,7 +46,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: context.colors.accentPrimary,
-                        child: Text(
+                        child: const Text(
                           'OP',
                           style: TextStyle(
                               color: Colors.white,
@@ -52,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       Text(
                         'Opérateur Principal',
                         style: TextStyle(
@@ -61,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Rôle : Superviseur Opérations',
                         style: TextStyle(
@@ -70,9 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Divider(color: context.colors.border),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       // Assigned Activities tags
                       Align(
                         alignment: Alignment.centerLeft,
@@ -84,27 +86,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: [
+                            _buildActivityTag('Piscine', context.colors.pool),
                             _buildActivityTag(
-                                'Piscine', Color(0xFF00D4FF)),
+                                'Équitation', context.colors.horses),
+                            _buildActivityTag('Padel', context.colors.padel),
                             _buildActivityTag(
-                                'Équitation', Color(0xFFFFB347)),
-                            _buildActivityTag('Padel', Color(0xFF34D399)),
-                            _buildActivityTag(
-                                'Stand de Tir', Color(0xFFFF4757)),
+                                'Stand de Tir', context.colors.shooting),
                           ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 2. Preferences / Settings Options
                 Text(
@@ -115,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
                     color: context.colors.backgroundSecondary,
@@ -151,20 +152,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
                       Divider(color: context.colors.border, height: 1),
-                      // Dark Theme (Read-only as dark theme is default and preferred)
-                      _buildSwitchTile(
-                        title: 'Mode Sombre',
-                        subtitle:
-                            'Thème de l\'interface principale (Recommandé)',
-                        icon: Icons.dark_mode_outlined,
-                        value: true,
-                        onChanged: (_) {},
-                        isEnabled: false,
-                      ),
+                      _buildThemeModeTile(),
                     ],
                   ),
                 ),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
 
                 // 3. Logout Button (large, glove-friendly target)
                 SizedBox(
@@ -180,7 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: context.colors.danger, width: 1.5),
                       ),
                     ),
-                    icon: Icon(Icons.logout),
+                    icon: const Icon(Icons.logout),
                     label: Text(
                       'Se déconnecter',
                       style: TextStyle(
@@ -195,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
                 ),
-                SizedBox(height: 48),
+                const SizedBox(height: 48),
 
                 // 4. Version Tag
                 Center(
@@ -208,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             fontSize: 13,
                             fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Version 1.0.0 (Build 2606)',
                         style:
@@ -217,7 +209,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -228,7 +220,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildActivityTag(String name, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(6),
@@ -245,6 +237,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildThemeModeTile() {
+    final mode = ref.watch(themeModeProvider);
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      leading: Icon(Icons.brightness_6_outlined,
+          color: context.colors.textSecondary),
+      title: Text(
+        'Apparence',
+        style: TextStyle(
+            color: context.colors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.bold),
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: SegmentedButton<ThemeMode>(
+          segments: const [
+            ButtonSegment(
+              value: ThemeMode.system,
+              label: Text('Auto'),
+              icon: Icon(Icons.brightness_auto_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.light,
+              label: Text('Clair'),
+              icon: Icon(Icons.light_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.dark,
+              label: Text('Sombre'),
+              icon: Icon(Icons.dark_mode_outlined),
+            ),
+          ],
+          selected: {mode},
+          onSelectionChanged: (selection) {
+            ref.read(themeModeProvider.notifier).setMode(selection.first);
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildSwitchTile({
     required String title,
     required String subtitle,
@@ -254,7 +288,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     bool isEnabled = true,
   }) {
     return ListTile(
-      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       leading: Icon(icon, color: context.colors.textSecondary),
       title: Text(
         title,

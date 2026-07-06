@@ -33,16 +33,16 @@ class AssetProfileScreen extends ConsumerWidget {
 
     if (isNotFound) {
       return Scaffold(
-        appBar: AppBar(title: Text('Profil Équipement')),
+        appBar: AppBar(title: const Text('Profil Équipement')),
         body: Center(
           child: Padding(
-            padding: EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.warning_amber_rounded,
                     size: 64, color: context.colors.danger),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   'Équipement introuvable',
                   style: TextStyle(
@@ -50,13 +50,13 @@ class AssetProfileScreen extends ConsumerWidget {
                       fontSize: 18,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   'Le code "$id" ne correspond à aucun équipement enregistré.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.colors.textSecondary),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colors.accentPrimary,
@@ -65,8 +65,8 @@ class AssetProfileScreen extends ConsumerWidget {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                   ),
-                  icon: Icon(Icons.qr_code_scanner),
-                  label: Text('Scanner à nouveau'),
+                  icon: const Icon(Icons.qr_code_scanner),
+                  label: const Text('Scanner à nouveau'),
                   onPressed: () => context.pushReplacement('/scan'),
                 ),
               ],
@@ -116,7 +116,7 @@ class AssetProfileScreen extends ConsumerWidget {
         ));
       }
       events.add(TimelineEvent(
-        date: DateTime.now().subtract(Duration(days: 60)),
+        date: DateTime.now().subtract(const Duration(days: 60)),
         title: 'Mise en service de l\'équipement',
         description:
             'Installation initiale et configuration des paramètres de fonctionnement.',
@@ -133,17 +133,17 @@ class AssetProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Fiche Équipement'),
+        title: const Text('Fiche Équipement'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: SingleChildScrollView(
         child: Center(
           child: Container(
-            constraints: BoxConstraints(maxWidth: 800),
-            padding: EdgeInsets.all(16.0),
+            constraints: const BoxConstraints(maxWidth: 800),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -174,7 +174,7 @@ class AssetProfileScreen extends ConsumerWidget {
                               size: 56,
                               color: asset.status.resolveColor(context).withValues(alpha: 0.8),
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               asset.category,
                               style: TextStyle(
@@ -191,7 +191,7 @@ class AssetProfileScreen extends ConsumerWidget {
                         top: 16,
                         right: 16,
                         child: Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: asset.status.resolveColor(context).withValues(alpha: 0.15),
@@ -212,7 +212,7 @@ class AssetProfileScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // 2. Asset Name & ID Strip
                 Text(
@@ -223,7 +223,7 @@ class AssetProfileScreen extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'SN: ${asset.serialNumber}  •  ID: ${asset.id}',
                   style: TextStyle(
@@ -231,7 +231,7 @@ class AssetProfileScreen extends ConsumerWidget {
                     fontSize: 13,
                   ),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 3. Technical Specs Matrix
                 if (asset.technicalSpecs != null &&
@@ -243,7 +243,7 @@ class AssetProfileScreen extends ConsumerWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
                       color: context.colors.backgroundSecondary,
@@ -260,7 +260,7 @@ class AssetProfileScreen extends ConsumerWidget {
                         final entry =
                             asset.technicalSpecs!.entries.elementAt(index);
                         return Padding(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -280,7 +280,7 @@ class AssetProfileScreen extends ConsumerWidget {
                       },
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                 ],
 
                 // 4. Maintenance Dates Strip
@@ -297,7 +297,7 @@ class AssetProfileScreen extends ConsumerWidget {
                         Icons.settings_backup_restore,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: _buildDateTile(
                         context,
@@ -311,7 +311,7 @@ class AssetProfileScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 5. Quick Actions Row (glove-friendly minimum touch bounds)
                 Text(
@@ -321,7 +321,7 @@ class AssetProfileScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth > 500;
@@ -374,7 +374,7 @@ class AssetProfileScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
 
                 // 6. Chronological Events Timeline
                 Text(
@@ -384,9 +384,9 @@ class AssetProfileScreen extends ConsumerWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildTimelineList(events, dateFormat),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -398,7 +398,7 @@ class AssetProfileScreen extends ConsumerWidget {
   Widget _buildDateTile(
       BuildContext context, String label, String value, IconData icon) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
@@ -407,7 +407,7 @@ class AssetProfileScreen extends ConsumerWidget {
       child: Row(
         children: [
           Icon(icon, color: context.colors.textSecondary, size: 20),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,7 +415,7 @@ class AssetProfileScreen extends ConsumerWidget {
                 Text(label,
                     style: TextStyle(
                         color: context.colors.textSecondary, fontSize: 11)),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(value,
                     style: TextStyle(
                         color: context.colors.textPrimary,
@@ -496,7 +496,7 @@ class AssetProfileScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colors.backgroundSecondary,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
@@ -505,12 +505,12 @@ class AssetProfileScreen extends ConsumerWidget {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: EdgeInsets.only(bottom: 16.0),
+                  padding: const EdgeInsets.only(bottom: 16.0),
                   child: Text(
                     'Modifier le statut de l\'équipement',
                     style: TextStyle(
@@ -568,7 +568,7 @@ class AssetProfileScreen extends ConsumerWidget {
       },
       child: Container(
         height: 52, // glove friendly minimum 48px
-        padding: EdgeInsets.symmetric(horizontal: 24),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -580,7 +580,7 @@ class AssetProfileScreen extends ConsumerWidget {
                   decoration:
                       BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Text(
                   label,
                   style: TextStyle(
@@ -642,14 +642,14 @@ class AssetProfileScreen extends ConsumerWidget {
                   ),
               ],
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
 
             // Card content
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(bottom: 24.0),
+                padding: const EdgeInsets.only(bottom: 24.0),
                 child: Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: context.colors.backgroundSecondary,
                     borderRadius: BorderRadius.circular(12),
@@ -672,7 +672,7 @@ class AssetProfileScreen extends ConsumerWidget {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: ev.color.withValues(alpha: 0.1),
@@ -688,14 +688,14 @@ class AssetProfileScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         dateFormat.format(ev.date),
                         style: TextStyle(
                             color: context.colors.textMuted, fontSize: 11),
                       ),
                       if (ev.description.isNotEmpty) ...[
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           ev.description,
                           style: TextStyle(

@@ -47,7 +47,7 @@ class QuickActionButton extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         // Label underneath
         SizedBox(
           width: 72,

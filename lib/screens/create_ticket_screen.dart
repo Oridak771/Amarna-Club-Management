@@ -28,8 +28,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
 
   // Media simulation
   int _mockPhotoCount = 0;
-  bool _hasVoiceNote = false;
-  bool _isRecording = false;
 
   String? _assignedTechnician = 'Karim (Technicien)';
 
@@ -78,11 +76,10 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 : (_assignedTechnician == 'Non assigné'
                     ? null
                     : _assignedTechnician),
-            imageUrl: _mockPhotoCount > 0
-                ? 'https://example.com/ticket-photo.jpg'
-                : null,
-            voiceNoteUrl:
-                _hasVoiceNote ? 'https://example.com/voice-note.mp3' : null,
+            photoPaths: List.generate(
+              _mockPhotoCount,
+              (i) => 'assets/images/placeholder_pool.jpg',
+            ),
           );
 
       context.pop();
@@ -105,14 +102,14 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Créer un Ticket d\'intervention'),
+        title: const Text('Nouvelle intervention'),
       ),
       body: SafeArea(
         child: Center(
           child: Container(
-            constraints: BoxConstraints(maxWidth: 800),
+            constraints: const BoxConstraints(maxWidth: 800),
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16.0),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -126,23 +123,23 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         AppFilterChip(
-                          label: 'Signalement d\'anomalie',
+                          label: 'Incident',
                           isSelected: _selectedType == TicketType.anomaly,
                           onTap: () => setState(
                               () => _selectedType = TicketType.anomaly),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         AppFilterChip(
                           label: 'Maintenance Préventive',
                           isSelected: _selectedType == TicketType.preventive,
                           onTap: () => setState(
                               () => _selectedType = TicketType.preventive),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         AppFilterChip(
                           label: 'Maintenance Corrective',
                           isSelected: _selectedType == TicketType.corrective,
@@ -151,7 +148,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 2. Activity Selector
                     Text(
@@ -161,12 +158,12 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
                       dropdownColor: context.colors.backgroundSecondary,
                       initialValue: _selectedActivityId,
                       style: TextStyle(color: context.colors.textPrimary),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         contentPadding:
                             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       ),
@@ -185,7 +182,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         }
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 3. Asset selector (conditional/optional)
                     Text(
@@ -195,7 +192,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _assetNameController,
                       style: TextStyle(color: context.colors.textPrimary),
@@ -218,7 +215,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                               SnackBar(
                                 content: Text(
                                     'Équipement détecté : ${_assetNameController.text}'),
-                                duration: Duration(seconds: 2),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           },
@@ -232,7 +229,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 4. Title Field
                     Text(
@@ -242,11 +239,11 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
                       style: TextStyle(color: context.colors.textPrimary),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Ex: Filtre de pompe obstrué',
                       ),
                       validator: (value) {
@@ -256,7 +253,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 5. Description Field
                     Text(
@@ -266,17 +263,17 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
                       maxLines: 3,
                       style: TextStyle(color: context.colors.textPrimary),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText:
                             'Expliquez en détail le problème ou l\'intervention requise...',
                       ),
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 6. Priority Selector (Large Buttons)
                     Text(
@@ -286,9 +283,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           fontSize: 14,
                           fontWeight: FontWeight.bold),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     _buildPrioritySelector(),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // 7. Technician Assignment (conditional)
                     if (showTechnicianAndAsset) ...[
@@ -299,12 +296,12 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                             fontSize: 14,
                             fontWeight: FontWeight.bold),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
                         dropdownColor: context.colors.backgroundSecondary,
                         initialValue: _assignedTechnician,
                         style: TextStyle(color: context.colors.textPrimary),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           contentPadding: EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                         ),
@@ -320,22 +317,20 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                           });
                         },
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                     ],
 
-                    // 8. Media attachment (Anomalies)
-                    if (_selectedType == TicketType.anomaly) ...[
-                      Text(
-                        'Pièces jointes (Photos / Vocal)',
-                        style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 12),
-                      _buildMediaRow(),
-                      SizedBox(height: 24),
-                    ],
+                    // 8. Photo attachments
+                    Text(
+                      'Photos',
+                      style: TextStyle(
+                          color: context.colors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildMediaRow(),
+                    const SizedBox(height: 24),
 
                     // 9. Submit Button
                     SizedBox(
@@ -354,9 +349,9 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                         onPressed: _submitForm,
                         child: Text(
                           _selectedType == TicketType.anomaly
-                              ? 'Signaler l\'anomalie'
-                              : 'Enregistrer la tâche',
-                          style: TextStyle(
+                              ? 'Signaler l\'incident'
+                              : 'Planifier l\'intervention',
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -444,7 +439,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
               _mockPhotoCount++;
             });
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+              const SnackBar(
                 content: Text('Photo capturée et jointe ✓'),
                 duration: Duration(seconds: 1),
               ),
@@ -463,7 +458,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 color: context.colors.textSecondary, size: 28),
           ),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
 
         // Photo thumbnail preview (if attached)
         if (_mockPhotoCount > 0)
@@ -488,13 +483,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 child: GestureDetector(
                   onTap: () => setState(() => _mockPhotoCount = 0),
                   child: Container(
-                    padding: EdgeInsets.all(2),
-                    decoration: BoxDecoration(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
                       color: Colors.black54,
                       shape: BoxShape.circle,
                     ),
                     child:
-                        Icon(Icons.close, color: Colors.white, size: 14),
+                        const Icon(Icons.close, color: Colors.white, size: 14),
                   ),
                 ),
               ),
@@ -503,14 +498,14 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 left: 2,
                 child: Container(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                   decoration: BoxDecoration(
                     color: Colors.black87,
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     'x$_mockPhotoCount',
-                    style: TextStyle(
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.bold),
@@ -518,58 +513,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 ),
               ),
             ],
-          ),
-        SizedBox(width: 12),
-
-        // Voice recorder button
-        GestureDetector(
-          onLongPressStart: (_) {
-            setState(() {
-              _isRecording = true;
-            });
-          },
-          onLongPressEnd: (_) {
-            setState(() {
-              _isRecording = false;
-              _hasVoiceNote = true;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Note vocale enregistrée ✓'),
-                duration: Duration(seconds: 1),
-              ),
-            );
-          },
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: _isRecording
-                  ? context.colors.danger.withValues(alpha: 0.25)
-                  : context.colors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: _isRecording ? context.colors.danger : context.colors.border,
-                width: _isRecording ? 2.0 : 1.0,
-              ),
-            ),
-            child: Icon(
-              _isRecording ? Icons.mic : Icons.mic_none,
-              color: _isRecording ? context.colors.danger : context.colors.textSecondary,
-              size: 28,
-            ),
-          ),
-        ),
-        SizedBox(width: 12),
-
-        if (_hasVoiceNote)
-          Chip(
-            backgroundColor: context.colors.backgroundSecondary,
-            avatar: Icon(Icons.play_arrow, color: context.colors.success),
-            label: Text('Vocal.mp3',
-                style: TextStyle(color: context.colors.textPrimary, fontSize: 12)),
-            onDeleted: () => setState(() => _hasVoiceNote = false),
-            deleteIconColor: context.colors.textSecondary,
           ),
       ],
     );

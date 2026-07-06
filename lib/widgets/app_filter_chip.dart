@@ -26,7 +26,7 @@ class AppFilterChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
@@ -48,10 +48,10 @@ class AppFilterChip extends StatelessWidget {
                 ),
               ),
               if (count != null) ...[
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Container(
                   padding:
-                      EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? context.colors.accentPrimary.withValues(alpha: 0.2)

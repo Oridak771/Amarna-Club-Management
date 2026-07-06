@@ -5,7 +5,6 @@ import '../models/activity.dart';
 import '../models/asset.dart';
 import '../models/work_ticket.dart';
 import '../models/inventory_item.dart';
-import '../models/checklist_item.dart';
 
 final isarProvider = Provider<Isar>((ref) {
   throw UnimplementedError('Isar database has not been initialized');
@@ -20,7 +19,6 @@ class DatabaseService {
         AssetSchema,
         WorkTicketSchema,
         InventoryItemSchema,
-        ChecklistItemSchema,
       ],
       directory: dir.path,
     );
@@ -451,85 +449,5 @@ class DatabaseService {
       ),
     ];
     await isar.inventoryItems.putAll(inventory);
-
-    // 5. Consolidated into tickets above
-
-    // 6. Seed Checklist Items
-    final checklists = [
-      // Pool
-      ChecklistItem(
-        id: 'chk-pool-1',
-        title: 'Inspection visuelle de l\'eau (clarté)',
-        category: 'Qualité',
-        activityId: 'pool',
-        requiresPhoto: false,
-      ),
-      ChecklistItem(
-        id: 'chk-pool-2',
-        title: 'Contrôle du niveau de Chlore libre',
-        category: 'Chimie',
-        activityId: 'pool',
-        requiresPhoto: true,
-      ),
-      ChecklistItem(
-        id: 'chk-pool-3',
-        title: 'Contrôle de la valeur pH de l\'eau',
-        category: 'Chimie',
-        activityId: 'pool',
-        requiresPhoto: true,
-      ),
-      ChecklistItem(
-        id: 'chk-pool-4',
-        title: 'Vérification de la bouée de sauvetage',
-        category: 'Sécurité',
-        activityId: 'pool',
-        requiresPhoto: false,
-      ),
-      ChecklistItem(
-        id: 'chk-pool-5',
-        title: 'Validation de présence du Maître-Nageur',
-        category: 'Staff',
-        activityId: 'pool',
-        requiresPhoto: false,
-      ),
-      // Horses
-      ChecklistItem(
-        id: 'chk-horse-1',
-        title: 'Nettoyage des boxes',
-        category: 'Écurie',
-        activityId: 'horses',
-        requiresPhoto: false,
-      ),
-      ChecklistItem(
-        id: 'chk-horse-2',
-        title: 'Inspection visuelle des sabots',
-        category: 'Santé',
-        activityId: 'horses',
-        requiresPhoto: true,
-      ),
-      ChecklistItem(
-        id: 'chk-horse-3',
-        title: 'Ration alimentaire distribuée',
-        category: 'Alimentation',
-        activityId: 'horses',
-        requiresPhoto: false,
-      ),
-      // Shooting Range
-      ChecklistItem(
-        id: 'chk-shoot-1',
-        title: 'Vérification de l\'armurerie fermée',
-        category: 'Sécurité',
-        activityId: 'shooting',
-        requiresPhoto: true,
-      ),
-      ChecklistItem(
-        id: 'chk-shoot-2',
-        title: 'Test ventilation',
-        category: 'Technique',
-        activityId: 'shooting',
-        requiresPhoto: false,
-      ),
-    ];
-    await isar.checklistItems.putAll(checklists);
   }
 }

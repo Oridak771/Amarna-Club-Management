@@ -6,19 +6,41 @@ import 'package:intl/intl.dart';
 import '../models/work_ticket.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
+import '../ui/ticket_ui_adapter.dart';
 import '../widgets/priority_indicator.dart';
 
-class TicketDetailScreen extends ConsumerWidget {
+class TicketDetailScreen extends ConsumerStatefulWidget {
   final String id;
-  TicketDetailScreen({super.key, required this.id});
+  const TicketDetailScreen({super.key, required this.id});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TicketDetailScreen> createState() =>
+      _TicketDetailScreenState();
+}
+
+class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
+  final _commentController = TextEditingController();
+
+  static const _technicians = [
+    'Karim (Technicien)',
+    'Mourad (Technicien)',
+    'Sami (Électricien)',
+    'Sophie (Coach Gym)',
+  ];
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final tickets = ref.watch(ticketsProvider);
     final ticket = tickets.firstWhere(
-      (t) => t.id == id,
+      (t) => t.id == widget.id,
       orElse: () => WorkTicket(
-        id: id,
+        id: widget.id,
         title: 'Ticket inconnu',
         description: 'Aucune description disponible.',
         activityId: '',
@@ -30,400 +52,42 @@ class TicketDetailScreen extends ConsumerWidget {
       ),
     );
 
-    final String createdDateStr =
-        DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated);
-    final String? dueDateStr = ticket.dateDue != null
-        ? DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateDue!)
-        : null;
-    final bool isOverdue = ticket.status != TicketStatus.resolved &&
-        ticket.dateDue != null &&
-        ticket.dateDue!.isBefore(DateTime.now());
-
     return Scaffold(
       appBar: AppBar(
         title: Text(ticket.type == TicketType.anomaly
-            ? 'Détail Anomalie'
-            : 'Détail Maintenance'),
+            ? 'Détail incident'
+            : 'Détail intervention'),
         actions: [
           IconButton(
-            icon: Icon(Icons.qr_code_scanner),
+            icon: const Icon(Icons.qr_code_scanner),
+            tooltip: 'Scanner QR',
             onPressed: () => context.push('/scan'),
           ),
         ],
       ),
       body: SafeArea(
         child: Center(
-          child: Container(
-            constraints: BoxConstraints(maxWidth: 800),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Priority indicator & title card
-                  PriorityIndicator(
-                    priority: ticket.priority,
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildTypeBadge(context, ticket),
-                              _buildStatusBadge(context, ticket),
-                            ],
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            ticket.title,
-                            style: TextStyle(
-                              color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Activité : ${ticket.activityName}',
-                            style: TextStyle(
-                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                              fontSize: 14,
-                            ),
-                          ),
-                          if (ticket.assetName != null) ...[
-                            SizedBox(height: 4),
-                            Text(
-                              'Équipement : ${ticket.assetName}',
-                              style: TextStyle(
-                                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // Detail section
-                  Text(
-                    'Détails du ticket',
-                    style: TextStyle(
-                        color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 12),
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Description',
-                          style: TextStyle(
-                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          ticket.description.isNotEmpty
-                              ? ticket.description
-                              : 'Aucune description fournie.',
-                          style: TextStyle(
-                              color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                              fontSize: 14,
-                              height: 1.4),
-                        ),
-                        Divider(height: 24, color: Theme.of(context).extension<AppSemanticColors>()!.border),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Date de création',
-                                    style: TextStyle(
-                                        color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                                        fontSize: 12),
-                                  ),
-                                  SizedBox(height: 6),
-                                  Row(
-                                    children: [
-                                      Icon(Icons.calendar_today,
-                                          size: 14,
-                                          color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary),
-                                      SizedBox(width: 6),
-                                      Text(
-                                        createdDateStr,
-                                        style: TextStyle(
-                                            color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                                            fontSize: 13),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (dueDateStr != null)
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Échéance',
-                                      style: TextStyle(
-                                        color: isOverdue
-                                            ? Theme.of(context).extension<AppSemanticColors>()!.danger
-                                            : Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          Icons.access_alarm,
-                                          size: 14,
-                                          color: isOverdue
-                                              ? Theme.of(context).extension<AppSemanticColors>()!.danger
-                                              : Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                                        ),
-                                        SizedBox(width: 6),
-                                        Text(
-                                          dueDateStr,
-                                          style: TextStyle(
-                                            color: isOverdue
-                                                ? Theme.of(context).extension<AppSemanticColors>()!.danger
-                                                : Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                                            fontSize: 13,
-                                            fontWeight: isOverdue
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                          ],
-                        ),
-                        Divider(height: 24, color: Theme.of(context).extension<AppSemanticColors>()!.border),
-                        Text(
-                          'Technicien assigné',
-                          style: TextStyle(
-                              color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12),
-                        ),
-                        SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(Icons.person_outline,
-                                size: 16, color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary),
-                            SizedBox(width: 8),
-                            Text(
-                              ticket.assignedTechnician ?? 'Non assigné',
-                              style: TextStyle(
-                                color: ticket.assignedTechnician != null
-                                    ? Theme.of(context).extension<AppSemanticColors>()!.textPrimary
-                                    : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
-                                fontSize: 14,
-                                fontStyle: ticket.assignedTechnician != null
-                                    ? FontStyle.normal
-                                    : FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  // Media attachments (photos / voice)
-                  if (ticket.imageUrl != null ||
-                      ticket.voiceNoteUrl != null) ...[
-                    Text(
-                      'Pièces jointes',
-                      style: TextStyle(
-                          color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (ticket.imageUrl != null) ...[
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Container(
-                                height: 180,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: AssetImage(
-                                        'assets/images/placeholder_pool.jpg'),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 12),
-                          ],
-                          if (ticket.voiceNoteUrl != null)
-                            Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).extension<AppSemanticColors>()!.surface,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: Icon(Icons.play_circle_outline,
-                                        color: Theme.of(context).extension<AppSemanticColors>()!.success, size: 32),
-                                    onPressed: () {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'Lecture de la note vocale...'),
-                                          duration: Duration(seconds: 1),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Note vocale.mp3',
-                                            style: TextStyle(
-                                                color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                                                fontSize: 13)),
-                                        SizedBox(height: 4),
-                                        Text('Durée : 0:14',
-                                            style: TextStyle(
-                                                color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary,
-                                                fontSize: 11)),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: 24),
-                  ],
-
-                  // Action Buttons based on status
-                  if (ticket.status != TicketStatus.resolved) ...[
-                    Row(
-                      children: [
-                        if (ticket.status == TicketStatus.open)
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.warning,
-                                  foregroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                                icon: Icon(Icons.play_arrow),
-                                label: Text('Prendre en charge',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
-                                onPressed: () {
-                                  ref
-                                      .read(ticketsProvider.notifier)
-                                      .updateTicketStatus(
-                                          ticket.id, TicketStatus.inProgress);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            'Ticket pris en charge (En cours) ✓')),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        if (ticket.status == TicketStatus.inProgress) ...[
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context).extension<AppSemanticColors>()!.success,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                                icon: Icon(Icons.check),
-                                label: Text(
-                                    ticket.type == TicketType.anomaly
-                                        ? 'Résoudre'
-                                        : 'Terminer',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                onPressed: () {
-                                  ref
-                                      .read(ticketsProvider.notifier)
-                                      .updateTicketStatus(
-                                          ticket.id, TicketStatus.resolved);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            'Ticket résolu avec succès ✓')),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    SizedBox(height: 24),
-                  ],
-
-                  // Event Log Timeline (Odoo style)
-                  Text(
-                    'Historique d\'intervention',
-                    style: TextStyle(
-                        color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 12),
-                  _buildTimeline(context, ticket),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 820),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildHeaderCard(ticket),
+                const SizedBox(height: 16),
+                _buildInfoCard(ticket),
+                if (ticket.photoPaths.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildPhotosCard(ticket),
                 ],
-              ),
+                const SizedBox(height: 16),
+                if (ticket.status != TicketStatus.resolved) ...[
+                  _buildActions(ticket),
+                  const SizedBox(height: 16),
+                ],
+                _buildTimelineCard(ticket),
+                const SizedBox(height: 12),
+                _buildCommentComposer(ticket),
+              ],
             ),
           ),
         ),
@@ -431,144 +95,473 @@ class TicketDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTypeBadge(BuildContext context, WorkTicket ticket) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        ticket.typeTextFrench,
-        style: TextStyle(
-          color: ticket.type.resolveColor(context),
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
+  // -- Header -----------------------------------------------------------
+
+  Widget _buildHeaderCard(WorkTicket ticket) {
+    final colors = context.colors;
+    return PriorityIndicator(
+      priority: ticket.priority,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _badge(ticket.typeTextFrench,
+                    ticket.type.resolveColor(context)),
+                const SizedBox(width: 8),
+                _badge(ticket.priorityTextFrench,
+                    ticket.priority.resolveColor(context)),
+                const Spacer(),
+                _badge(ticket.statusTextFrench,
+                    ticket.status.resolveColor(context)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(ticket.title,
+                style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 16,
+              runSpacing: 6,
+              children: [
+                _iconLabel(
+                  Icons.grid_view_rounded,
+                  ticket.activityName,
+                  colors.getActivityColor(ticket.activityId),
+                ),
+                if (ticket.assetName != null)
+                  _iconLabel(Icons.settings_rounded, ticket.assetName!,
+                      colors.textSecondary),
+                _iconLabel(
+                  Icons.person_outline_rounded,
+                  ticket.assignedTechnician ?? 'Non assigné',
+                  ticket.assignedTechnician != null
+                      ? colors.textSecondary
+                      : colors.textMuted,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusBadge(BuildContext context, WorkTicket ticket) {
+  Widget _badge(String label, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: ticket.status.resolveColor(context).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        ticket.statusTextFrench,
-        style: TextStyle(
-          color: ticket.status.resolveColor(context),
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
+        label,
+        style:
+            TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800),
       ),
     );
   }
 
-  Widget _buildTimeline(BuildContext context, WorkTicket ticket) {
-    final bool hasStarted = ticket.status == TicketStatus.inProgress ||
-        ticket.status == TicketStatus.resolved;
-    final bool hasResolved = ticket.status == TicketStatus.resolved;
+  Widget _iconLabel(IconData icon, String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
 
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).extension<AppSemanticColors>()!.backgroundSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).extension<AppSemanticColors>()!.border),
-      ),
+  // -- Info -------------------------------------------------------------
+
+  Widget _buildInfoCard(WorkTicket ticket) {
+    final colors = context.colors;
+    final dateFormat = DateFormat('dd/MM/yyyy à HH:mm');
+
+    return _card(
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildTimelineItem(context: context, 
-            title: 'Création du ticket',
-            time: DateFormat('dd/MM/yyyy à HH:mm').format(ticket.dateCreated),
-            subtitle: 'Ticket signalé par l\'opérateur',
-            isActive: true,
-            isLast: !hasStarted,
+          Text('Description',
+              style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          const SizedBox(height: 6),
+          Text(
+            ticket.description.isNotEmpty
+                ? ticket.description
+                : 'Aucune description fournie.',
+            style: TextStyle(
+                color: colors.textPrimary, fontSize: 14, height: 1.4),
           ),
-          if (hasStarted)
-            _buildTimelineItem(context: context, 
-              title: 'Pris en charge',
-              time: DateFormat('dd/MM/yyyy à HH:mm')
-                  .format(ticket.dateCreated.add(Duration(minutes: 15))),
-              subtitle:
-                  'Assigné à ${ticket.assignedTechnician ?? "Karim (Technicien)"}',
-              isActive: true,
-              isLast: !hasResolved,
-            ),
-          if (hasResolved)
-            _buildTimelineItem(context: context, 
-              title: ticket.type == TicketType.anomaly ? 'Résolu' : 'Terminé',
-              time: DateFormat('dd/MM/yyyy à HH:mm')
-                  .format(ticket.dateCompleted ?? DateTime.now()),
-              subtitle: 'Intervention validée sur le terrain',
-              isActive: true,
-              isLast: true,
-            ),
+          Divider(height: 24, color: colors.border),
+          Row(
+            children: [
+              Expanded(
+                child: _dateColumn(
+                  'Créé le',
+                  dateFormat.format(ticket.dateCreated),
+                  Icons.calendar_today_rounded,
+                  colors.textSecondary,
+                ),
+              ),
+              if (ticket.dateDue != null)
+                Expanded(
+                  child: _dateColumn(
+                    'Échéance',
+                    dateFormat.format(ticket.dateDue!),
+                    Icons.access_alarm_rounded,
+                    ticket.isOverdue ? colors.danger : colors.textSecondary,
+                  ),
+                ),
+              if (ticket.dateCompleted != null)
+                Expanded(
+                  child: _dateColumn(
+                    'Clôturé le',
+                    dateFormat.format(ticket.dateCompleted!),
+                    Icons.check_circle_outline_rounded,
+                    colors.success,
+                  ),
+                ),
+            ],
+          ),
+          Divider(height: 24, color: colors.border),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ticket.assignedTechnician == null
+                      ? 'Aucun technicien assigné'
+                      : 'Assigné à ${ticket.assignedTechnician}',
+                  style: TextStyle(
+                    color: ticket.assignedTechnician == null
+                        ? colors.textMuted
+                        : colors.textPrimary,
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              OutlinedButton.icon(
+                onPressed: () => _pickTechnician(ticket),
+                icon: const Icon(Icons.person_add_alt_rounded, size: 18),
+                label: Text(ticket.assignedTechnician == null
+                    ? 'Assigner'
+                    : 'Réassigner'),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTimelineItem({required BuildContext context, 
-    required String title,
-    required String time,
-    required String subtitle,
-    required bool isActive,
-    required bool isLast,
-  }) {
-    return Row(
+  Widget _dateColumn(String label, String value, IconData icon, Color color) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
+        Text(label, style: TextStyle(color: color, fontSize: 12)),
+        const SizedBox(height: 6),
+        Row(
           children: [
-            Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                color: isActive ? Theme.of(context).extension<AppSemanticColors>()!.success : Theme.of(context).extension<AppSemanticColors>()!.textMuted,
-                shape: BoxShape.circle,
-              ),
+            Icon(icon, size: 14, color: color),
+            const SizedBox(width: 6),
+            Text(value,
+                style: TextStyle(
+                    color: context.colors.textPrimary, fontSize: 13)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickTechnician(WorkTicket ticket) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('Assigner un technicien',
+                  style: Theme.of(sheetContext).textTheme.titleLarge),
             ),
-            if (!isLast)
-              Container(
-                width: 2,
-                height: 40,
-                color: isActive
-                    ? Theme.of(context).extension<AppSemanticColors>()!.success.withValues(alpha: 0.5)
-                    : Theme.of(context).extension<AppSemanticColors>()!.border,
+            for (final tech in _technicians)
+              ListTile(
+                leading: const Icon(Icons.person_outline_rounded),
+                title: Text(tech),
+                trailing: ticket.assignedTechnician == tech
+                    ? const Icon(Icons.check_rounded)
+                    : null,
+                onTap: () => Navigator.pop(sheetContext, tech),
               ),
           ],
         ),
-        SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      ),
+    );
+
+    if (selected != null && selected != ticket.assignedTechnician) {
+      await ref
+          .read(ticketsProvider.notifier)
+          .assignTechnician(ticket.id, selected);
+    }
+  }
+
+  // -- Photos -----------------------------------------------------------
+
+  Widget _buildPhotosCard(WorkTicket ticket) {
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Photos (${ticket.photoPaths.length})',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 120,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: ticket.photoPaths.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 10),
+              itemBuilder: (context, index) => ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  ticket.photoPaths[index],
+                  width: 160,
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 160,
+                    height: 120,
+                    color: context.colors.surface,
+                    child: Icon(Icons.broken_image_outlined,
+                        color: context.colors.textMuted),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // -- Actions ----------------------------------------------------------
+
+  Widget _buildActions(WorkTicket ticket) {
+    final colors = context.colors;
+    final notifier = ref.read(ticketsProvider.notifier);
+
+    return Row(
+      children: [
+        if (ticket.status == TicketStatus.open)
+          Expanded(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.warning,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(0, 52),
+              ),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: const Text('Prendre en charge'),
+              onPressed: () {
+                notifier.updateTicketStatus(
+                    ticket.id, TicketStatus.inProgress);
+                _snack('Ticket pris en charge ✓');
+              },
+            ),
+          ),
+        if (ticket.status == TicketStatus.inProgress)
+          Expanded(
+            child: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.success,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(0, 52),
+              ),
+              icon: const Icon(Icons.check_rounded),
+              label: Text(ticket.type == TicketType.anomaly
+                  ? 'Marquer résolu'
+                  : 'Terminer l\'intervention'),
+              onPressed: () {
+                notifier.updateTicketStatus(ticket.id, TicketStatus.resolved);
+                _snack('Ticket résolu ✓');
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  // -- Timeline & comments ----------------------------------------------
+
+  Widget _buildTimelineCard(WorkTicket ticket) {
+    final colors = context.colors;
+    final events = ticket.events.reversed.toList();
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Historique', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 16),
+          if (events.isEmpty)
+            Text(
+              'Aucun évènement enregistré.',
+              style: TextStyle(color: colors.textMuted, fontSize: 13),
+            )
+          else
+            for (var i = 0; i < events.length; i++)
+              _timelineRow(events[i], isLast: i == events.length - 1),
+        ],
+      ),
+    );
+  }
+
+  ({IconData icon, Color color}) _eventStyle(TicketEventType type) {
+    final colors = context.colors;
+    switch (type) {
+      case TicketEventType.created:
+        return (icon: Icons.flag_rounded, color: colors.accentPrimary);
+      case TicketEventType.statusChanged:
+        return (icon: Icons.sync_rounded, color: colors.info);
+      case TicketEventType.commented:
+        return (icon: Icons.chat_bubble_outline_rounded, color: colors.accentSecondary);
+      case TicketEventType.photoAdded:
+        return (icon: Icons.photo_camera_outlined, color: colors.gym);
+      case TicketEventType.assigned:
+        return (icon: Icons.person_add_alt_rounded, color: colors.success);
+    }
+  }
+
+  Widget _timelineRow(TicketEvent event, {required bool isLast}) {
+    final colors = context.colors;
+    final style = _eventStyle(event.type);
+    final when = event.at != null
+        ? DateFormat('dd/MM à HH:mm').format(event.at!)
+        : '';
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: style.color.withValues(alpha: 0.14),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(style.icon, size: 16, color: style.color),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(width: 2, color: colors.border),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: TextStyle(
-                          color: Theme.of(context).extension<AppSemanticColors>()!.textPrimary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold)),
-                  Text(time,
-                      style: TextStyle(
-                          color: Theme.of(context).extension<AppSemanticColors>()!.textMuted, fontSize: 11)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          event.message ?? '',
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      Text(when,
+                          style: TextStyle(
+                              color: colors.textMuted, fontSize: 11)),
+                    ],
+                  ),
+                  if (event.author != null && event.author!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        event.author!,
+                        style: TextStyle(
+                            color: colors.textSecondary, fontSize: 12),
+                      ),
+                    ),
                 ],
               ),
-              SizedBox(height: 2),
-              Text(subtitle,
-                  style: TextStyle(
-                      color: Theme.of(context).extension<AppSemanticColors>()!.textSecondary, fontSize: 12)),
-              SizedBox(height: 16),
-            ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCommentComposer(WorkTicket ticket) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _commentController,
+            textInputAction: TextInputAction.send,
+            decoration: const InputDecoration(
+              hintText: 'Ajouter un commentaire…',
+              prefixIcon: Icon(Icons.chat_bubble_outline_rounded),
+            ),
+            onSubmitted: (_) => _sendComment(ticket),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 52,
+          height: 52,
+          child: FilledButton(
+            onPressed: () => _sendComment(ticket),
+            style: FilledButton.styleFrom(padding: EdgeInsets.zero),
+            child: const Icon(Icons.send_rounded, size: 20),
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _sendComment(WorkTicket ticket) async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+    _commentController.clear();
+    await ref.read(ticketsProvider.notifier).addComment(ticket.id, text);
+  }
+
+  // -- Shared card decoration --------------------------------------------
+
+  Widget _card({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.colors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: child,
     );
   }
 }

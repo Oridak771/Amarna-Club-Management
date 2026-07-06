@@ -18,6 +18,7 @@
 # Environment variables
 .env
 .env.*
+!.env.example
 
 # Flutter/Dart
 .dart_tool/

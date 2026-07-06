@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ---------------------------------------------------------------------------
-// Semantic color tokens — use via Theme.of(context).extension<AppSemanticColors>()
-// or the convenience getter `context.colors`.
+// Amarna Club design system — emerald & gold.
+// Semantic color tokens: use via `context.colors.xxx`.
 // ---------------------------------------------------------------------------
 
 class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
@@ -78,66 +78,66 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.padel,
   });
 
-  // ---- Light palette ----
+  // ---- Light palette : warm sand + emerald + gold ----
   static const light = AppSemanticColors(
-    backgroundPrimary: Color(0xFFF6F8FB),
+    backgroundPrimary: Color(0xFFF7F6F2),
     backgroundSecondary: Color(0xFFFFFFFF),
-    backgroundElevated: Color(0xFFF1F5F9),
-    surface: Color(0xFFEFF4FA),
-    surfaceHover: Color(0xFFE2E8F0),
-    border: Color(0xFFE2E8F0),
-    borderActive: Color(0xFF2563EB),
-    textPrimary: Color(0xFF111827),
-    textSecondary: Color(0xFF526173),
-    textMuted: Color(0xFF8A98AA),
+    backgroundElevated: Color(0xFFF0EEE7),
+    surface: Color(0xFFF2F1EB),
+    surfaceHover: Color(0xFFE8E6DD),
+    border: Color(0xFFE4E1D7),
+    borderActive: Color(0xFF0E7C66),
+    textPrimary: Color(0xFF1A1F1D),
+    textSecondary: Color(0xFF56605B),
+    textMuted: Color(0xFF98A19B),
     textOnAccent: Color(0xFFFFFFFF),
-    accentPrimary: Color(0xFF2563EB),
-    accentSecondary: Color(0xFF0F766E),
-    success: Color(0xFF16A34A),
-    warning: Color(0xFFD97706),
-    danger: Color(0xFFDC2626),
-    info: Color(0xFF2563EB),
-    priorityLow: Color(0xFF64748B),
-    priorityMedium: Color(0xFFD97706),
-    priorityHigh: Color(0xFFEA580C),
-    priorityCritical: Color(0xFFDC2626),
-    pool: Color(0xFF0891B2),
-    horses: Color(0xFFB45309),
-    paintball: Color(0xFF16A34A),
-    shooting: Color(0xFFDC2626),
-    gym: Color(0xFF7C3AED),
-    padel: Color(0xFF059669),
+    accentPrimary: Color(0xFF0E7C66),
+    accentSecondary: Color(0xFFB8892F),
+    success: Color(0xFF178A50),
+    warning: Color(0xFFC77D14),
+    danger: Color(0xFFCB3B2F),
+    info: Color(0xFF2A6FA8),
+    priorityLow: Color(0xFF7B857F),
+    priorityMedium: Color(0xFFC77D14),
+    priorityHigh: Color(0xFFDD5E28),
+    priorityCritical: Color(0xFFCB3B2F),
+    pool: Color(0xFF0E8AA3),
+    horses: Color(0xFFA5622A),
+    paintball: Color(0xFF4E8A2E),
+    shooting: Color(0xFFB03A3A),
+    gym: Color(0xFF6D4FB3),
+    padel: Color(0xFF0E7C66),
   );
 
-  // ---- Dark palette ----
+  // ---- Dark palette : deep green charcoal + luminous emerald & gold ----
   static const dark = AppSemanticColors(
-    backgroundPrimary: Color(0xFF0B1220),
-    backgroundSecondary: Color(0xFF111827),
-    backgroundElevated: Color(0xFF1A2332),
-    surface: Color(0xFF1E293B),
-    surfaceHover: Color(0xFF334155),
-    border: Color(0xFF1F2937),
-    borderActive: Color(0xFF60A5FA),
-    textPrimary: Color(0xFFF8FAFC),
-    textSecondary: Color(0xFFCBD5E1),
-    textMuted: Color(0xFF64748B),
-    textOnAccent: Color(0xFFFFFFFF),
-    accentPrimary: Color(0xFF60A5FA),
-    accentSecondary: Color(0xFF2DD4BF),
-    success: Color(0xFF4ADE80),
-    warning: Color(0xFFFBBF24),
-    danger: Color(0xFFF87171),
-    info: Color(0xFF60A5FA),
-    priorityLow: Color(0xFF94A3B8),
-    priorityMedium: Color(0xFFFBBF24),
-    priorityHigh: Color(0xFFFB923C),
-    priorityCritical: Color(0xFFF87171),
-    pool: Color(0xFF22D3EE),
-    horses: Color(0xFFFBBF24),
-    paintball: Color(0xFF4ADE80),
-    shooting: Color(0xFFF87171),
-    gym: Color(0xFFA78BFA),
-    padel: Color(0xFF34D399),
+    backgroundPrimary: Color(0xFF0E1311),
+    backgroundSecondary: Color(0xFF161D1A),
+    backgroundElevated: Color(0xFF1D2622),
+    surface: Color(0xFF1F2925),
+    surfaceHover: Color(0xFF2A3630),
+    border: Color(0xFF27312C),
+    borderActive: Color(0xFF3DC9A5),
+    textPrimary: Color(0xFFF2F5F3),
+    textSecondary: Color(0xFFAEBBB4),
+    textMuted: Color(0xFF6C7973),
+    textOnAccent: Color(0xFF0B1210),
+    accentPrimary: Color(0xFF3DC9A5),
+    accentSecondary: Color(0xFFE0B45C),
+    success: Color(0xFF4CCB84),
+    warning: Color(0xFFE8A94A),
+    danger: Color(0xFFEF6E60),
+    info: Color(0xFF62A9DE),
+    priorityLow: Color(0xFF93A09A),
+    priorityMedium: Color(0xFFE8A94A),
+    priorityHigh: Color(0xFFF08650),
+    priorityCritical: Color(0xFFEF6E60),
+    pool: Color(0xFF43C3DD),
+    horses: Color(0xFFE0A163),
+    paintball: Color(0xFF83CE58),
+    shooting: Color(0xFFEB7A7A),
+    gym: Color(0xFFA98BE8),
+    padel: Color(0xFF3DC9A5),
   );
 
   @override
@@ -205,9 +205,12 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   AppSemanticColors lerp(AppSemanticColors? other, double t) {
     if (other is! AppSemanticColors) return this;
     return AppSemanticColors(
-      backgroundPrimary: Color.lerp(backgroundPrimary, other.backgroundPrimary, t)!,
-      backgroundSecondary: Color.lerp(backgroundSecondary, other.backgroundSecondary, t)!,
-      backgroundElevated: Color.lerp(backgroundElevated, other.backgroundElevated, t)!,
+      backgroundPrimary:
+          Color.lerp(backgroundPrimary, other.backgroundPrimary, t)!,
+      backgroundSecondary:
+          Color.lerp(backgroundSecondary, other.backgroundSecondary, t)!,
+      backgroundElevated:
+          Color.lerp(backgroundElevated, other.backgroundElevated, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
       surfaceHover: Color.lerp(surfaceHover, other.surfaceHover, t)!,
       border: Color.lerp(border, other.border, t)!,
@@ -225,7 +228,8 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       priorityLow: Color.lerp(priorityLow, other.priorityLow, t)!,
       priorityMedium: Color.lerp(priorityMedium, other.priorityMedium, t)!,
       priorityHigh: Color.lerp(priorityHigh, other.priorityHigh, t)!,
-      priorityCritical: Color.lerp(priorityCritical, other.priorityCritical, t)!,
+      priorityCritical:
+          Color.lerp(priorityCritical, other.priorityCritical, t)!,
       pool: Color.lerp(pool, other.pool, t)!,
       horses: Color.lerp(horses, other.horses, t)!,
       paintball: Color.lerp(paintball, other.paintball, t)!,
@@ -233,6 +237,25 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       gym: Color.lerp(gym, other.gym, t)!,
       padel: Color.lerp(padel, other.padel, t)!,
     );
+  }
+
+  Color getActivityColor(String activityId) {
+    switch (activityId.toLowerCase()) {
+      case 'pool':
+        return pool;
+      case 'horses':
+        return horses;
+      case 'paintball':
+        return paintball;
+      case 'shooting':
+        return shooting;
+      case 'gym':
+        return gym;
+      case 'padel':
+        return padel;
+      default:
+        return accentPrimary;
+    }
   }
 }
 
@@ -243,60 +266,76 @@ extension SemanticColorsX on BuildContext {
 }
 
 // ---------------------------------------------------------------------------
-// Theme builder
+// Theme builder — one implementation shared by light and dark.
 // ---------------------------------------------------------------------------
 
 class AppTheme {
-  static TextTheme _textTheme(Color primary, Color secondary) {
-    return GoogleFonts.interTextTheme(
+  static const double radiusCard = 20;
+  static const double radiusField = 14;
+
+  // Built once and cached — constructing ThemeData (and its GoogleFonts
+  // text theme) on every access is wasted work on each rebuild.
+  static final ThemeData lightTheme =
+      _build(AppSemanticColors.light, Brightness.light);
+
+  static final ThemeData darkTheme =
+      _build(AppSemanticColors.dark, Brightness.dark);
+
+  static TextTheme _textTheme(AppSemanticColors c) {
+    return GoogleFonts.manropeTextTheme(
       TextTheme(
         displayLarge: TextStyle(
-            fontSize: 32, fontWeight: FontWeight.w800, color: primary),
+            fontSize: 34, fontWeight: FontWeight.w800, color: c.textPrimary),
         headlineLarge: TextStyle(
-            fontSize: 28, fontWeight: FontWeight.w800, color: primary),
+            fontSize: 28, fontWeight: FontWeight.w800, color: c.textPrimary),
         headlineMedium: TextStyle(
-            fontSize: 22, fontWeight: FontWeight.w700, color: primary),
+            fontSize: 22, fontWeight: FontWeight.w800, color: c.textPrimary),
         titleLarge: TextStyle(
-            fontSize: 18, fontWeight: FontWeight.w700, color: primary),
+            fontSize: 18, fontWeight: FontWeight.w700, color: c.textPrimary),
         titleMedium: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.w700, color: primary),
-        bodyLarge: TextStyle(
-            fontSize: 16, fontWeight: FontWeight.normal, color: primary),
-        bodyMedium: TextStyle(
-            fontSize: 14, fontWeight: FontWeight.normal, color: secondary),
+            fontSize: 16, fontWeight: FontWeight.w700, color: c.textPrimary),
+        bodyLarge: TextStyle(fontSize: 16, color: c.textPrimary),
+        bodyMedium: TextStyle(fontSize: 14, color: c.textSecondary),
         labelLarge: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
       ),
     );
   }
 
-  static ThemeData get lightTheme {
-    const c = AppSemanticColors.light;
-
+  static ThemeData _build(AppSemanticColors c, Brightness brightness) {
     final scheme = ColorScheme.fromSeed(
       seedColor: c.accentPrimary,
-      brightness: Brightness.light,
+      brightness: brightness,
       primary: c.accentPrimary,
+      onPrimary: c.textOnAccent,
       secondary: c.accentSecondary,
       surface: c.backgroundSecondary,
+      onSurface: c.textPrimary,
       error: c.danger,
     );
 
+    OutlineInputBorder fieldBorder(Color color, [double width = 1]) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(radiusField),
+        borderSide: BorderSide(color: color, width: width),
+      );
+    }
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
-      extensions: const [c],
+      brightness: brightness,
+      extensions: [c],
+      colorScheme: scheme,
       scaffoldBackgroundColor: c.backgroundPrimary,
       cardColor: c.backgroundSecondary,
       dividerColor: c.border,
-      colorScheme: scheme,
-      textTheme: _textTheme(c.textPrimary, c.textSecondary),
-      visualDensity: VisualDensity.standard,
+      splashFactory: InkSparkle.splashFactory,
+      textTheme: _textTheme(c),
       cardTheme: CardThemeData(
         color: c.backgroundSecondary,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: c.border, width: 1),
+          borderRadius: BorderRadius.circular(radiusCard),
+          side: BorderSide(color: c.border),
         ),
         margin: EdgeInsets.zero,
         elevation: 0,
@@ -307,7 +346,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: GoogleFonts.manrope(
           fontSize: 20,
           fontWeight: FontWeight.w800,
           color: c.textPrimary,
@@ -317,14 +356,14 @@ class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
         backgroundColor: c.backgroundSecondary,
-        indicatorColor: c.accentPrimary.withValues(alpha: 0.12),
+        indicatorColor: c.accentPrimary.withValues(alpha: 0.14),
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 12,
             fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w700
+                ? FontWeight.w800
                 : FontWeight.w500,
             color: states.contains(WidgetState.selected)
                 ? c.accentPrimary
@@ -339,13 +378,6 @@ class AppTheme {
           ),
         ),
       ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: c.backgroundSecondary,
-        selectedItemColor: c.accentPrimary,
-        unselectedItemColor: c.textSecondary,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: c.backgroundSecondary,
@@ -355,22 +387,10 @@ class AppTheme {
         suffixIconColor: c.textSecondary,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.border, width: 1),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.border, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.borderActive, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.danger, width: 1),
-        ),
+        border: fieldBorder(c.border),
+        enabledBorder: fieldBorder(c.border),
+        focusedBorder: fieldBorder(c.borderActive, 1.5),
+        errorBorder: fieldBorder(c.danger),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -378,121 +398,98 @@ class AppTheme {
           foregroundColor: c.textOnAccent,
           minimumSize: const Size(double.infinity, 52),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(radiusField),
           ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
           elevation: 0,
+        ),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: c.accentPrimary,
+          foregroundColor: c.textOnAccent,
+          minimumSize: const Size(0, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusField),
+          ),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: c.textPrimary,
+          side: BorderSide(color: c.border, width: 1.2),
+          minimumSize: const Size(0, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(radiusField),
+          ),
+          textStyle: GoogleFonts.manrope(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: c.accentPrimary,
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          textStyle: GoogleFonts.manrope(fontWeight: FontWeight.w700),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: c.backgroundSecondary,
-        selectedColor: c.accentPrimary.withValues(alpha: 0.12),
+        selectedColor: c.accentPrimary.withValues(alpha: 0.14),
         side: BorderSide(color: c.border),
-        labelStyle: TextStyle(
-            color: c.textSecondary, fontWeight: FontWeight.w600),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        labelStyle:
+            TextStyle(color: c.textSecondary, fontWeight: FontWeight.w600),
+        shape:
+            RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
-    );
-  }
-
-  static ThemeData get darkTheme {
-    const c = AppSemanticColors.dark;
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: Brightness.dark,
-      extensions: const [c],
-      scaffoldBackgroundColor: c.backgroundPrimary,
-      cardColor: c.backgroundSecondary,
-      dividerColor: c.border,
-      colorScheme: ColorScheme.dark(
-        primary: c.accentPrimary,
-        secondary: c.accentSecondary,
-        surface: c.backgroundSecondary,
-        error: c.danger,
-        onPrimary: c.textOnAccent,
-        onSecondary: c.textOnAccent,
-        onSurface: c.textPrimary,
-      ),
-      textTheme: _textTheme(c.textPrimary, c.textSecondary),
-      cardTheme: CardThemeData(
-        color: c.backgroundSecondary,
-        surfaceTintColor: Colors.transparent,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: c.accentPrimary,
+        foregroundColor: c.textOnAccent,
+        elevation: 2,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: c.border, width: 1),
+          borderRadius: BorderRadius.circular(18),
         ),
-        margin: EdgeInsets.zero,
-        elevation: 0,
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: c.backgroundPrimary,
-        foregroundColor: c.textPrimary,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: c.textPrimary),
-        iconTheme: IconThemeData(color: c.textPrimary),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 72,
-        backgroundColor: c.backgroundSecondary,
-        indicatorColor: c.accentPrimary.withValues(alpha: 0.16),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-      ),
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: c.backgroundSecondary,
-        selectedItemColor: c.accentPrimary,
-        unselectedItemColor: c.textSecondary,
-        selectedLabelStyle:
-            const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 12),
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: c.backgroundSecondary,
-        hintStyle: TextStyle(color: c.textMuted, fontSize: 14),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.border, width: 1),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.border, width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.accentPrimary, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: c.danger, width: 1),
+        extendedTextStyle: GoogleFonts.manrope(
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
         ),
       ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: c.accentPrimary,
-          foregroundColor: c.textOnAccent,
-          minimumSize: const Size(double.infinity, 52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-          elevation: 0,
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: brightness == Brightness.light
+            ? const Color(0xFF1A1F1D)
+            : c.backgroundElevated,
+        contentTextStyle: GoogleFonts.manrope(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radiusField),
+        ),
+      ),
+      dividerTheme: DividerThemeData(color: c.border, thickness: 1),
+      listTileTheme: ListTileThemeData(
+        iconColor: c.textSecondary,
+        textColor: c.textPrimary,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.textOnAccent
+              : c.textMuted,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? c.accentPrimary
+              : c.surfaceHover,
         ),
       ),
     );

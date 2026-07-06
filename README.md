@@ -1,121 +1,103 @@
-# Amarna Club — Mobile Operations Management App
+# Amarna Club — Tablette de Gestion Opérationnelle
 
-Amarna Club is a mobile-first, offline-first operational client application designed for activity center employees, supervisors, and operations managers. It serves as a field interface to manage daily operations, track assets, file incidents, perform checklist inspections, adjust stocks, and log maintenance activities, eventually synchronizing all data with Odoo ERP.
+Amarna Club is a staff-facing tablet application for an activity/leisure club — employees, supervisors, and operations managers. It is a Flutter app (Android / iOS / Windows desktop) that acts as a field tool and syncs data with an Odoo ERP backend (direct JSON-RPC + PostgreSQL read access). The app assumes a permanent internet connection.
 
 ---
 
 ## 🚀 Key Features
 
-* **Accueil (KPI Dashboard)**: Display of real-time metrics (open activities, active incidents, delayed maintenance, daily bookings) and connection indicators.
+* **Ma journée (Home)** — action-first staff home page: urgent interventions, today's reservations with one-tap **check-in**, live alerts (critical incidents, overdue work, low stock, activity warnings), quick actions and an activity occupancy strip.
 * **Activités (Specialized Modules)**:
-  * 🏊 **Piscine**: Live water quality dials (pH, Chlorine, Temperature, Turbidity).
-  * 🐎 **Écurie**: Grid of horses with veterinary fatigue bars, statuses, and profiles.
-  * 🔫 **Stand de Tir**: Strict serial tracking and QR scan requirements for cleaning.
-  * 🎯 **Paintball / Gym / Padel**: Interactive court schedules, session clocks, and clean sheets.
-* **Suivi de Maintenance (Tab 3)**: Preventive and corrective intervention timelines, technician assignments, and checkoffs.
-* **Signalement d'Incidents (Tab 4)**: Glove-friendly quick reporting flow (Type + Priority + Photo attachment in under 3 taps) with optional voice notes and detailed sheets.
-* **Fiches d'inspection (Checklists)**: Gestural swipeable checklists card stack (Swipe Right for `Done`, Swipe Left for `Problem`) powered by responsive spring physics.
-* **Moteur Hors-ligne (Offline DB)**: Built on Isar DB cache. In offline mode, the app buffers actions locally and prompts a reactive warning banner. Re-establishing connection automatically triggers the synchronization queue to sync Odoo ERP.
+  * 🏊 **Piscine** — water-quality gauges (pH, chlorine, temperature, turbidity), conformity summary, reading log, open interventions.
+  * 🐎 **Écurie** — horse grid with breed/age/status/fatigue, vet visit reminders, today's riding sessions (Odoo), status filters.
+  * 🔫 **Stand de Tir** — armory summary, serial tracking, cleaning-due alerts with QR scan.
+  * 🎯 **Paintball / Gym / Padel** — session clock & player counter, cleaning progress, court boards, live Odoo reservations per activity.
+* **Interventions (unified module)** — incidents and maintenance merged in one flow: filterable list (type, overdue, status), photo attachments, comment & event **timeline**, technician assignment, one-tap status transitions. Every change is pushed directly to Odoo.
+* **Réservations** — day planner fed by Odoo (`calendar.event` by default), creation and **check-in** which updates activity occupancy and writes back the status.
+* **Thème clair / sombre** — full light & dark design system (emerald + gold), switchable from Profil → Apparence, persisted across launches.
 
 ---
 
 ## 🛠️ Technology Stack
 
-* **Frontend Framework**: Flutter (v3.10.0+ / stable channel)
-* **Programming Language**: Dart 3.x
-* **Navigation & Shell Routing**: GoRouter (indexed stateful stack branches)
-* **State Management**: Riverpod (Notifier state containers)
-* **Local Cache Database**: Isar 3.x (Object-oriented persistent database)
-* **Integrations**: `mobile_scanner` (QR scanning), `nfc_manager` (NFC tag scanning), `path_provider`, `flutter_secure_storage`.
+* **Frontend**: Flutter (stable) / Dart 3.x
+* **Navigation**: GoRouter (StatefulShellRoute branches)
+* **State**: Riverpod
+* **Local cache**: Isar 3.x
+* **Integrations**: Odoo JSON-RPC (`http`), direct PostgreSQL reads (`postgres`), `mobile_scanner` (QR), `nfc_manager` (NFC), `flutter_dotenv` (secrets), `flutter_secure_storage` (preferences)
 
 ---
 
-## 📂 Project Directory Structure
+## 📂 Project Structure
 
 ```
 lib/
-├── main.dart                  # App bootstrap, db initialization, and provider overrides
-├── routes.dart                # GoRouter configuration with StatefulShellRoute branches
-├── models/                    # Data models & Isar database collection schemas
-│   ├── activity.dart          # Activity metadata and occupancy details
-│   ├── asset.dart             # Equipment/asset serials, specs, and maintenance logs
-│   ├── checklist_item.dart    # Daily checklist task schemas
-│   ├── incident.dart          # Incident priorities, statuses, and reporting details
-│   ├── inventory_item.dart    # Consumables, stock levels, and threshold warnings
-│   └── maintenance_task.dart  # Preventive and corrective work orders
-├── providers/                 # State management (Riverpod Notifiers & DB caches)
-│   ├── activities_provider.dart
-│   ├── assets_provider.dart
-│   ├── checklist_provider.dart
-│   ├── incidents_provider.dart
-│   ├── inventory_provider.dart
-│   ├── maintenance_provider.dart
-│   └── sync_provider.dart     # Offline transaction queue and network simulator
-├── services/                  # Infrastructure and database layers
-│   └── database_service.dart  # Isar instance builder & seed data migrator
-├── theme/                     # Styling system
-│   └── app_theme.dart         # Dark theme rules, palettes, and typography tokens
-├── widgets/                   # Shared reusable UI component library (Touch targets >= 48px)
-│   ├── activity_tile.dart     # Grid activity selector
-│   ├── app_filter_chip.dart   # List state selection filters
-│   ├── gauge_card.dart        # Radial quality arcs
-│   ├── inventory_stepper.dart # Stock adjusters (48x48px targets)
-│   ├── offline_banner.dart    # Connection status banner
-│   ├── priority_indicator.dart# Priority borders & pulse glows
-│   ├── swipe_card.dart        # Gestural checklist cards
-│   └── ...
-└── screens/                   # Page screens and layouts
-    ├── dashboard_screen.dart  # Core KPI dashboard
-    ├── offline_dashboard_screen.dart # Sync status & Connection simulator
-    ├── activity_detail_screen.dart # Tabbed details (Consumables, Equipment, Logs)
-    └── activities/            # Activity-specific custom modules (Pool, Horses, Padel...)
+├── main.dart                  # Bootstrap: .env load, Isar init, provider overrides
+├── routes.dart                # GoRouter configuration
+├── config/
+│   └── app_environment.dart   # Reads runtime secrets from .env
+├── models/                    # Isar collections & domain models
+├── providers/                 # Riverpod state (tickets, activities, check-in, theme…)
+├── repositories/              # Isar data-access layer
+├── services/                  # Odoo JSON-RPC, Postgres, ticket push, database seed
+├── theme/app_theme.dart       # Light + dark design system (semantic tokens)
+├── ui/                        # Model → color/label adapters
+├── widgets/                   # Shared components (gauges, panels, chips…)
+└── screens/                   # Pages (home, activities/, tickets, reservations…)
+tool/
+└── check_db.dart              # CLI connectivity check for the Odoo PostgreSQL DB
 ```
 
 ---
 
-## 💻 Local Setup & Run Instructions
-
-To run the application locally on your computer without Docker:
+## 💻 Setup & Run
 
 ### 1. Prerequisites
-Ensure you have the Flutter SDK and dependencies installed locally:
-* **Flutter SDK**: Stable channel (v3.10.0+ / Dart 3.x)
-* **Android Development**: Android Studio and SDK (for emulation/mobile debugging)
-* **iOS Development**: Xcode (macOS only, for iPhone debugging)
-* **Windows Desktop Development**: Visual Studio with the "Desktop development with C++" workload installed.
+* **Flutter SDK** (stable channel, Dart 3.x)
+* Android Studio / Xcode / Visual Studio ("Desktop development with C++") depending on target
 
-### 2. Install Dependencies
-Navigate to the project directory and pull Dart packages:
+### 2. Install dependencies
 ```bash
 flutter pub get
 ```
 
-### 3. Generate Database Schemas
-Generate the Isar adapters and model schemas (`.g.dart` files):
+### 3. Configure credentials (.env)
+Copy the template and fill in the real values — `.env` is gitignored and bundled at build time:
+```bash
+cp .env.example .env
+```
+```dotenv
+AMARNA_DB_HOST=10.20.10.49
+AMARNA_DB_PORT=5432
+AMARNA_DB_NAME=<postgres_database_name>
+AMARNA_DB_USERNAME=biuser
+AMARNA_DB_PASSWORD=<postgres_password>
+
+AMARNA_ODOO_BASE_URL=https://your-odoo-host
+AMARNA_ODOO_DB=<odoo_database_name>
+AMARNA_ODOO_USERNAME=<odoo_login>
+AMARNA_ODOO_PASSWORD=<odoo_password>
+```
+Optional Odoo model/field mappings (reservations & tickets) are documented in `.env.example`.
+
+Verify database connectivity at any time:
+```bash
+dart run tool/check_db.dart
+```
+
+### 4. Generate database schemas
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-### 4. Run the Application
-Start debugging the app on your connected device or local emulator:
+### 5. Run
 ```bash
-# List all active devices
 flutter devices
-
-# Run on a target device
-flutter run -d <device_id>
-
-# Run natively on Windows Desktop
-flutter run -d windows
+flutter run -d <device_id>     # or: flutter run -d windows
 ```
 
 ---
 
-## ⚙️ Offline Synchronization Simulation
+## 🔄 Odoo Synchronization
 
-To verify the offline transaction buffering:
-1. Navigate to **Plus** -> **Mode hors-ligne** inside the application.
-2. Toggle the **Simulation Réseau** switch to **Hors-ligne**. The amber warning banner will slide down.
-3. Make changes inside the app (e.g. increase stock quantities, file a quick incident report, or check off inspection cards).
-4. Notice the **Modifications En attente** count updates and logs the actions in the terminal interface.
-5. Toggle the network back to **Connecté**. The synchronization queue will run, clear database transaction flags, reload views, and display a green success banner (`Synchronisé ✓`).
+The app is online-first: every ticket creation/update is pushed immediately to Odoo (`maintenance.request` by default), and reservations are read from / written to Odoo (`calendar.event` by default). If Odoo is not configured in `.env`, the app runs fully on the local Isar cache with seeded demo data — remote pushes are simply skipped.

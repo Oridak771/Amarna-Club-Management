@@ -5,7 +5,7 @@ import '../theme/app_theme.dart';
 class StatusBadge extends StatelessWidget {
   final ActivityStatus status;
 
-  StatusBadge({
+  const StatusBadge({
     super.key,
     required this.status,
   });
@@ -45,7 +45,7 @@ class StatusBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(20),
@@ -62,7 +62,7 @@ class StatusBadge extends StatelessWidget {
             size: 14,
             color: textColor,
           ),
-          SizedBox(width: 4),
+          const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(

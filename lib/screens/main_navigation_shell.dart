@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../widgets/offline_banner.dart';
-
 class MainNavigationShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  MainNavigationShell({
+  const MainNavigationShell({
     Key? key,
     required this.navigationShell,
-  }) : super(key: key ?? ValueKey<String>('MainNavigationShell'));
+  }) : super(key: key ?? const ValueKey<String>('MainNavigationShell'));
 
   void _onTap(BuildContext context, int index) {
     navigationShell.goBranch(
@@ -21,22 +19,17 @@ class MainNavigationShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          OfflineBanner(),
-          Expanded(child: navigationShell),
-        ],
-      ),
+      body: navigationShell,
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
           border: Border(
-            top: BorderSide(color: Color(0xFFE2E8F0)),
+            top: BorderSide(color: Theme.of(context).dividerColor),
           ),
         ),
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           onDestinationSelected: (index) => _onTap(context, index),
-          destinations: [
+          destinations: const [
             NavigationDestination(
               icon: Icon(Icons.space_dashboard_outlined),
               selectedIcon: Icon(Icons.space_dashboard_rounded),

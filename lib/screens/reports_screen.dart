@@ -55,18 +55,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Rapports & Statistiques'),
+        title: const Text('Rapports & Statistiques'),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.ios_share),
+            icon: const Icon(Icons.ios_share),
             tooltip: 'Exporter',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                     content:
                         Text('Rapport exporté en format PDF avec succès.')),
               );
@@ -75,10 +75,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: Center(
           child: Container(
-            constraints: BoxConstraints(maxWidth: 900),
+            constraints: const BoxConstraints(maxWidth: 900),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -87,7 +87,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   children: [
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: context.colors.backgroundSecondary,
                           borderRadius: BorderRadius.circular(10),
@@ -128,10 +128,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: context.colors.backgroundSecondary,
                           borderRadius: BorderRadius.circular(10),
@@ -164,7 +164,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 2. High-level KPI grid
                 LayoutBuilder(
@@ -202,7 +202,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     );
                   },
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 3. Detailed stats & charts Section
                 LayoutBuilder(
@@ -215,7 +215,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               Expanded(
                                   child: _buildAnomaliesChart(
                                       anomalyResolutionRate)),
-                              SizedBox(width: 16),
+                              const SizedBox(width: 16),
                               Expanded(
                                   child:
                                       _buildMaintenanceChart(maintenanceRate)),
@@ -224,17 +224,17 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         : Column(
                             children: [
                               _buildAnomaliesChart(anomalyResolutionRate),
-                              SizedBox(height: 16),
+                              const SizedBox(height: 16),
                               _buildMaintenanceChart(maintenanceRate),
                             ],
                           );
                   },
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 4. Activity Occupancy Distribution
                 _buildOccupancyDistribution(activities),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -246,7 +246,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget _buildKPICard(
       String title, String value, String subtext, Color accentColor) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -266,13 +266,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           Text(title,
               style: TextStyle(
                   color: context.colors.textSecondary, fontSize: 13)),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(value,
               style: TextStyle(
                   color: context.colors.textPrimary,
                   fontSize: 22,
                   fontWeight: FontWeight.bold)),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Row(
             children: [
               Container(
@@ -280,7 +280,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   height: 6,
                   decoration: BoxDecoration(
                       color: accentColor, shape: BoxShape.circle)),
-              SizedBox(width: 6),
+              const SizedBox(width: 6),
               Text(subtext,
                   style: TextStyle(
                       color: accentColor,
@@ -295,7 +295,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Widget _buildAnomaliesChart(double rate) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
@@ -313,7 +313,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   fontWeight: FontWeight.bold),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           SizedBox(
             height: 120,
             width: 120,
@@ -344,7 +344,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               ],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Taux d\'anomalies résolues',
             style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
@@ -356,7 +356,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Widget _buildMaintenanceChart(double rate) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
@@ -374,7 +374,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   fontWeight: FontWeight.bold),
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           SizedBox(
             height: 120,
             width: 120,
@@ -405,7 +405,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               ],
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Taux de tâches préventives faites',
             style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
@@ -417,7 +417,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   Widget _buildOccupancyDistribution(List<dynamic> activities) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: context.colors.backgroundSecondary,
         borderRadius: BorderRadius.circular(16),
@@ -433,12 +433,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 fontSize: 15,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: activities.length,
-            separatorBuilder: (context, index) => SizedBox(height: 14),
+            separatorBuilder: (context, index) => const SizedBox(height: 14),
             itemBuilder: (context, index) {
               final act = activities[index];
               final pct = act.occupancyPercentage;
@@ -459,7 +459,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               color: context.colors.textSecondary, fontSize: 13)),
                     ],
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
@@ -480,21 +480,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 
   Color _getActivityColor(String activityId) {
-    switch (activityId.toLowerCase()) {
-      case 'pool':
-        return const Color(0xFF00D4FF);
-      case 'horses':
-        return const Color(0xFFFFB347);
-      case 'paintball':
-        return const Color(0xFF7CFC00);
-      case 'shooting':
-        return const Color(0xFFFF4757);
-      case 'gym':
-        return const Color(0xFFA855F7);
-      case 'padel':
-        return const Color(0xFF34D399);
-      default:
-        return context.colors.accentPrimary;
-    }
+    return context.colors.getActivityColor(activityId);
   }
 }

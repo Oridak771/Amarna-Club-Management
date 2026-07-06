@@ -12,7 +12,7 @@ class GaugeCard extends StatelessWidget {
   final double safeMax;
   final bool isHero;
 
-  GaugeCard({
+  const GaugeCard({
     super.key,
     required this.title,
     required this.value,
@@ -56,7 +56,7 @@ class GaugeCard extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
 
             // Custom Painter Gauge
             SizedBox(
@@ -96,12 +96,12 @@ class GaugeCard extends StatelessWidget {
               ),
             ),
 
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             // Status footer
             if (isHero) ...[
               Container(
                 padding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -152,11 +152,11 @@ class _GaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = min(size.width / 2, size.height / 2);
-    strokeWidth = 8.0;
+    const double strokeWidth = 8.0;
 
     // Paint for background track
     final trackPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.2)
+      ..color = Colors.grey.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round;
@@ -169,8 +169,8 @@ class _GaugePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // Draw background track (270 degrees arc starting at 135 degrees)
-    startAngle = 135.0 * pi / 180.0;
-    sweepAngleMax = 270.0 * pi / 180.0;
+    const double startAngle = 135.0 * pi / 180.0;
+    const double sweepAngleMax = 270.0 * pi / 180.0;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius - strokeWidth / 2),
       startAngle,

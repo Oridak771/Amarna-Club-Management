@@ -31,7 +31,10 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_secure_storage: ^9.2.2
   intl: ^0.20.2
+  http: ^1.2.2
+  postgres: ^3.5.12
   cupertino_icons: ^1.0.8
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -47,3 +50,4 @@ flutter:
     - assets/images/
     - assets/images/activities/
     - assets/icons/
+    - .env

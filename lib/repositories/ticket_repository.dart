@@ -27,11 +27,6 @@ class TicketRepository {
         .findAll();
   }
 
-  /// Returns all tickets that are still pending sync.
-  Future<List<WorkTicket>> getPendingSync() async {
-    return _isar.workTickets.filter().syncPendingEqualTo(true).findAll();
-  }
-
   /// Inserts or updates a ticket.
   Future<void> put(WorkTicket ticket) async {
     await _isar.writeTxn(() async {
