@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../services/odoo_club_service.dart';
 
 enum HorseStatus { available, resting, injured }
 
@@ -198,26 +201,53 @@ List<Horse> _seedHorses() {
 }
 
 class HorsesNotifier extends StateNotifier<List<Horse>> {
-  HorsesNotifier() : super(_seedHorses());
+  HorsesNotifier(this._club) : super(_seedHorses()) {
+    refreshFromOdoo();
+  }
+
+  final OdooClubService _club;
+
+  /// Replaces the seeded demo herd with the live one from Odoo.
+  Future<void> refreshFromOdoo() async {
+    if (!_club.isConfigured) return;
+    try {
+      final remote = await _club.fetchHorses();
+      if (remote.isNotEmpty) {
+        state = remote;
+      }
+    } catch (error) {
+      debugPrint('Odoo horses pull failed: $error');
+    }
+  }
 
   void updateStatus(String id, HorseStatus status) {
+    // A horse put back to work starts rested.
+    final newFatigue = status == HorseStatus.available ? 0.0 : null;
     state = [
       for (final horse in state)
         if (horse.id == id)
-          horse.copyWith(
-            status: status,
-            // A horse put back to work starts rested.
-            fatigue: status == HorseStatus.available ? 0.0 : horse.fatigue,
-          )
+          horse.copyWith(status: status, fatigue: newFatigue)
         else
           horse,
     ];
+    _pushStatus(id, status);
+  }
+
+  Future<void> _pushStatus(String id, HorseStatus status) async {
+    if (!_club.isConfigured) return;
+    final horse = state.where((h) => h.id == id).toList();
+    if (horse.isEmpty) return;
+    try {
+      await _club.pushHorseStatus(id, status, horse.first.fatigue);
+    } catch (error) {
+      debugPrint('Odoo horse status push failed for $id: $error');
+    }
   }
 }
 
 final horsesProvider =
     StateNotifierProvider<HorsesNotifier, List<Horse>>((ref) {
-  return HorsesNotifier();
+  return HorsesNotifier(ref.watch(odooClubServiceProvider));
 });
 
 final horseByIdProvider = Provider.family<Horse?, String>((ref, id) {

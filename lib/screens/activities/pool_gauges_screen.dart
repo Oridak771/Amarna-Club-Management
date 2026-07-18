@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../services/odoo_club_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
 import '../../widgets/gauge_card.dart';
@@ -63,6 +64,52 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
   late double _ph = _current.ph;
   late double _turbidity = _current.turbidity;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadLatestFromOdoo();
+  }
+
+  /// Replaces the local demo reading with the latest one stored in Odoo.
+  Future<void> _loadLatestFromOdoo() async {
+    final club = ref.read(odooClubServiceProvider);
+    if (!club.isConfigured) return;
+    try {
+      final latest = await club.fetchLatestPoolReading();
+      if (latest == null || !mounted) return;
+      setState(() {
+        _current = _Reading(
+          temperature: latest.temperature,
+          chlorine: latest.chlorine,
+          ph: latest.ph,
+          turbidity: latest.turbidity,
+          recordedAt: latest.recordedAt,
+        );
+        _temperature = _current.temperature;
+        _chlorine = _current.chlorine;
+        _ph = _current.ph;
+        _turbidity = _current.turbidity;
+      });
+    } catch (error) {
+      debugPrint('Odoo pool reading pull failed: $error');
+    }
+  }
+
+  Future<void> _pushReadingToOdoo(_Reading reading) async {
+    final club = ref.read(odooClubServiceProvider);
+    if (!club.isConfigured) return;
+    try {
+      await club.createPoolReading(
+        temperature: reading.temperature,
+        chlorine: reading.chlorine,
+        ph: reading.ph,
+        turbidity: reading.turbidity,
+      );
+    } catch (error) {
+      debugPrint('Odoo pool reading push failed: $error');
+    }
+  }
+
   void _saveReading() {
     setState(() {
       _current = _Reading(
@@ -73,6 +120,7 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
         recordedAt: DateTime.now(),
       );
     });
+    _pushReadingToOdoo(_current);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Relevé enregistré ✓')),
     );

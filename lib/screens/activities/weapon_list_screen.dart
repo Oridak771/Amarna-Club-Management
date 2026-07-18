@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../models/asset.dart';
+import '../../models/work_ticket.dart';
+import '../../providers/assets_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
 import '../../widgets/priority_indicator.dart';
-import '../../models/work_ticket.dart';
 
 class Weapon {
   final String id;
@@ -22,57 +25,72 @@ class Weapon {
   });
 }
 
-class WeaponListScreen extends StatefulWidget {
+class WeaponListScreen extends ConsumerStatefulWidget {
   const WeaponListScreen({super.key});
 
   @override
-  State<WeaponListScreen> createState() => _WeaponListScreenState();
+  ConsumerState<WeaponListScreen> createState() => _WeaponListScreenState();
 }
 
-class _WeaponListScreenState extends State<WeaponListScreen> {
-  late List<Weapon> weapons;
+class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
+  /// Offline demo armory, shown only when no weapon asset is available
+  /// from the synced asset cache (e.g. Odoo not configured).
+  final List<Weapon> _demoWeapons = [
+    Weapon(
+        id: 'w1',
+        serialNumber: 'SN-GLOCK-001',
+        model: 'Glock 17',
+        status: 'Disponible',
+        lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
+    Weapon(
+        id: 'w2',
+        serialNumber: 'SN-GLOCK-002',
+        model: 'Glock 17',
+        status: 'En utilisation',
+        lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
+    Weapon(
+        id: 'w3',
+        serialNumber: 'SN-AR15-001',
+        model: 'AR-15',
+        status: 'Maintenance',
+        lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
+    Weapon(
+        id: 'w4',
+        serialNumber: 'SN-BERETTA-001',
+        model: 'Beretta 92FS',
+        status: 'Disponible',
+        lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    weapons = [
-      Weapon(
-          id: 'w1',
-          serialNumber: 'SN-GLOCK-001',
-          model: 'Glock 17',
-          status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
-      Weapon(
-          id: 'w2',
-          serialNumber: 'SN-GLOCK-002',
-          model: 'Glock 17',
-          status: 'En utilisation',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
-      Weapon(
-          id: 'w3',
-          serialNumber: 'SN-AR15-001',
-          model: 'AR-15',
-          status: 'Maintenance',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
-      Weapon(
-          id: 'w4',
-          serialNumber: 'SN-BERETTA-001',
-          model: 'Beretta 92FS',
-          status: 'Disponible',
-          lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
-    ];
+  List<Weapon> weapons = [];
+
+  Weapon _weaponFromAsset(Asset asset) {
+    return Weapon(
+      id: asset.id,
+      serialNumber: asset.serialNumber,
+      model: asset.name,
+      status: asset.statusTextFrench,
+      lastCleaned: asset.lastMaintenance ??
+          DateTime.now().subtract(const Duration(days: 30)),
+    );
   }
 
   void _cleanWeapon(int index) {
+    final weapon = weapons[index];
+    // Updates the local asset cache and pushes to Odoo.
+    ref.read(assetsProvider.notifier).markAssetCleaned(weapon.id);
     setState(() {
-      final w = weapons[index];
-      weapons[index] = Weapon(
-        id: w.id,
-        serialNumber: w.serialNumber,
-        model: w.model,
-        status: w.status,
-        lastCleaned: DateTime.now(),
-      );
+      final demoIndex = _demoWeapons.indexWhere((w) => w.id == weapon.id);
+      if (demoIndex != -1) {
+        final w = _demoWeapons[demoIndex];
+        _demoWeapons[demoIndex] = Weapon(
+          id: w.id,
+          serialNumber: w.serialNumber,
+          model: w.model,
+          status: w.status,
+          lastCleaned: DateTime.now(),
+        );
+      }
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -83,6 +101,16 @@ class _WeaponListScreenState extends State<WeaponListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final assets = ref.watch(assetsProvider);
+    final weaponAssets = assets
+        .where((a) =>
+            a.activityId == 'shooting' &&
+            a.category.toLowerCase().contains('arme'))
+        .toList();
+    weapons = weaponAssets.isNotEmpty
+        ? weaponAssets.map(_weaponFromAsset).toList()
+        : _demoWeapons;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Liste des Armes'),

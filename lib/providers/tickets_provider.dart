@@ -4,6 +4,7 @@ import '../config/app_environment.dart';
 import '../models/work_ticket.dart';
 import '../repositories/ticket_repository.dart';
 import '../services/database_service.dart';
+import '../services/odoo_club_service.dart';
 import '../services/ticket_sync_service.dart';
 
 final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
@@ -13,13 +14,56 @@ final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
 class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
   final TicketRepository _repo;
   final TicketSyncService _odooSync;
+  final OdooClubService _club;
 
-  TicketsNotifier(this._repo, this._odooSync) : super([]) {
-    loadTickets();
+  TicketsNotifier(this._repo, this._odooSync, this._club) : super([]) {
+    _init();
+  }
+
+  Future<void> _init() async {
+    await loadTickets();
+    await pullFromOdoo();
   }
 
   Future<void> loadTickets() async {
     state = await _repo.getAll();
+  }
+
+  /// Two-way sync: pulls interventions from Odoo. Unknown tickets are added
+  /// to the local cache; for known ones the remote status/priority/assignee
+  /// win (a technician may have moved the ticket in the Odoo UI), while the
+  /// local timeline events and photos are preserved.
+  Future<void> pullFromOdoo() async {
+    if (!AppEnvironment.isOdooConfigured) return;
+    try {
+      final remote = await _club.fetchInterventions();
+      for (final ticket in remote) {
+        final local = await _repo.getById(ticket.id);
+        if (local == null) {
+          await _repo.put(ticket);
+        } else if (local.status != ticket.status ||
+            local.priority != ticket.priority ||
+            local.assignedTechnician != ticket.assignedTechnician) {
+          await _repo.put(local.copyWith(
+            status: ticket.status,
+            priority: ticket.priority,
+            dateCompleted: ticket.dateCompleted,
+            assignedTechnician: ticket.assignedTechnician,
+            events: [
+              ...local.events,
+              TicketEvent.make(
+                type: TicketEventType.statusChanged,
+                message: 'Mis à jour depuis Odoo',
+                author: ticket.assignedTechnician,
+              ),
+            ],
+          ));
+        }
+      }
+      await loadTickets();
+    } catch (error) {
+      debugPrint('Odoo tickets pull failed: $error');
+    }
   }
 
   /// Pushes the ticket to Odoo when configured; local state is the source
@@ -188,5 +232,6 @@ final ticketsProvider =
   return TicketsNotifier(
     ref.watch(ticketRepositoryProvider),
     ref.watch(ticketSyncServiceProvider),
+    ref.watch(odooClubServiceProvider),
   );
 });

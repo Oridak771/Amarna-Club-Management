@@ -15,6 +15,24 @@ class TicketSyncService {
   final OdooJsonRpcService _odoo;
 
   Future<void> syncTicket(WorkTicket ticket) async {
+    // Tickets pulled from Odoo carry an 'odoo-<id>' identifier: write the
+    // mapped fields straight back to that record instead of re-creating it
+    // (its name/description belong to the Odoo side).
+    if (ticket.id.startsWith('odoo-')) {
+      final remoteId = int.tryParse(ticket.id.substring('odoo-'.length));
+      if (remoteId != null) {
+        final values = _buildMappedFields(ticket);
+        if (values.isNotEmpty) {
+          await _odoo.write(
+            model: AppEnvironment.odooTicketModel,
+            id: remoteId,
+            values: values,
+          );
+        }
+        return;
+      }
+    }
+
     final existingId = await _findRemoteTicketId(ticket.id);
     final values = _buildPayload(ticket);
 
@@ -55,10 +73,18 @@ class TicketSyncService {
   }
 
   Map<String, dynamic> _buildPayload(WorkTicket ticket) {
-    final payload = <String, dynamic>{
+    return {
       'name': '[${ticket.id}] ${ticket.title}',
       'description': _buildDescription(ticket),
+      ..._buildMappedFields(ticket),
     };
+  }
+
+  /// Only the .env-mapped fields (status, priority, due date, activity,
+  /// assignee) — used both for full pushes and for updates of tickets that
+  /// originate in Odoo.
+  Map<String, dynamic> _buildMappedFields(WorkTicket ticket) {
+    final payload = <String, dynamic>{};
 
     _putIfConfigured(
       payload,

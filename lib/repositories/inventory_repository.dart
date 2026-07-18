@@ -32,6 +32,13 @@ class InventoryRepository {
     });
   }
 
+  /// Inserts or updates multiple items inside a single transaction.
+  Future<void> putAll(List<InventoryItem> items) async {
+    await _isar.writeTxn(() async {
+      await _isar.inventoryItems.putAll(items);
+    });
+  }
+
   /// Watches the entire inventory collection.
   Stream<void> watchAll() {
     return _isar.inventoryItems.watchLazy();

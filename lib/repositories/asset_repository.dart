@@ -29,6 +29,13 @@ class AssetRepository {
     });
   }
 
+  /// Inserts or updates multiple assets inside a single transaction.
+  Future<void> putAll(List<Asset> assets) async {
+    await _isar.writeTxn(() async {
+      await _isar.assets.putAll(assets);
+    });
+  }
+
   /// Watches the entire asset collection.
   Stream<void> watchAll() {
     return _isar.assets.watchLazy();
