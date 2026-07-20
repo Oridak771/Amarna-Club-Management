@@ -34,6 +34,7 @@ class AmarnaClubApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
       title: 'Amarna Club',
@@ -41,7 +42,7 @@ class AmarnaClubApp extends ConsumerWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      routerConfig: appRouter,
+      routerConfig: router,
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [
         Locale('fr', 'FR'),

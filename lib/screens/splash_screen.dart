@@ -1,20 +1,22 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
 
 /// Animated loading splash: dual rotating arcs orbit a pulsing gold emblem
 /// while staged status messages play, then the app routes to login.
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with TickerProviderStateMixin {
   late final AnimationController _intro; // one-shot entrance
   late final AnimationController _spin; // repeating orbit + pulse
@@ -38,6 +40,11 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1600),
     )..repeat();
 
+    // Trigger auto-login in the background
+    Future.microtask(() {
+      ref.read(authProvider.notifier).tryAutoLogin();
+    });
+
     // Advance status messages, then leave.
     Future.delayed(const Duration(milliseconds: 900), () {
       if (mounted) setState(() => _stageIndex = 1);
@@ -46,7 +53,14 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) setState(() => _stageIndex = 2);
     });
     Future.delayed(const Duration(milliseconds: 2700), () {
-      if (mounted) context.go('/login');
+      if (mounted) {
+        final authStatus = ref.read(authProvider).status;
+        if (authStatus == AuthStatus.authenticated) {
+          context.go('/accueil');
+        } else {
+          context.go('/login');
+        }
+      }
     });
   }
 

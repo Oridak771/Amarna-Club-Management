@@ -73,7 +73,5 @@ class AppEnvironment {
 
   static bool get isOdooConfigured =>
       odooBaseUrl.isNotEmpty &&
-      odooDatabase.isNotEmpty &&
-      odooUsername.isNotEmpty &&
-      odooPassword.isNotEmpty;
+      odooDatabase.isNotEmpty;
 }

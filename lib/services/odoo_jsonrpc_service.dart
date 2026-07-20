@@ -15,6 +15,8 @@ class OdooJsonRpcService {
 
   final http.Client _client;
   String? _sessionCookie;
+  String? _username;
+  String? _password;
 
   Future<IntegrationStatus> checkHealth() async {
     if (!AppEnvironment.isOdooConfigured) {
@@ -22,7 +24,7 @@ class OdooJsonRpcService {
         name: 'Odoo',
         state: IntegrationHealthState.notConfigured,
         message:
-            'AMARNA_ODOO_BASE_URL, AMARNA_ODOO_DB, AMARNA_ODOO_USERNAME ou AMARNA_ODOO_PASSWORD manquant.',
+            'AMARNA_ODOO_BASE_URL ou base de données manquante.',
       );
     }
 
@@ -54,22 +56,61 @@ class OdooJsonRpcService {
     }
   }
 
-  Future<Map<String, dynamic>> authenticate() async {
-    final result = await _post(
-      '/web/session/authenticate',
-      body: {
-        'jsonrpc': '2.0',
-        'method': 'call',
-        'params': {
-          'db': AppEnvironment.odooDatabase,
-          'login': AppEnvironment.odooUsername,
-          'password': AppEnvironment.odooPassword,
-        },
-      },
-      allowRetry: false,
-    );
+  Future<Map<String, dynamic>> authenticate({
+    String? username,
+    String? password,
+    bool persistSession = true,
+  }) async {
+    final resolvedUsername = username ?? _username;
+    final resolvedPassword = password ?? _password;
 
-    return Map<String, dynamic>.from(result);
+    if (resolvedUsername == null || resolvedPassword == null) {
+      throw Exception('Aucun identifiant fourni pour l\'authentification Odoo.');
+    }
+
+    final response = await _client
+        .post(
+          Uri.parse('${AppEnvironment.odooBaseUrl}/web/session/authenticate'),
+          headers: const {
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode({
+            'jsonrpc': '2.0',
+            'method': 'call',
+            'params': {
+              'db': AppEnvironment.odooDatabase,
+              'login': resolvedUsername,
+              'password': resolvedPassword,
+            },
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    if (decoded['error'] != null) {
+      throw Exception(_extractOdooError(decoded['error']));
+    }
+
+    final result = Map<String, dynamic>.from(decoded['result'] as Map);
+    final uid = result['uid'];
+    if (uid == null || uid == false || (uid is num && uid <= 0)) {
+      throw Exception('Identifiant ou mot de passe Odoo invalide.');
+    }
+
+    if (persistSession) {
+      _username = resolvedUsername;
+      _password = resolvedPassword;
+
+      final setCookie = response.headers['set-cookie'];
+      if (setCookie != null && setCookie.isNotEmpty) {
+        _sessionCookie = setCookie
+            .split(',')
+            .map((part) => part.split(';').first.trim())
+            .join('; ');
+      }
+    }
+
+    return result;
   }
 
   Future<List<Map<String, dynamic>>> searchRead({
@@ -155,7 +196,17 @@ class OdooJsonRpcService {
       return;
     }
 
+    if (_username == null || _password == null) {
+      return; // Cannot re-authenticate without credentials.
+    }
+
     await authenticate();
+  }
+
+  void clearSession() {
+    _sessionCookie = null;
+    _username = null;
+    _password = null;
   }
 
   Future<dynamic> _post(

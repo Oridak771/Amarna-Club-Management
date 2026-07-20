@@ -41,6 +41,13 @@ class PlusMenuScreen extends StatelessWidget {
         route: '/plus/reservations',
       ),
       _PlusMenuItem(
+        icon: Icons.card_membership_outlined,
+        iconColor: context.colors.accentSecondary, // gold
+        label: 'Abonnements',
+        subtitle: 'Consulter les abonnements clients',
+        route: '/plus/abonnements',
+      ),
+      _PlusMenuItem(
         icon: Icons.bar_chart_rounded,
         iconColor: context.colors.gym, // purple
         label: 'Rapports',

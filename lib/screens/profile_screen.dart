@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../providers/auth_provider.dart';
 import '../providers/theme_mode_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -17,9 +19,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.userDetails ?? const <String, dynamic>{};
+    final displayName = _displayName(user);
+    final login = _login(user);
+    final role = _roleLabel(user);
+    final initials = _buildInitials(displayName);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil & Paramètres'),
+        title: const Text('Profil & Parametres'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -33,7 +42,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. User Info Card
                 Container(
                   padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
@@ -46,17 +54,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       CircleAvatar(
                         radius: 40,
                         backgroundColor: context.colors.accentPrimary,
-                        child: const Text(
-                          'OP',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold),
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Opérateur Principal',
+                        displayName,
                         style: TextStyle(
                           color: context.colors.textPrimary,
                           fontSize: 20,
@@ -65,25 +74,35 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Rôle : Superviseur Opérations',
+                        role,
                         style: TextStyle(
                           color: context.colors.accentSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      if (login.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          login,
+                          style: TextStyle(
+                            color: context.colors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Divider(color: context.colors.border),
                       const SizedBox(height: 8),
-                      // Assigned Activities tags
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Activités Affectées :',
+                          'Activites affectees :',
                           style: TextStyle(
-                              color: context.colors.textSecondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
+                            color: context.colors.textSecondary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -94,11 +113,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           runSpacing: 8,
                           children: [
                             _buildActivityTag('Piscine', context.colors.pool),
-                            _buildActivityTag(
-                                'Équitation', context.colors.horses),
+                            _buildActivityTag('Equitation', context.colors.horses),
                             _buildActivityTag('Padel', context.colors.padel),
                             _buildActivityTag(
-                                'Stand de Tir', context.colors.shooting),
+                              'Stand de Tir',
+                              context.colors.shooting,
+                            ),
                           ],
                         ),
                       ),
@@ -106,10 +126,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // 2. Preferences / Settings Options
                 Text(
-                  'Préférences de l\'application',
+                  'Preferences de l\'application',
                   style: TextStyle(
                     color: context.colors.textPrimary,
                     fontSize: 16,
@@ -125,11 +143,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Toggle Notifications
                       _buildSwitchTile(
                         title: 'Notifications Push',
                         subtitle:
-                            'Recevoir les alertes d\'incidents en temps réel',
+                            'Recevoir les alertes d\'incidents en temps reel',
                         icon: Icons.notifications_active_outlined,
                         value: _pushNotifications,
                         onChanged: (val) {
@@ -139,10 +156,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         },
                       ),
                       Divider(color: context.colors.border, height: 1),
-                      // Toggle Biometry
                       _buildSwitchTile(
-                        title: 'Connexion Biométrique',
-                        subtitle: 'Empreinte digitale ou FaceID au démarrage',
+                        title: 'Connexion Biometrique',
+                        subtitle: 'Empreinte digitale ou FaceID au demarrage',
                         icon: Icons.fingerprint,
                         value: _biometrics,
                         onChanged: (val) {
@@ -157,54 +173,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-
-                // 3. Logout Button (large, glove-friendly target)
                 SizedBox(
                   height: 52,
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: context.colors.danger.withValues(alpha: 0.15),
+                      backgroundColor:
+                          context.colors.danger.withValues(alpha: 0.15),
                       foregroundColor: context.colors.danger,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                            color: context.colors.danger, width: 1.5),
+                          color: context.colors.danger,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.logout),
                     label: Text(
-                      'Se déconnecter',
+                      'Se deconnecter',
                       style: TextStyle(
                         color: context.colors.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
                     ),
-                    onPressed: () {
-                      // Redirect to login page
+                    onPressed: () async {
+                      await ref.read(authProvider.notifier).logout();
+                      if (!context.mounted) return;
                       context.go('/login');
                     },
                   ),
                 ),
                 const SizedBox(height: 48),
-
-                // 4. Version Tag
                 Center(
                   child: Column(
                     children: [
                       Text(
                         'Amarna Club Management',
                         style: TextStyle(
-                            color: context.colors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold),
+                          color: context.colors.textSecondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Version 1.0.0 (Build 2606)',
-                        style:
-                            TextStyle(color: context.colors.textMuted, fontSize: 11),
+                        style: TextStyle(
+                          color: context.colors.textMuted,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -237,18 +256,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  String _displayName(Map<String, dynamic> user) {
+    final value = user['name']?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+    return 'Utilisateur Odoo';
+  }
+
+  String _login(Map<String, dynamic> user) {
+    final username = user['username']?.toString().trim();
+    if (username != null && username.isNotEmpty) return username;
+    final login = user['login']?.toString().trim();
+    if (login != null && login.isNotEmpty) return login;
+    return '';
+  }
+
+  String _roleLabel(Map<String, dynamic> user) {
+    final company = user['user_companies']?['current_company']?.toString().trim();
+    if (company != null && company.isNotEmpty) {
+      return 'Societe : $company';
+    }
+
+    return 'Session authentifiee via Odoo';
+  }
+
+  String _buildInitials(String value) {
+    final parts = value
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .take(2)
+        .toList();
+    if (parts.isEmpty) return 'OD';
+    return parts.map((part) => part[0].toUpperCase()).join();
+  }
+
   Widget _buildThemeModeTile() {
     final mode = ref.watch(themeModeProvider);
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: Icon(Icons.brightness_6_outlined,
-          color: context.colors.textSecondary),
+      leading: Icon(
+        Icons.brightness_6_outlined,
+        color: context.colors.textSecondary,
+      ),
       title: Text(
         'Apparence',
         style: TextStyle(
-            color: context.colors.textPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.bold),
+          color: context.colors.textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 10),
@@ -293,9 +348,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       title: Text(
         title,
         style: TextStyle(
-            color: context.colors.textPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.bold),
+          color: context.colors.textPrimary,
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       subtitle: Text(
         subtitle,
