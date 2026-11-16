@@ -90,6 +90,9 @@ class Subscription {
     return null;
   }
 
+  /// Odoo returns `false` for empty selection/char fields.
+  static String _text(Object? value) => value is String ? value : '';
+
   factory Subscription.fromOdoo(Map<String, dynamic> row) {
     final ref = row['name']?.toString() ?? '';
     return Subscription(
@@ -101,8 +104,8 @@ class Subscription {
       remainingSessions: (row['remaining_sessions'] as num?)?.toInt() ?? 0,
       startDate: _date(row['start_date']),
       expirationDate: _date(row['expiration_date']),
-      status: row['subscription_status']?.toString() ?? '',
-      paymentState: row['payment_state']?.toString() ?? '',
+      status: _text(row['subscription_status']),
+      paymentState: _text(row['payment_state']),
       amountTotal: (row['amount_total'] as num?)?.toDouble() ?? 0,
     );
   }

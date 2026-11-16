@@ -27,7 +27,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   TicketPriority _selectedPriority = TicketPriority.medium;
 
   // Media simulation
-  int _mockPhotoCount = 0;
 
   String? _assignedTechnician = 'Karim (Technicien)';
 
@@ -76,10 +75,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                 : (_assignedTechnician == 'Non assigné'
                     ? null
                     : _assignedTechnician),
-            photoPaths: List.generate(
-              _mockPhotoCount,
-              (i) => 'assets/images/placeholder_pool.jpg',
-            ),
           );
 
       context.pop();
@@ -196,30 +191,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     TextFormField(
                       controller: _assetNameController,
                       style: TextStyle(color: context.colors.textPrimary),
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         hintText: 'Nom ou Code-barres de l\'équipement',
-                        suffixIcon: IconButton(
-                          icon: Icon(Icons.qr_code_scanner,
-                              color: context.colors.accentPrimary),
-                          onPressed: () {
-                            // Mock scan search
-                            setState(() {
-                              _assetNameController.text =
-                                  _selectedActivityId == 'pool'
-                                      ? 'Pompe de Filtration 2'
-                                      : _selectedActivityId == 'horses'
-                                          ? 'Selle Cuir Tornade'
-                                          : 'Équipement Standard';
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'Équipement détecté : ${_assetNameController.text}'),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          },
-                        ),
                       ),
                       validator: (value) {
                         if (showTechnicianAndAsset &&
@@ -320,18 +293,6 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       const SizedBox(height: 20),
                     ],
 
-                    // 8. Photo attachments
-                    Text(
-                      'Photos',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildMediaRow(),
-                    const SizedBox(height: 24),
-
                     // 9. Submit Button
                     SizedBox(
                       width: double.infinity,
@@ -429,92 +390,4 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
     );
   }
 
-  Widget _buildMediaRow() {
-    return Row(
-      children: [
-        // Camera button
-        InkWell(
-          onTap: () {
-            setState(() {
-              _mockPhotoCount++;
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Photo capturée et jointe ✓'),
-                duration: Duration(seconds: 1),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: context.colors.backgroundSecondary,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.colors.border),
-            ),
-            child: Icon(Icons.camera_alt_outlined,
-                color: context.colors.textSecondary, size: 28),
-          ),
-        ),
-        const SizedBox(width: 12),
-
-        // Photo thumbnail preview (if attached)
-        if (_mockPhotoCount > 0)
-          Stack(
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: context.colors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: context.colors.border),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/placeholder_pool.jpg'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: GestureDetector(
-                  onTap: () => setState(() => _mockPhotoCount = 0),
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.black54,
-                      shape: BoxShape.circle,
-                    ),
-                    child:
-                        const Icon(Icons.close, color: Colors.white, size: 14),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 2,
-                left: 2,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    'x$_mockPhotoCount',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
 }

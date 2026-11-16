@@ -1,173 +1,262 @@
-// Live integration test of the app's Odoo sync layer.
+// Tests of the tablet's Odoo layer.
 //
-// Runs the REAL service classes (OdooJsonRpcService, OdooClubService,
-// TicketSyncService) against the local Odoo backend configured in `.env`.
-// Requires the Odoo server to be running; skipped otherwise.
+// 1. Unit tests (always run): time-zone conversions, availability rules and
+//    session-cookie parsing.
+// 2. Integration tests (need a running Odoo with the amarna_club addons):
+//    they exercise the real service classes against the server, as a
+//    non-admin staff account. They are skipped unless the following are given:
 //
-//   flutter test test/odoo_sync_integration_test.dart
+//    flutter test --dart-define-from-file=config/dart_define.local.json \
+//      --dart-define=AMARNA_TEST_LOGIN=<staff login> \
+//      --dart-define=AMARNA_TEST_PASSWORD=<staff password>
+//
+// Test records are named "TEST ..." so they are easy to find in Odoo. The
+// tablet account cannot delete records, so they are removed by an admin.
 
-import 'dart:io';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:amarna_club/config/app_environment.dart';
 import 'package:amarna_club/models/activity.dart';
-import 'package:amarna_club/models/asset.dart';
+import 'package:amarna_club/models/reservation.dart';
 import 'package:amarna_club/models/work_ticket.dart';
-import 'package:amarna_club/providers/horses_provider.dart';
 import 'package:amarna_club/services/odoo_club_service.dart';
+import 'package:amarna_club/services/odoo_datetime.dart';
 import 'package:amarna_club/services/odoo_jsonrpc_service.dart';
+import 'package:amarna_club/services/odoo_reservation_service.dart';
 import 'package:amarna_club/services/ticket_sync_service.dart';
 
-Future<bool> _odooReachable() async {
-  try {
-    final client = HttpClient();
-    final request = await client
-        .getUrl(Uri.parse('${AppEnvironment.odooBaseUrl}/web/login'))
-        .timeout(const Duration(seconds: 5));
-    final response = await request.close();
-    await response.drain<void>();
-    client.close();
-    return response.statusCode == 200;
-  } catch (_) {
-    return false;
-  }
-}
+const _login = String.fromEnvironment('AMARNA_TEST_LOGIN');
+const _password = String.fromEnvironment('AMARNA_TEST_PASSWORD');
 
 void main() {
-  // Load .env from disk (no asset bundle in the test VM).
-  dotenv.testLoad(fileInput: File('.env').readAsStringSync());
+  group('Odoo date conversions', () {
+    test('a local time is stored as UTC and read back unchanged', () {
+      final local = DateTime(2030, 1, 15, 10, 30);
+      final stored = toOdooDateTime(local);
+      expect(fromOdooDateTime(stored), local);
+      expect(
+        fromOdooDateTime('2030-01-15 09:30:00'),
+        DateTime.utc(2030, 1, 15, 9, 30).toLocal(),
+      );
+    });
 
-  final odoo = OdooJsonRpcService(http.Client());
-  final club = OdooClubService(odoo);
-  final ticketSync = TicketSyncService(odoo);
+    test('empty or invalid values give null', () {
+      expect(fromOdooDateTime(false), isNull);
+      expect(fromOdooDateTime(''), isNull);
+      expect(fromOdooDate(null), isNull);
+      expect(fromOdooDate('not a date'), isNull);
+    });
 
-  late final bool reachable;
+    test('dates keep their calendar day', () {
+      expect(toOdooDate(DateTime(2030, 2, 3, 23, 59)), '2030-02-03');
+      expect(fromOdooDate('2030-02-03'), DateTime(2030, 2, 3));
+    });
 
-  setUpAll(() async {
-    reachable = AppEnvironment.isOdooConfigured && await _odooReachable();
+    test('a local day maps to a UTC window of the same length', () {
+      final (start, end) = odooDayBounds(DateTime(2030, 1, 15, 17));
+      expect(start, toOdooDateTime(DateTime(2030, 1, 15)));
+      expect(end, toOdooDateTime(DateTime(2030, 1, 16)));
+    });
   });
 
-  test('environment is configured for Odoo', () {
-    expect(AppEnvironment.isOdooConfigured, isTrue,
-        reason: '.env must contain the Odoo credentials');
+  group('Activity availability (mirrors amarna.club.activity)', () {
+    Activity activity({
+      ActivityStatus status = ActivityStatus.open,
+      DateTime? closureStart,
+      DateTime? closureEnd,
+    }) {
+      return Activity(
+        id: 'horses',
+        name: 'Équitation',
+        iconKey: 'horses',
+        status: status,
+        currentOccupancy: 0,
+        maxCapacity: 20,
+        assignedStaff: '',
+        closureStart: closureStart,
+        closureEnd: closureEnd,
+      );
+    }
+
+    final slotStart = DateTime(2030, 1, 15, 10);
+    final slotEnd = DateTime(2030, 1, 15, 11);
+
+    test('open and warning activities take bookings', () {
+      expect(activity().isAvailableAt(slotStart, slotEnd), isTrue);
+      expect(
+        activity(status: ActivityStatus.warning).isAvailableAt(slotStart, slotEnd),
+        isTrue,
+      );
+    });
+
+    test('closed and in-maintenance activities do not', () {
+      expect(
+        activity(status: ActivityStatus.closed).isAvailableAt(slotStart, slotEnd),
+        isFalse,
+      );
+      expect(
+        activity(status: ActivityStatus.maintenance)
+            .isAvailableAt(slotStart, slotEnd),
+        isFalse,
+      );
+    });
+
+    test('a booking may not overlap a closure window', () {
+      final closed = activity(
+        closureStart: DateTime(2030, 1, 15, 10, 30),
+        closureEnd: DateTime(2030, 1, 15, 12),
+      );
+      expect(closed.isAvailableAt(slotStart, slotEnd), isFalse);
+      // Ending exactly when the closure starts is fine.
+      expect(
+        closed.isAvailableAt(DateTime(2030, 1, 15, 9), DateTime(2030, 1, 15, 10, 30)),
+        isTrue,
+      );
+    });
+
+    test('an open-ended closure blocks everything after its start', () {
+      final closed = activity(closureStart: DateTime(2030, 1, 15, 9));
+      expect(closed.isAvailableAt(slotStart, slotEnd), isFalse);
+      expect(
+        closed.isAvailableAt(DateTime(2030, 1, 15, 7), DateTime(2030, 1, 15, 8)),
+        isTrue,
+      );
+    });
+
+    test('an empty or reversed slot is never available', () {
+      expect(activity().isAvailableAt(slotEnd, slotStart), isFalse);
+      expect(activity().isAvailableAt(slotStart, slotStart), isFalse);
+    });
   });
 
-  test('activities: fetch and occupancy round-trip', () async {
-    if (!reachable) return;
-    final activities = await club.fetchActivities();
-    expect(activities.length, greaterThanOrEqualTo(6));
-    final pool = activities.firstWhere((a) => a.id == 'pool');
-    expect(pool.maxCapacity, 60);
-    expect(pool.status, isA<ActivityStatus>());
+  group('Session cookie parsing', () {
+    test('finds session_id among other cookies and attributes', () {
+      expect(
+        OdooJsonRpcService.extractSessionId(
+          'session_id=abc123; Max-Age=7776000; Expires=Mon, 16 Feb 2027 10:00:00 GMT; '
+          'HttpOnly; Path=/; SameSite=Lax',
+        ),
+        'abc123',
+      );
+    });
 
-    await club.pushActivityOccupancy('pool', pool.currentOccupancy + 1);
-    final after = (await club.fetchActivities())
-        .firstWhere((a) => a.id == 'pool');
-    expect(after.currentOccupancy, pool.currentOccupancy + 1);
-    await club.pushActivityOccupancy('pool', pool.currentOccupancy);
+    test('joined Set-Cookie headers still yield the session id', () {
+      expect(
+        OdooJsonRpcService.extractSessionId(
+          'tz=Europe/Paris; Path=/, session_id=xyz789; Path=/',
+        ),
+        'xyz789',
+      );
+    });
+
+    test('no session cookie gives null', () {
+      expect(OdooJsonRpcService.extractSessionId(null), isNull);
+      expect(OdooJsonRpcService.extractSessionId('tz=UTC; Path=/'), isNull);
+    });
   });
 
-  test('assets: fetch armory and status round-trip', () async {
-    if (!reachable) return;
-    final assets = await club.fetchAssets();
-    expect(assets.length, greaterThanOrEqualTo(12));
-    final weapons = assets.where((a) =>
-        a.activityId == 'shooting' &&
-        a.category.toLowerCase().contains('arme'));
-    expect(weapons.length, 4);
+  group(
+    'Odoo integration (staff account)',
+    () {
+      late OdooJsonRpcService rpc;
+      late OdooClubService club;
+      late OdooReservationService reservations;
+      late TicketSyncService tickets;
 
-    final treadmill =
-        assets.firstWhere((a) => a.id == 'asset-gym-treadmill-1');
-    await club.pushAssetStatus(treadmill.id, AssetStatus.broken);
-    final after = (await club.fetchAssets())
-        .firstWhere((a) => a.id == treadmill.id);
-    expect(after.status, AssetStatus.broken);
-    await club.pushAssetStatus(treadmill.id, treadmill.status);
-  });
+      setUpAll(() async {
+        rpc = OdooJsonRpcService(http.Client());
+        club = OdooClubService(rpc);
+        reservations = OdooReservationService(rpc);
+        tickets = TicketSyncService(rpc);
+        await rpc.authenticate(_login, _password);
+      });
 
-  test('inventory: fetch and quantity round-trip', () async {
-    if (!reachable) return;
-    final items = await club.fetchInventory();
-    expect(items.length, greaterThanOrEqualTo(9));
-    final chlore = items.firstWhere((i) => i.id == 'inv-pool-01');
-    expect(chlore.activityName, isNotEmpty);
+      tearDownAll(() async {
+        await rpc.logout();
+      });
 
-    await club.pushInventoryQty(chlore.id, chlore.currentStock - 1);
-    final after = (await club.fetchInventory())
-        .firstWhere((i) => i.id == chlore.id);
-    expect(after.currentStock, chlore.currentStock - 1);
-    await club.pushInventoryQty(chlore.id, chlore.currentStock);
-  });
+      test('the session is valid after sign-in', () async {
+        final info = await rpc.validateSession();
+        expect(info, isNotNull);
+        expect(info!['uid'], isA<int>());
+      });
 
-  test('horses: fetch herd and status round-trip', () async {
-    if (!reachable) return;
-    final horses = await club.fetchHorses();
-    expect(horses.length, greaterThanOrEqualTo(6));
-    final pegase = horses.firstWhere((h) => h.id == 'h2');
-    expect(pegase.farrierDue, isTrue);
-    expect(pegase.dewormingDue, isTrue);
+      test('activities are read from Odoo', () async {
+        final activities = await club.fetchActivities();
+        expect(activities.map((a) => a.id), contains('horses'));
+      });
 
-    final jumper = horses.firstWhere((h) => h.id == 'h6');
-    await club.pushHorseStatus(jumper.id, HorseStatus.available, 0.0);
-    final after =
-        (await club.fetchHorses()).firstWhere((h) => h.id == jumper.id);
-    expect(after.status, HorseStatus.available);
-    await club.pushHorseStatus(jumper.id, jumper.status, jumper.fatigue);
-  });
+      test('a ticket created on the tablet comes back with its status', () async {
+        final id = 'test-${DateTime.now().microsecondsSinceEpoch}';
+        final ticket = WorkTicket(
+          id: id,
+          title: 'TEST ticket $id',
+          description: 'Created by the integration test',
+          activityId: 'horses',
+          activityName: 'Équitation',
+          type: TicketType.anomaly,
+          priority: TicketPriority.high,
+          status: TicketStatus.open,
+          dateCreated: DateTime.now(),
+        );
 
-  test('pool: latest reading fetch and new reading push', () async {
-    if (!reachable) return;
-    final latest = await club.fetchLatestPoolReading();
-    expect(latest, isNotNull);
+        await tickets.syncTicket(ticket);
+        var pulled = (await club.fetchInterventions())
+            .firstWhere((t) => t.id == id);
+        expect(pulled.status, TicketStatus.open);
+        expect(pulled.priority, TicketPriority.high);
 
-    final id = await club.createPoolReading(
-      temperature: 27.8,
-      chlorine: 1.4,
-      ph: 7.3,
-      turbidity: 0.4,
-      author: 'Test integration',
-    );
-    expect(id, greaterThan(0));
+        // Pushing the same id again updates the record instead of duplicating it.
+        await tickets.syncTicket(ticket.copyWith(status: TicketStatus.inProgress));
+        final all = await club.fetchInterventions();
+        expect(all.where((t) => t.id == id), hasLength(1));
+        pulled = all.firstWhere((t) => t.id == id);
+        expect(pulled.status, TicketStatus.inProgress);
+      });
 
-    final after = await club.fetchLatestPoolReading();
-    expect(after!.temperature, closeTo(27.8, 0.01));
-  });
+      test('a reservation is stored in UTC, found on its day, and checked in',
+          () async {
+        final day = DateTime(2030, 1, 15, 10);
+        final remoteId = await reservations.createReservation(
+          activityId: 'horses',
+          activityName: 'Équitation',
+          clientName: 'TEST client',
+          peopleCount: 2,
+          status: ReservationStatus.pending,
+          startAt: day,
+          endAt: day.add(const Duration(hours: 1)),
+        );
 
-  test('tickets: push, dedupe, pull back (two-way)', () async {
-    if (!reachable) return;
-    final mobileId = 'it-${DateTime.now().millisecondsSinceEpoch}';
-    final ticket = WorkTicket(
-      id: mobileId,
-      title: 'Test intégration sync',
-      description: 'Ticket créé par le test d\'intégration.',
-      activityId: 'gym',
-      activityName: 'Salle de Gym',
-      type: TicketType.anomaly,
-      priority: TicketPriority.high,
-      status: TicketStatus.open,
-      dateCreated: DateTime.now(),
-      assignedTechnician: 'Amarna Mobile',
-    );
+        final onDay = await reservations.fetchReservationsForDay(day);
+        final found = onDay.firstWhere((r) => r.remoteId == remoteId);
+        expect(found.clientName, 'TEST client');
+        expect(found.startAt, day);
+        expect(found.status, ReservationStatus.pending);
 
-    // Push (create) then push again (must dedupe into a write, not a copy).
-    await ticketSync.syncTicket(ticket);
-    await ticketSync.syncTicket(ticket.copyWith(
-      status: TicketStatus.inProgress,
-    ));
+        await reservations.updateReservationStatus(
+            remoteId, ReservationStatus.checkedIn);
+        final after = await reservations.fetchReservationsForDay(day);
+        expect(
+          after.firstWhere((r) => r.remoteId == remoteId).status,
+          ReservationStatus.checkedIn,
+        );
+      });
 
-    final remote = await club.fetchInterventions();
-    final matches = remote.where((t) => t.id == mobileId).toList();
-    expect(matches.length, 1, reason: 'dedupe must prevent duplicates');
-    expect(matches.first.status, TicketStatus.inProgress);
-    expect(matches.first.activityId, 'gym');
-    expect(matches.first.title, 'Test intégration sync');
-  });
-
-  test('reservations config points at the club model', () {
-    expect(AppEnvironment.odooReservationModel, 'amarna.club.reservation');
-    expect(AppEnvironment.odooTicketModel, 'amarna.club.intervention');
-  });
+      test('a pool reading is stored and read back', () async {
+        await club.createPoolReading(
+          temperature: 28,
+          chlorine: 2,
+          ph: 7.4,
+          turbidity: 0.5,
+          author: 'TEST',
+        );
+        final latest = await club.fetchLatestPoolReading();
+        expect(latest, isNotNull);
+        expect(latest!.temperature, closeTo(28, 0.001));
+      });
+    },
+    skip: (AppEnvironment.isOdooConfigured && _login.isNotEmpty && _password.isNotEmpty)
+        ? false
+        : 'Set AMARNA_ODOO_BASE_URL / AMARNA_ODOO_DB and AMARNA_TEST_LOGIN / AMARNA_TEST_PASSWORD',
+  );
 }

@@ -371,15 +371,7 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
                           else if (canCheckIn)
                             FilledButton.icon(
                               onPressed: () async {
-                                await checkinNotifier.checkIn(reservation);
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          '${reservation.clientName} — arrivée enregistrée ✓'),
-                                    ),
-                                  );
-                                }
+                                await runCheckIn(context, checkinNotifier, reservation);
                               },
                               style: FilledButton.styleFrom(
                                 minimumSize: const Size(0, 38),

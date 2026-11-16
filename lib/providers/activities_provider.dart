@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/activity.dart';
 import '../repositories/activity_repository.dart';
 import '../services/database_service.dart';
 import '../services/odoo_club_service.dart';
+import '../services/odoo_jsonrpc_service.dart';
 
 final activityRepositoryProvider = Provider<ActivityRepository>((ref) {
   return ActivityRepository(ref.watch(isarProvider));
@@ -26,6 +26,17 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
     state = await _repo.getAll();
   }
 
+  /// Ensures the reservation form can validate against the local cache even
+  /// when it is opened before the provider's initial async load completes.
+  Future<void> ensureLoaded() async {
+    if (state.isEmpty) {
+      await _loadActivities();
+    }
+    if (state.isEmpty) {
+      await refreshFromOdoo();
+    }
+  }
+
   /// Pulls the activity list from Odoo and upserts it into the local cache
   /// (business id is a unique replace index, so this is an upsert).
   Future<void> refreshFromOdoo() async {
@@ -37,7 +48,7 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
         await _loadActivities();
       }
     } catch (error) {
-      debugPrint('Odoo activities pull failed: $error');
+      reportSyncIssue('Activités (lecture)', error);
     }
   }
 
@@ -54,6 +65,8 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       currentOccupancy: clamped,
       maxCapacity: activity.maxCapacity,
       assignedStaff: activity.assignedStaff,
+      closureStart: activity.closureStart,
+      closureEnd: activity.closureEnd,
     );
     await _repo.put(updated);
     await _loadActivities();
@@ -76,6 +89,10 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       currentOccupancy: occupancy,
       maxCapacity: activity.maxCapacity,
       assignedStaff: activity.assignedStaff,
+      closureStart: newStatus == ActivityStatus.open
+          ? null
+          : (activity.closureStart ?? DateTime.now()),
+      closureEnd: activity.closureEnd,
     );
     await _repo.put(updated);
     await _loadActivities();
@@ -87,7 +104,7 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
     try {
       await _club.pushActivityOccupancy(code, occupancy);
     } catch (error) {
-      debugPrint('Odoo occupancy push failed for $code: $error');
+      reportSyncIssue('Occupation « $code »', error);
     }
   }
 
@@ -98,7 +115,7 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       await _club.pushActivityStatus(code, status);
       await _club.pushActivityOccupancy(code, occupancy);
     } catch (error) {
-      debugPrint('Odoo status push failed for $code: $error');
+      reportSyncIssue('Statut « $code »', error);
     }
   }
 }

@@ -1,0 +1,4 @@
+{
+  "AMARNA_ODOO_BASE_URL": "http://10.0.2.2:8066",
+  "AMARNA_ODOO_DB": "odoo_test"
+}

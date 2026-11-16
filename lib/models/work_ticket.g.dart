@@ -105,19 +105,24 @@ const WorkTicketSchema = CollectionSchema(
       name: r'statusTextFrench',
       type: IsarType.string,
     ),
-    r'title': PropertySchema(
+    r'syncPending': PropertySchema(
       id: 17,
+      name: r'syncPending',
+      type: IsarType.bool,
+    ),
+    r'title': PropertySchema(
+      id: 18,
       name: r'title',
       type: IsarType.string,
     ),
     r'type': PropertySchema(
-      id: 18,
+      id: 19,
       name: r'type',
       type: IsarType.byte,
       enumMap: _WorkTickettypeEnumValueMap,
     ),
     r'typeTextFrench': PropertySchema(
-      id: 19,
+      id: 20,
       name: r'typeTextFrench',
       type: IsarType.string,
     )
@@ -228,9 +233,10 @@ void _workTicketSerialize(
   writer.writeString(offsets[14], object.priorityTextFrench);
   writer.writeByte(offsets[15], object.status.index);
   writer.writeString(offsets[16], object.statusTextFrench);
-  writer.writeString(offsets[17], object.title);
-  writer.writeByte(offsets[18], object.type.index);
-  writer.writeString(offsets[19], object.typeTextFrench);
+  writer.writeBool(offsets[17], object.syncPending);
+  writer.writeString(offsets[18], object.title);
+  writer.writeByte(offsets[19], object.type.index);
+  writer.writeString(offsets[20], object.typeTextFrench);
 }
 
 WorkTicket _workTicketDeserialize(
@@ -264,8 +270,9 @@ WorkTicket _workTicketDeserialize(
             TicketPriority.low,
     status: _WorkTicketstatusValueEnumMap[reader.readByteOrNull(offsets[15])] ??
         TicketStatus.open,
-    title: reader.readString(offsets[17]),
-    type: _WorkTickettypeValueEnumMap[reader.readByteOrNull(offsets[18])] ??
+    syncPending: reader.readBoolOrNull(offsets[17]) ?? false,
+    title: reader.readString(offsets[18]),
+    type: _WorkTickettypeValueEnumMap[reader.readByteOrNull(offsets[19])] ??
         TicketType.anomaly,
   );
   return object;
@@ -321,11 +328,13 @@ P _workTicketDeserializeProp<P>(
     case 16:
       return (reader.readString(offset)) as P;
     case 17:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 18:
+      return (reader.readString(offset)) as P;
+    case 19:
       return (_WorkTickettypeValueEnumMap[reader.readByteOrNull(offset)] ??
           TicketType.anomaly) as P;
-    case 19:
+    case 20:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -2506,6 +2515,16 @@ extension WorkTicketQueryFilter
     });
   }
 
+  QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition>
+      syncPendingEqualTo(bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'syncPending',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<WorkTicket, WorkTicket, QAfterFilterCondition> titleEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -3027,6 +3046,18 @@ extension WorkTicketQuerySortBy
     });
   }
 
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortBySyncPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncPending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortBySyncPendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncPending', Sort.desc);
+    });
+  }
+
   QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3264,6 +3295,18 @@ extension WorkTicketQuerySortThenBy
     });
   }
 
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenBySyncPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncPending', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenBySyncPendingDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'syncPending', Sort.desc);
+    });
+  }
+
   QueryBuilder<WorkTicket, WorkTicket, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -3412,6 +3455,12 @@ extension WorkTicketQueryWhereDistinct
     });
   }
 
+  QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctBySyncPending() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'syncPending');
+    });
+  }
+
   QueryBuilder<WorkTicket, WorkTicket, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -3548,6 +3597,12 @@ extension WorkTicketQueryProperty
       statusTextFrenchProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'statusTextFrench');
+    });
+  }
+
+  QueryBuilder<WorkTicket, bool, QQueryOperations> syncPendingProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'syncPending');
     });
   }
 

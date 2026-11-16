@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/app_environment.dart';
 import '../models/work_ticket.dart';
 import '../repositories/ticket_repository.dart';
 import '../services/database_service.dart';
 import '../services/odoo_club_service.dart';
 import '../services/ticket_sync_service.dart';
+import '../services/odoo_jsonrpc_service.dart';
 
 final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
   return TicketRepository(ref.watch(isarProvider));
@@ -29,58 +28,92 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
     state = await _repo.getAll();
   }
 
-  /// Two-way sync: pulls interventions from Odoo. Unknown tickets are added
-  /// to the local cache; for known ones the remote status/priority/assignee
-  /// win (a technician may have moved the ticket in the Odoo UI), while the
-  /// local timeline events and photos are preserved.
+  /// Two-way sync with Odoo.
+  ///
+  /// Local changes are pushed first. Then the Odoo state is merged in: new
+  /// tickets are added, and status/priority/assignee changes made in the Odoo
+  /// back office are adopted. A ticket that still has a local change waiting
+  /// to be pushed is never overwritten, so an offline edit cannot be reverted.
   Future<void> pullFromOdoo() async {
-    if (!AppEnvironment.isOdooConfigured) return;
+    if (!_club.isConfigured) return;
+    await flushPending();
     try {
       final remote = await _club.fetchInterventions();
+      final localById = {
+        for (final ticket in await _repo.getAll()) ticket.id: ticket,
+      };
       for (final ticket in remote) {
-        final local = await _repo.getById(ticket.id);
+        final local = localById[ticket.id];
         if (local == null) {
           await _repo.put(ticket);
-        } else if (local.status != ticket.status ||
-            local.priority != ticket.priority ||
-            local.assignedTechnician != ticket.assignedTechnician) {
-          await _repo.put(local.copyWith(
-            status: ticket.status,
-            priority: ticket.priority,
-            dateCompleted: ticket.dateCompleted,
-            assignedTechnician: ticket.assignedTechnician,
-            events: [
-              ...local.events,
-              TicketEvent.make(
-                type: TicketEventType.statusChanged,
-                message: 'Mis à jour depuis Odoo',
-                author: ticket.assignedTechnician,
-              ),
-            ],
-          ));
+          continue;
         }
+        if (local.syncPending) continue;
+        final changed = local.status != ticket.status ||
+            local.priority != ticket.priority ||
+            local.assignedTechnician != ticket.assignedTechnician ||
+            local.dateDue != ticket.dateDue ||
+            local.dateCompleted != ticket.dateCompleted;
+        if (!changed) continue;
+        await _repo.put(local.copyWith(
+          status: ticket.status,
+          priority: ticket.priority,
+          dateDue: ticket.dateDue,
+          dateCompleted: ticket.dateCompleted,
+          assignedTechnician: ticket.assignedTechnician,
+          events: [
+            ...local.events,
+            TicketEvent.make(
+              type: TicketEventType.statusChanged,
+              message: 'Mis à jour depuis Odoo',
+              author: ticket.assignedTechnician,
+            ),
+          ],
+        ));
       }
       await loadTickets();
     } catch (error) {
-      debugPrint('Odoo tickets pull failed: $error');
+      reportSyncIssue('Interventions (lecture)', error);
     }
   }
 
-  /// Pushes the ticket to Odoo when configured; local state is the source
-  /// of truth for the UI, so remote failures are logged but non-blocking.
+  /// Retries every local change that has not reached Odoo yet.
+  Future<void> flushPending() async {
+    if (!_club.isConfigured) return;
+    final pending = (await _repo.getAll()).where((t) => t.syncPending).toList();
+    for (final ticket in pending) {
+      await _pushToOdoo(ticket);
+    }
+    await loadTickets();
+  }
+
+  /// Pushes [ticket] to Odoo. On success its pending flag is cleared, unless
+  /// the ticket was changed again while the request was in flight.
   Future<void> _pushToOdoo(WorkTicket ticket) async {
-    if (!AppEnvironment.isOdooConfigured) return;
+    if (!_club.isConfigured) return;
     try {
       await _odooSync.syncTicket(ticket);
+      final latest = await _repo.getById(ticket.id);
+      if (latest != null &&
+          latest.syncPending &&
+          latest.status == ticket.status &&
+          latest.priority == ticket.priority &&
+          latest.assignedTechnician == ticket.assignedTechnician &&
+          latest.dateDue == ticket.dateDue &&
+          latest.events.length == ticket.events.length) {
+        await _repo.put(latest.copyWith(syncPending: false));
+      }
     } catch (error) {
-      debugPrint('Odoo push failed for ticket ${ticket.id}: $error');
+      // The ticket stays pending and is retried on the next sync.
+      reportSyncIssue('Intervention « ${ticket.id} »', error);
     }
   }
 
   Future<void> _saveAndPush(WorkTicket ticket) async {
-    await _repo.put(ticket);
+    final pending = ticket.copyWith(syncPending: true);
+    await _repo.put(pending);
     await loadTickets();
-    await _pushToOdoo(ticket);
+    await _pushToOdoo(pending);
   }
 
   Future<void> addTicket({

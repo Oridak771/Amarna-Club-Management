@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/inventory_item.dart';
 import '../repositories/inventory_repository.dart';
 import '../services/database_service.dart';
 import '../services/odoo_club_service.dart';
+import '../services/odoo_jsonrpc_service.dart';
 
 final inventoryRepositoryProvider = Provider<InventoryRepository>((ref) {
   return InventoryRepository(ref.watch(isarProvider));
@@ -36,7 +36,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
         await _loadInventory();
       }
     } catch (error) {
-      debugPrint('Odoo inventory pull failed: $error');
+      reportSyncIssue('Stocks (lecture)', error);
     }
   }
 
@@ -63,7 +63,7 @@ class InventoryNotifier extends StateNotifier<List<InventoryItem>> {
     try {
       await _club.pushInventoryQty(itemId, qty);
     } catch (error) {
-      debugPrint('Odoo stock push failed for $itemId: $error');
+      reportSyncIssue('Stock « $itemId »', error);
     }
   }
 }

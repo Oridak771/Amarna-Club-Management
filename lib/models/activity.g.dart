@@ -22,39 +22,49 @@ const ActivitySchema = CollectionSchema(
       name: r'assignedStaff',
       type: IsarType.string,
     ),
-    r'currentOccupancy': PropertySchema(
+    r'closureEnd': PropertySchema(
       id: 1,
+      name: r'closureEnd',
+      type: IsarType.dateTime,
+    ),
+    r'closureStart': PropertySchema(
+      id: 2,
+      name: r'closureStart',
+      type: IsarType.dateTime,
+    ),
+    r'currentOccupancy': PropertySchema(
+      id: 3,
       name: r'currentOccupancy',
       type: IsarType.long,
     ),
     r'iconKey': PropertySchema(
-      id: 2,
+      id: 4,
       name: r'iconKey',
       type: IsarType.string,
     ),
     r'id': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'id',
       type: IsarType.string,
     ),
     r'maxCapacity': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'maxCapacity',
       type: IsarType.long,
     ),
     r'name': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'name',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'status',
       type: IsarType.byte,
       enumMap: _ActivitystatusEnumValueMap,
     ),
     r'statusTextFrench': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'statusTextFrench',
       type: IsarType.string,
     )
@@ -108,13 +118,15 @@ void _activitySerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.assignedStaff);
-  writer.writeLong(offsets[1], object.currentOccupancy);
-  writer.writeString(offsets[2], object.iconKey);
-  writer.writeString(offsets[3], object.id);
-  writer.writeLong(offsets[4], object.maxCapacity);
-  writer.writeString(offsets[5], object.name);
-  writer.writeByte(offsets[6], object.status.index);
-  writer.writeString(offsets[7], object.statusTextFrench);
+  writer.writeDateTime(offsets[1], object.closureEnd);
+  writer.writeDateTime(offsets[2], object.closureStart);
+  writer.writeLong(offsets[3], object.currentOccupancy);
+  writer.writeString(offsets[4], object.iconKey);
+  writer.writeString(offsets[5], object.id);
+  writer.writeLong(offsets[6], object.maxCapacity);
+  writer.writeString(offsets[7], object.name);
+  writer.writeByte(offsets[8], object.status.index);
+  writer.writeString(offsets[9], object.statusTextFrench);
 }
 
 Activity _activityDeserialize(
@@ -125,13 +137,15 @@ Activity _activityDeserialize(
 ) {
   final object = Activity(
     assignedStaff: reader.readString(offsets[0]),
-    currentOccupancy: reader.readLong(offsets[1]),
-    iconKey: reader.readString(offsets[2]),
-    id: reader.readString(offsets[3]),
+    closureEnd: reader.readDateTimeOrNull(offsets[1]),
+    closureStart: reader.readDateTimeOrNull(offsets[2]),
+    currentOccupancy: reader.readLong(offsets[3]),
+    iconKey: reader.readString(offsets[4]),
+    id: reader.readString(offsets[5]),
     isarId: id,
-    maxCapacity: reader.readLong(offsets[4]),
-    name: reader.readString(offsets[5]),
-    status: _ActivitystatusValueEnumMap[reader.readByteOrNull(offsets[6])] ??
+    maxCapacity: reader.readLong(offsets[6]),
+    name: reader.readString(offsets[7]),
+    status: _ActivitystatusValueEnumMap[reader.readByteOrNull(offsets[8])] ??
         ActivityStatus.open,
   );
   return object;
@@ -147,19 +161,23 @@ P _activityDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
-    case 4:
       return (reader.readLong(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
     case 5:
       return (reader.readString(offset)) as P;
     case 6:
+      return (reader.readLong(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (_ActivitystatusValueEnumMap[reader.readByteOrNull(offset)] ??
           ActivityStatus.open) as P;
-    case 7:
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -497,6 +515,147 @@ extension ActivityQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'assignedStaff',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureEndIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'closureEnd',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      closureEndIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'closureEnd',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureEndEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'closureEnd',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureEndGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'closureEnd',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureEndLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'closureEnd',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureEndBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'closureEnd',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureStartIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'closureStart',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      closureStartIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'closureStart',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureStartEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'closureStart',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      closureStartGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'closureStart',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureStartLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'closureStart',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> closureStartBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'closureStart',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1263,6 +1422,30 @@ extension ActivityQuerySortBy on QueryBuilder<Activity, Activity, QSortBy> {
     });
   }
 
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByClosureEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByClosureEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureEnd', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByClosureStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureStart', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByClosureStartDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureStart', Sort.desc);
+    });
+  }
+
   QueryBuilder<Activity, Activity, QAfterSortBy> sortByCurrentOccupancy() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentOccupancy', Sort.asc);
@@ -1359,6 +1542,30 @@ extension ActivityQuerySortThenBy
   QueryBuilder<Activity, Activity, QAfterSortBy> thenByAssignedStaffDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'assignedStaff', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByClosureEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureEnd', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByClosureEndDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureEnd', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByClosureStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureStart', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByClosureStartDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'closureStart', Sort.desc);
     });
   }
 
@@ -1469,6 +1676,18 @@ extension ActivityQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Activity, Activity, QDistinct> distinctByClosureEnd() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'closureEnd');
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QDistinct> distinctByClosureStart() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'closureStart');
+    });
+  }
+
   QueryBuilder<Activity, Activity, QDistinct> distinctByCurrentOccupancy() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'currentOccupancy');
@@ -1528,6 +1747,18 @@ extension ActivityQueryProperty
   QueryBuilder<Activity, String, QQueryOperations> assignedStaffProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'assignedStaff');
+    });
+  }
+
+  QueryBuilder<Activity, DateTime?, QQueryOperations> closureEndProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'closureEnd');
+    });
+  }
+
+  QueryBuilder<Activity, DateTime?, QQueryOperations> closureStartProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'closureStart');
     });
   }
 

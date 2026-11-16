@@ -215,7 +215,7 @@ class ActivityReservationsPanel extends ConsumerWidget {
                                 color: colors.success, size: 22)
                           else
                             TextButton(
-                              onPressed: () => checkin.checkIn(session),
+                              onPressed: () => runCheckIn(context, checkin, session),
                               child: const Text('Check-in'),
                             ),
                         ],
@@ -230,7 +230,7 @@ class ActivityReservationsPanel extends ConsumerWidget {
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (_, __) => _info(context, Icons.cloud_off_rounded,
-              'Réservations Odoo indisponibles (configuration .env).'),
+              'Réservations Odoo indisponibles (vérifiez la connexion).'),
         ),
       ],
     );

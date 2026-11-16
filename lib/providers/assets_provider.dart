@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/asset.dart';
 import '../repositories/asset_repository.dart';
 import '../services/database_service.dart';
 import '../services/odoo_club_service.dart';
+import '../services/odoo_jsonrpc_service.dart';
 
 final assetRepositoryProvider = Provider<AssetRepository>((ref) {
   return AssetRepository(ref.watch(isarProvider));
@@ -37,7 +37,7 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
         await _loadAssets();
       }
     } catch (error) {
-      debugPrint('Odoo assets pull failed: $error');
+      reportSyncIssue('Équipements (lecture)', error);
     }
   }
 
@@ -50,7 +50,7 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
     try {
       await _club.pushAssetStatus(assetId, status);
     } catch (error) {
-      debugPrint('Odoo asset status push failed for $assetId: $error');
+      reportSyncIssue('Statut équipement « $assetId »', error);
     }
   }
 
@@ -76,7 +76,7 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
     try {
       await _club.pushAssetCleaned(assetId);
     } catch (error) {
-      debugPrint('Odoo asset cleaning push failed for $assetId: $error');
+      reportSyncIssue('Nettoyage « $assetId »', error);
     }
   }
 

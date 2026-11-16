@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../providers/reservations_provider.dart';
+import '../providers/activities_provider.dart';
+import '../models/activity.dart';
+import '../models/reservation.dart';
 import '../services/odoo_reservation_service.dart';
 import '../theme/app_theme.dart';
 
@@ -25,7 +28,7 @@ class _CreateReservationScreenState
   TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
   final TextEditingController _clientNameCtrl = TextEditingController();
   int _peopleCount = 2;
-  String _status = 'Confirme';
+  ReservationStatus _status = ReservationStatus.confirmed;
   final TextEditingController _notesCtrl = TextEditingController();
   bool _isSaving = false;
 
@@ -50,7 +53,12 @@ class _CreateReservationScreenState
     ),
   ];
 
-  static const _statuses = ['Confirme', 'En attente', 'Annule'];
+  // A new booking is either confirmed or pending; cancelling is done on the
+  // reservation itself.
+  static const _statuses = [ReservationStatus.confirmed, ReservationStatus.pending];
+
+  static String _statusLabel(ReservationStatus status) =>
+      status == ReservationStatus.pending ? 'En attente' : 'Confirmée';
 
   @override
   void dispose() {
@@ -147,6 +155,31 @@ class _CreateReservationScreenState
         'L heure de fin doit etre apres l heure de debut.',
         context.colors.warning,
       );
+      return;
+    }
+
+    // Check the same operational window locally as the Odoo constraint. The
+    // server repeats this check, so stale mobile caches cannot create a
+    // reservation for a closed activity.
+    await ref.read(activitiesProvider.notifier).ensureLoaded();
+    if (!mounted) return;
+    final activities = ref.read(activitiesProvider);
+    final liveActivity = activities.cast<Activity?>().firstWhere(
+          (item) => item?.id == activity.id,
+          orElse: () => null,
+        );
+    if (liveActivity == null) {
+      _showSnack(
+        'Activité indisponible : son état n’est pas encore synchronisé.',
+        context.colors.warning,
+      );
+      return;
+    }
+    if (!liveActivity.isAvailableAt(startAt, endAt)) {
+      final reason = liveActivity.status != ActivityStatus.open
+          ? 'l’activité est ${liveActivity.statusTextFrench.toLowerCase()}'
+          : 'le créneau chevauche sa période de fermeture';
+      _showSnack('Réservation impossible : $reason.', context.colors.danger);
       return;
     }
 
@@ -470,7 +503,7 @@ class _CreateReservationScreenState
                                     Border.all(color: context.colors.border),
                               ),
                               child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
+                                child: DropdownButton<ReservationStatus>(
                                   value: _status,
                                   isExpanded: true,
                                   dropdownColor:
@@ -483,7 +516,7 @@ class _CreateReservationScreenState
                                       .map(
                                         (s) => DropdownMenuItem(
                                           value: s,
-                                          child: Text(s),
+                                          child: Text(_statusLabel(s)),
                                         ),
                                       )
                                       .toList(),

@@ -10,6 +10,7 @@ import '../providers/activities_provider.dart';
 import '../providers/checkin_provider.dart';
 import '../providers/inventory_provider.dart';
 import '../providers/reservations_provider.dart';
+import '../services/odoo_jsonrpc_service.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 
@@ -54,6 +55,7 @@ class HomeScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
+              const _SyncBanner(),
               _GreetingHeader(
                 openCount: activities
                     .where((a) => a.status == ActivityStatus.open)
@@ -671,7 +673,7 @@ class _TodayReservationsSection extends ConsumerWidget {
           error: (error, _) => const _EmptyCard(
             icon: Icons.cloud_off_rounded,
             message:
-                'Réservations Odoo indisponibles.\nVérifiez la configuration dans .env.',
+                'Réservations Odoo indisponibles.\nVérifiez la connexion au serveur.',
           ),
         ),
       ],
@@ -785,16 +787,9 @@ class _ReservationRow extends ConsumerWidget {
                   ),
                 )
               : FilledButton.icon(
+                  key: ValueKey('checkin-${reservation.remoteId}'),
                   onPressed: () async {
-                    await notifier.checkIn(reservation);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              '${reservation.clientName} — arrivée enregistrée ✓'),
-                        ),
-                      );
-                    }
+                    await runCheckIn(context, notifier, reservation);
                   },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 40),
@@ -965,6 +960,50 @@ class _EmptyCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Tells staff when the last exchange with Odoo failed, so stale figures are
+/// not mistaken for live ones. Dismissing it only hides the message.
+class _SyncBanner extends StatelessWidget {
+  const _SyncBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<String?>(
+      valueListenable: odooSyncIssue,
+      builder: (context, issue, _) {
+        if (issue == null) return const SizedBox.shrink();
+        final colors = context.colors;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
+          decoration: BoxDecoration(
+            color: colors.danger.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colors.danger.withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.cloud_off_rounded, color: colors.danger, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Synchronisation Odoo interrompue — $issue\n'
+                  'Les données affichées peuvent être anciennes.',
+                  style: TextStyle(color: colors.textPrimary, fontSize: 13),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Masquer',
+                icon: Icon(Icons.close_rounded, color: colors.textSecondary),
+                onPressed: () => odooSyncIssue.value = null,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

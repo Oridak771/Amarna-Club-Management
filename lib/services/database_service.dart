@@ -1,16 +1,28 @@
+import 'dart:io';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../models/activity.dart';
 import '../models/asset.dart';
-import '../models/work_ticket.dart';
 import '../models/inventory_item.dart';
+import '../models/work_ticket.dart';
 
 final isarProvider = Provider<Isar>((ref) {
   throw UnimplementedError('Isar database has not been initialized');
 });
 
+/// Local cache of the tablet.
+///
+/// Activities, assets and inventory are mirrors of Odoo and are reloaded at
+/// every start. Tickets are kept while they wait to be pushed; the others are
+/// mirrors too. The cache holds no demo data: an earlier build seeded sample
+/// activities, assets and tickets, which are purged once here.
 class DatabaseService {
+  static const _cacheVersion = '2';
+  static const _cacheVersionFile = 'amarna_cache_version';
+
   static Future<Isar> init() async {
     final dir = await getApplicationDocumentsDirectory();
     final isar = await Isar.open(
@@ -23,431 +35,20 @@ class DatabaseService {
       directory: dir.path,
     );
 
-    // Seed data if empty
-    final activityCount = await isar.activitys.count();
-    if (activityCount == 0) {
+    final marker = File('${dir.path}/$_cacheVersionFile');
+    final upToDate =
+        marker.existsSync() && marker.readAsStringSync().trim() == _cacheVersion;
+    if (!upToDate) {
       await isar.writeTxn(() async {
-        await _seedInitialData(isar);
+        await isar.activitys.clear();
+        await isar.assets.clear();
+        await isar.inventoryItems.clear();
+        // Keep tickets that still have to reach Odoo; drop the other ones.
+        await isar.workTickets.filter().syncPendingEqualTo(false).deleteAll();
       });
-    } else {
-      // Ensure 'padel' activity and its assets/inventory exist if missing
-      final padelExists =
-          await isar.activitys.filter().idEqualTo('padel').findFirst() != null;
-      if (!padelExists) {
-        await isar.writeTxn(() async {
-          await isar.activitys.put(
-            Activity(
-              id: 'padel',
-              name: 'Terrains de Padel',
-              iconKey: 'padel',
-              status: ActivityStatus.open,
-              currentOccupancy: 8,
-              maxCapacity: 16,
-              assignedStaff: 'Antoine (Coordinateur Padel)',
-            ),
-          );
-
-          // Seed Padel Asset
-          await isar.assets.put(
-            Asset(
-              id: 'asset-padel-court-1',
-              serialNumber: 'SN-PADEL-CT-01',
-              name: 'Filet Court de Padel 1',
-              category: 'Infrastructures Terrain',
-              activityId: 'padel',
-              status: AssetStatus.available,
-              lastMaintenance:
-                  DateTime.now().subtract(const Duration(days: 10)),
-            ),
-          );
-
-          // Seed Padel Inventory
-          await isar.inventoryItems.put(
-            InventoryItem(
-              id: 'inv-padel-01',
-              name: 'Balles de Padel (Tube de 3)',
-              activityId: 'padel',
-              activityName: 'Terrains de Padel',
-              currentStock: 30,
-              lowThreshold: 10,
-              unitName: 'tubes',
-            ),
-          );
-
-          // Seed Padel Work Ticket
-          await isar.workTickets.put(
-            WorkTicket(
-              id: 'maint-003',
-              title: 'Remplacement filet court 3',
-              description:
-                  'Le filet de padel présente des déchirures importantes au milieu.',
-              assetId: 'asset-padel-net-03',
-              assetName: 'Filet Padel Court 3',
-              activityId: 'padel',
-              activityName: 'Terrains de Padel',
-              type: TicketType.corrective,
-              priority: TicketPriority.low,
-              status: TicketStatus.open,
-              dateCreated: DateTime.now().subtract(const Duration(days: 1)),
-              dateDue: DateTime.now().add(const Duration(days: 4)),
-              assignedTechnician: 'Mourad (Technicien)',
-            ),
-          );
-        });
-      }
+      marker.writeAsStringSync(_cacheVersion);
     }
 
     return isar;
-  }
-
-  static Future<void> _seedInitialData(Isar isar) async {
-    // 1. Seed Activities
-    final activities = [
-      Activity(
-        id: 'pool',
-        name: 'Piscine',
-        iconKey: 'pool',
-        status: ActivityStatus.open,
-        currentOccupancy: 45,
-        maxCapacity: 60,
-        assignedStaff: 'Jean (Maitre-Nageur)',
-      ),
-      Activity(
-        id: 'horses',
-        name: 'Équitation',
-        iconKey: 'horses',
-        status: ActivityStatus.warning,
-        currentOccupancy: 12,
-        maxCapacity: 20,
-        assignedStaff: 'Marie (Responsable Écurie)',
-      ),
-      Activity(
-        id: 'paintball',
-        name: 'Paintball',
-        iconKey: 'paintball',
-        status: ActivityStatus.open,
-        currentOccupancy: 8,
-        maxCapacity: 30,
-        assignedStaff: 'Thomas (Superviseur Field)',
-      ),
-      Activity(
-        id: 'shooting',
-        name: 'Stand de Tir',
-        iconKey: 'shooting',
-        status: ActivityStatus.maintenance,
-        currentOccupancy: 0,
-        maxCapacity: 12,
-        assignedStaff: 'Lucas (Superviseur Armurerie)',
-      ),
-      Activity(
-        id: 'gym',
-        name: 'Salle de Gym',
-        iconKey: 'gym',
-        status: ActivityStatus.open,
-        currentOccupancy: 18,
-        maxCapacity: 40,
-        assignedStaff: 'Sophie (Coach Gym)',
-      ),
-      Activity(
-        id: 'padel',
-        name: 'Terrains de Padel',
-        iconKey: 'padel',
-        status: ActivityStatus.open,
-        currentOccupancy: 8,
-        maxCapacity: 16,
-        assignedStaff: 'Antoine (Coordinateur Padel)',
-      ),
-    ];
-    await isar.activitys.putAll(activities);
-
-    // 2. Seed Assets
-    final now = DateTime.now();
-    final assets = [
-      Asset(
-        id: 'asset-pool-filter-01',
-        serialNumber: 'SN-POOL-FLTR-01',
-        name: 'Filtre Principal A',
-        category: 'Équipement Piscine',
-        activityId: 'pool',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 30)),
-        nextMaintenance: now.add(const Duration(days: 60)),
-        technicalSpecs: {
-          'Débit': '50 m3/h',
-          'Pression': '1.5 bar',
-          'Média': 'Sable de silice'
-        },
-      ),
-      Asset(
-        id: 'asset-pool-pump-02',
-        serialNumber: 'SN-POOL-PUMP-02',
-        name: 'Pompe de Filtration 2',
-        category: 'Équipement Piscine',
-        activityId: 'pool',
-        status: AssetStatus.maintenance,
-        lastMaintenance: now.subtract(const Duration(days: 90)),
-        nextMaintenance: now.add(const Duration(days: 10)),
-        technicalSpecs: {'Puissance': '2.2 kW', 'Tension': '400V Triphasé'},
-      ),
-      Asset(
-        id: 'asset-pool-robot',
-        serialNumber: 'SN-POOL-ROBT-99',
-        name: 'Robot Nettoyeur Dolphin',
-        category: 'Équipement Piscine',
-        activityId: 'pool',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 15)),
-        nextMaintenance: now.add(const Duration(days: 45)),
-        technicalSpecs: {
-          'Cycles': '1.5 / 2.5 / 3.5 h',
-          'Longueur câble': '18 m'
-        },
-      ),
-      Asset(
-        id: 'asset-horse-saddle-1',
-        serialNumber: 'SN-SADDLE-01',
-        name: 'Selle Cuir Tornade',
-        category: 'Équipement Équitation',
-        activityId: 'horses',
-        status: AssetStatus.broken,
-        lastMaintenance: now.subtract(const Duration(days: 120)),
-        technicalSpecs: {'Taille': '17.5 pouces', 'Matière': 'Cuir de veau'},
-      ),
-      Asset(
-        id: 'asset-horse-box-4',
-        serialNumber: 'SN-BOX-04',
-        name: 'Écurie Box 4',
-        category: 'Infrastructures Écurie',
-        activityId: 'horses',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 180)),
-        technicalSpecs: {'Dimensions': '4m x 4m', 'Matériau': 'Chêne et acier'},
-      ),
-      Asset(
-        id: 'asset-shoot-pistol-9mm',
-        serialNumber: 'SN-PISTOL-9MM-102',
-        name: 'Pistolet 9mm Glock 17',
-        category: 'Arme de Poing',
-        activityId: 'shooting',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 5)),
-        nextMaintenance: now.add(const Duration(days: 25)),
-        technicalSpecs: {'Calibre': '9x19mm', 'Capacité': '17 coups'},
-      ),
-      Asset(
-        id: 'asset-shoot-vent-02',
-        serialNumber: 'SN-VENT-SH-02',
-        name: 'Extracteur Air Standard',
-        category: 'Infrastructures Stand',
-        activityId: 'shooting',
-        status: AssetStatus.maintenance,
-        lastMaintenance: now.subtract(const Duration(days: 150)),
-        technicalSpecs: {'Débit': '12000 m3/h', 'Puissance': '4 kW'},
-      ),
-      Asset(
-        id: 'asset-gym-treadmill-1',
-        serialNumber: 'SN-GYM-TM-01',
-        name: 'Tapis de course Matrix 1',
-        category: 'Équipement Cardio',
-        activityId: 'gym',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 20)),
-        nextMaintenance: now.add(const Duration(days: 70)),
-      ),
-      Asset(
-        id: 'asset-padel-court-1',
-        serialNumber: 'SN-PADEL-CT-01',
-        name: 'Filet Court de Padel 1',
-        category: 'Infrastructures Terrain',
-        activityId: 'padel',
-        status: AssetStatus.available,
-        lastMaintenance: now.subtract(const Duration(days: 10)),
-      ),
-    ];
-    await isar.assets.putAll(assets);
-
-    // 3. Seed Work Tickets
-    final tickets = [
-      WorkTicket(
-        id: 'inc-001',
-        title: 'Fuite filtre pompe 2',
-        description:
-            'Une fuite mineure a été détectée sur le raccord d\'aspiration de la pompe de filtration 2.',
-        activityId: 'pool',
-        activityName: 'Piscine',
-        assetId: 'asset-pool-pump-02',
-        assetName: 'Pompe de Filtration 2',
-        type: TicketType.anomaly,
-        priority: TicketPriority.medium,
-        status: TicketStatus.inProgress,
-        dateCreated: now.subtract(const Duration(hours: 4)),
-        assignedTechnician: 'Karim (Technicien)',
-      ),
-      WorkTicket(
-        id: 'inc-002',
-        title: 'Sangle selle déchirée',
-        description:
-            'La sangle de la selle de "Tornado" est fissurée et présente un risque de rupture.',
-        activityId: 'horses',
-        activityName: 'Équitation',
-        assetId: 'asset-horse-saddle-1',
-        assetName: 'Selle Cuir Tornade',
-        type: TicketType.anomaly,
-        priority: TicketPriority.high,
-        status: TicketStatus.open,
-        dateCreated: now.subtract(const Duration(hours: 1)),
-        assignedTechnician: 'Mourad (Technicien)',
-      ),
-      WorkTicket(
-        id: 'inc-003',
-        title: 'Ventilation stand de tir HS',
-        description:
-            'L\'extracteur d\'air principal ne démarre plus. Forte concentration de gaz. Fermeture obligatoire.',
-        activityId: 'shooting',
-        activityName: 'Stand de Tir',
-        assetId: 'asset-shoot-vent-02',
-        assetName: 'Extracteur Air Standard',
-        type: TicketType.anomaly,
-        priority: TicketPriority.critical,
-        status: TicketStatus.open,
-        dateCreated: now.subtract(const Duration(minutes: 30)),
-        assignedTechnician: 'Sami (Électricien)',
-      ),
-      WorkTicket(
-        id: 'maint-001',
-        title: 'Nettoyage des filtres à sable',
-        description:
-            'Effectuer le lavage à contre-courant du filtre principal A.',
-        assetId: 'asset-pool-filter-01',
-        assetName: 'Filtre Principal A',
-        activityId: 'pool',
-        activityName: 'Piscine',
-        type: TicketType.preventive,
-        priority: TicketPriority.medium,
-        status: TicketStatus.open,
-        dateCreated: now.subtract(const Duration(days: 2)),
-        dateDue: now.add(const Duration(days: 1)),
-        assignedTechnician: 'Karim (Technicien)',
-      ),
-      WorkTicket(
-        id: 'maint-002',
-        title: 'Changement extracteur ventilation stand de tir',
-        description:
-            'Remplacer le moteur électrique grillé de la hotte d\'aspiration.',
-        assetId: 'asset-shoot-vent-02',
-        assetName: 'Extracteur Air Standard',
-        activityId: 'shooting',
-        activityName: 'Stand de Tir',
-        type: TicketType.corrective,
-        priority: TicketPriority.critical,
-        status: TicketStatus.inProgress,
-        dateCreated: now.subtract(const Duration(days: 3)),
-        dateDue: now.subtract(const Duration(days: 1)),
-        assignedTechnician: 'Sami (Électricien)',
-      ),
-      WorkTicket(
-        id: 'maint-003',
-        title: 'Remplacement filet court 3',
-        description:
-            'Le filet de padel présente des déchirures importantes au milieu.',
-        assetId: 'asset-padel-net-03',
-        assetName: 'Filet Padel Court 3',
-        activityId: 'padel',
-        activityName: 'Terrains de Padel',
-        type: TicketType.corrective,
-        priority: TicketPriority.low,
-        status: TicketStatus.open,
-        dateCreated: now.subtract(const Duration(days: 1)),
-        dateDue: now.add(const Duration(days: 4)),
-        assignedTechnician: 'Mourad (Technicien)',
-      ),
-    ];
-    await isar.workTickets.putAll(tickets);
-
-    // 4. Seed Inventory Items
-    final inventory = [
-      InventoryItem(
-        id: 'inv-pool-01',
-        name: 'Chlore Granulé',
-        activityId: 'pool',
-        activityName: 'Piscine',
-        currentStock: 12,
-        lowThreshold: 5,
-        unitName: 'seaux',
-      ),
-      InventoryItem(
-        id: 'inv-pool-02',
-        name: 'Régulateur pH Moins',
-        activityId: 'pool',
-        activityName: 'Piscine',
-        currentStock: 3,
-        lowThreshold: 4,
-        unitName: 'bidons',
-      ),
-      InventoryItem(
-        id: 'inv-horse-01',
-        name: 'Granulés de Foin Alfalfa',
-        activityId: 'horses',
-        activityName: 'Équitation',
-        currentStock: 45,
-        lowThreshold: 10,
-        unitName: 'sacs',
-      ),
-      InventoryItem(
-        id: 'inv-horse-02',
-        name: 'Fers à Cheval de Rechange',
-        activityId: 'horses',
-        activityName: 'Équitation',
-        currentStock: 8,
-        lowThreshold: 10,
-        unitName: 'paires',
-      ),
-      InventoryItem(
-        id: 'inv-pb-01',
-        name: 'Billes de Paintball (Boîte 2000)',
-        activityId: 'paintball',
-        activityName: 'Paintball',
-        currentStock: 15,
-        lowThreshold: 6,
-        unitName: 'boîtes',
-      ),
-      InventoryItem(
-        id: 'inv-pb-02',
-        name: 'Cartouches CO2 12g',
-        activityId: 'paintball',
-        activityName: 'Paintball',
-        currentStock: 120,
-        lowThreshold: 50,
-        unitName: 'unités',
-      ),
-      InventoryItem(
-        id: 'inv-shoot-01',
-        name: 'Munitions 9x19mm Parabellum',
-        activityId: 'shooting',
-        activityName: 'Stand de Tir',
-        currentStock: 2500,
-        lowThreshold: 1000,
-        unitName: 'balles',
-      ),
-      InventoryItem(
-        id: 'inv-shoot-02',
-        name: 'Cibles en carton standard',
-        activityId: 'shooting',
-        activityName: 'Stand de Tir',
-        currentStock: 85,
-        lowThreshold: 100,
-        unitName: 'feuilles',
-      ),
-      InventoryItem(
-        id: 'inv-padel-01',
-        name: 'Balles de Padel (Tube de 3)',
-        activityId: 'padel',
-        activityName: 'Terrains de Padel',
-        currentStock: 30,
-        lowThreshold: 10,
-        unitName: 'tubes',
-      ),
-    ];
-    await isar.inventoryItems.putAll(inventory);
   }
 }

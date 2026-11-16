@@ -1,103 +1,128 @@
-# Amarna Club — Tablette de Gestion Opérationnelle
+# Amarna Club — Tablette de gestion opérationnelle
 
-Amarna Club is a staff-facing tablet application for an activity/leisure club — employees, supervisors, and operations managers. It is a Flutter app (Android / iOS / Windows desktop) that acts as a field tool and syncs data with an Odoo ERP backend (direct JSON-RPC + PostgreSQL read access). The app assumes a permanent internet connection.
+Application Flutter pour le personnel du club (accueil, moniteurs, responsables).
+Elle travaille en ligne avec le serveur Odoo `amarna` : chaque salarié se connecte
+avec son propre compte Odoo.
 
----
-
-## 🚀 Key Features
-
-* **Ma journée (Home)** — action-first staff home page: urgent interventions, today's reservations with one-tap **check-in**, live alerts (critical incidents, overdue work, low stock, activity warnings), quick actions and an activity occupancy strip.
-* **Activités (Specialized Modules)**:
-  * 🏊 **Piscine** — water-quality gauges (pH, chlorine, temperature, turbidity), conformity summary, reading log, open interventions.
-  * 🐎 **Écurie** — horse grid with breed/age/status/fatigue, vet visit reminders, today's riding sessions (Odoo), status filters.
-  * 🔫 **Stand de Tir** — armory summary, serial tracking, cleaning-due alerts with QR scan.
-  * 🎯 **Paintball / Gym / Padel** — session clock & player counter, cleaning progress, court boards, live Odoo reservations per activity.
-* **Interventions (unified module)** — incidents and maintenance merged in one flow: filterable list (type, overdue, status), photo attachments, comment & event **timeline**, technician assignment, one-tap status transitions. Every change is pushed directly to Odoo.
-* **Réservations** — day planner fed by Odoo (`calendar.event` by default), creation and **check-in** which updates activity occupancy and writes back the status.
-* **Thème clair / sombre** — full light & dark design system (emerald + gold), switchable from Profil → Apparence, persisted across launches.
+Le backend (modèles et règles métier) se trouve dans le dépôt Odoo :
+`odoo17/custom_addons/` — modules `abonnement_amarna`, `amarna_club_*`.
 
 ---
 
-## 🛠️ Technology Stack
+## Fonctionnalités
 
-* **Frontend**: Flutter (stable) / Dart 3.x
-* **Navigation**: GoRouter (StatefulShellRoute branches)
-* **State**: Riverpod
-* **Local cache**: Isar 3.x
-* **Integrations**: Odoo JSON-RPC (`http`), direct PostgreSQL reads (`postgres`), `mobile_scanner` (QR), `nfc_manager` (NFC), `flutter_dotenv` (secrets), `flutter_secure_storage` (preferences)
+- **Ma journée** : interventions prioritaires, réservations du jour avec check-in,
+  alertes (stocks bas, activités en maintenance), occupation des activités.
+- **Interventions** : incidents et maintenances, créés sur la tablette et
+  synchronisés avec Odoo (`amarna.club.intervention`).
+- **Réservations** : planning du jour lu dans Odoo, création, check-in
+  (séances décomptées et occupation gérées par Odoo).
+- **Activités** : piscine (relevés de qualité), écurie, stand de tir (armurerie),
+  gymnase, padel, paintball — statuts et occupation synchronisés.
+- **Stocks**, **abonnements** (lecture et mise à jour du solde).
+- Thème clair / sombre.
 
 ---
 
-## 📂 Project Structure
+## Configuration
+
+La tablette ne contient **aucun secret**. Elle reçoit seulement l'adresse du
+serveur Odoo, au moment de la compilation ou du lancement :
+
+```bash
+cp config/dart_define.example.json config/dart_define.local.json   # puis adapter
+```
+
+```json
+{
+  "AMARNA_ODOO_BASE_URL": "https://odoo.exemple.fr",
+  "AMARNA_ODOO_DB": "amarna"
+}
+```
+
+`config/dart_define.local.json` est ignoré par git. En production, l'adresse doit
+être en HTTPS (la version release refuse le HTTP en clair).
+
+---
+
+## Lancer l'application
+
+```bash
+flutter pub get
+flutter run -d <id_appareil> --dart-define-from-file=config/dart_define.local.json
+```
+
+Sur émulateur Android, l'adresse du poste hôte est `10.0.2.2`.
+Les builds de debug utilisent le moteur de rendu Skia (plus stable sur émulateur).
+
+Compiler un APK de production :
+
+```bash
+flutter build apk --release --dart-define-from-file=config/dart_define.prod.json
+```
+
+---
+
+## Tests
+
+```bash
+# Analyse statique
+flutter analyze
+
+# Tests unitaires et tests du service Odoo (le second groupe demande un Odoo joignable)
+flutter test test/ --dart-define-from-file=config/dart_define.local.json \
+  --dart-define=AMARNA_TEST_LOGIN=<compte_staff> --dart-define=AMARNA_TEST_PASSWORD=<mot_de_passe>
+
+# Parcours complets sur émulateur ou tablette (connexion, incident, check-in)
+flutter test integration_test/staff_flow_test.dart -d <id_appareil> \
+  --dart-define-from-file=config/dart_define.local.json \
+  --dart-define=AMARNA_TEST_LOGIN=<compte_staff> --dart-define=AMARNA_TEST_PASSWORD=<mot_de_passe>
+```
+
+Le compte de test doit être un compte **staff** (pas administrateur) : les tests
+vérifient ce qu'un salarié peut voir et faire. Les enregistrements créés par les
+tests sont nommés `TEST …` pour être supprimés côté Odoo.
+
+---
+
+## Synchronisation avec Odoo
+
+- Lecture au démarrage et après chaque action ; les modifications (occupation,
+  statut, stock, intervention, relevé piscine, réservation) sont envoyées
+  immédiatement.
+- Les dates sont stockées en UTC dans Odoo et converties sur la tablette.
+- Une intervention modifiée sur la tablette alors que l'envoi a échoué reste
+  « en attente » et n'est jamais écrasée par une lecture Odoo.
+- Un échec de synchronisation s'affiche dans un bandeau sur « Ma journée ».
+- Le cache local (Isar) est purgé à la mise à jour de version (`DatabaseService`).
+
+---
+
+## Structure
 
 ```
 lib/
-├── main.dart                  # Bootstrap: .env load, Isar init, provider overrides
-├── routes.dart                # GoRouter configuration
-├── config/
-│   └── app_environment.dart   # Reads runtime secrets from .env
-├── models/                    # Isar collections & domain models
-├── providers/                 # Riverpod state (tickets, activities, check-in, theme…)
-├── repositories/              # Isar data-access layer
-├── services/                  # Odoo JSON-RPC, Postgres, ticket push, database seed
-├── theme/app_theme.dart       # Light + dark design system (semantic tokens)
-├── ui/                        # Model → color/label adapters
-├── widgets/                   # Shared components (gauges, panels, chips…)
-└── screens/                   # Pages (home, activities/, tickets, reservations…)
-tool/
-└── check_db.dart              # CLI connectivity check for the Odoo PostgreSQL DB
+├── main.dart                 démarrage (Isar, locale fr_FR, Riverpod)
+├── config/app_environment.dart   adresse Odoo (--dart-define)
+├── services/                 client JSON-RPC Odoo, sync (club, réservations,
+│                             interventions), conversions de dates
+├── providers/                état Riverpod (auth, tickets, check-in…)
+├── models/                   modèles Isar et domaine
+├── screens/ widgets/ ui/     écrans et composants
+integration_test/             parcours de bout en bout
+test/                         tests unitaires et tests du service Odoo
+config/                       exemple de configuration (sans secret)
 ```
 
 ---
 
-## 💻 Setup & Run
+## Avant la mise en production
 
-### 1. Prerequisites
-* **Flutter SDK** (stable channel, Dart 3.x)
-* Android Studio / Xcode / Visual Studio ("Desktop development with C++") depending on target
-
-### 2. Install dependencies
-```bash
-flutter pub get
-```
-
-### 3. Configure credentials (.env)
-Copy the template and fill in the real values — `.env` is gitignored and bundled at build time:
-```bash
-cp .env.example .env
-```
-```dotenv
-AMARNA_DB_HOST=10.20.10.49
-AMARNA_DB_PORT=5432
-AMARNA_DB_NAME=<postgres_database_name>
-AMARNA_DB_USERNAME=biuser
-AMARNA_DB_PASSWORD=<postgres_password>
-
-AMARNA_ODOO_BASE_URL=https://your-odoo-host
-AMARNA_ODOO_DB=<odoo_database_name>
-AMARNA_ODOO_USERNAME=<odoo_login>
-AMARNA_ODOO_PASSWORD=<odoo_password>
-```
-Optional Odoo model/field mappings (reservations & tickets) are documented in `.env.example`.
-
-Verify database connectivity at any time:
-```bash
-dart run tool/check_db.dart
-```
-
-### 4. Generate database schemas
-```bash
-flutter pub run build_runner build --delete-conflicting-outputs
-```
-
-### 5. Run
-```bash
-flutter devices
-flutter run -d <device_id>     # or: flutter run -d windows
-```
-
----
-
-## 🔄 Odoo Synchronization
-
-The app is online-first: every ticket creation/update is pushed immediately to Odoo (`maintenance.request` by default), and reservations are read from / written to Odoo (`calendar.event` by default). If Odoo is not configured in `.env`, the app runs fully on the local Isar cache with seeded demo data — remote pushes are simply skipped.
+1. Mettre Odoo derrière HTTPS et renseigner l'adresse dans `config/dart_define.prod.json`.
+2. Changer `applicationId` (`com.example.amarna_club`) et la signature de l'APK.
+3. Faire tourner les mots de passe qui ont été embarqués dans des APK précédents
+   (base PostgreSQL et compte administrateur Odoo) et supprimer ces APK.
+4. Mettre à jour la base Odoo : `-u abonnement_amarna,amarna_club_interventions,amarna_club_inventory,amarna_club_ecurie,amarna_club_reservations`.
+   La migration des tickets `maintenance.request` vers `amarna.club.intervention`
+   est idempotente.
+5. Créer un compte Odoo par salarié (groupe « Amarna Club / Utilisateur »).

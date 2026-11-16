@@ -1,123 +1,129 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/app_environment.dart';
-import '../models/integration_status.dart';
+
+/// Latest synchronisation problem with Odoo, in French, for the staff banner.
+/// `null` when nothing is known to be failing. Cleared when the user dismisses it.
+final ValueNotifier<String?> odooSyncIssue = ValueNotifier<String?>(null);
+
+/// Records a failed sync of [what] (e.g. "Activités") and keeps the detail in
+/// the debug log. The message stays visible until the staff member dismisses it.
+void reportSyncIssue(String what, Object error) {
+  final detail = error is OdooException ? error.message : error.toString();
+  odooSyncIssue.value = '$what : $detail';
+  debugPrint('Odoo sync issue — $what: $error');
+}
 
 final odooJsonRpcServiceProvider = Provider<OdooJsonRpcService>((ref) {
-  return OdooJsonRpcService(http.Client());
+  final service = OdooJsonRpcService(http.Client());
+  ref.onDispose(service.dispose);
+  return service;
 });
 
+/// Any failed call to the Odoo server, with a message fit to show the user.
+///
+/// [sessionExpired] is true when the server no longer recognises the
+/// session: the user has to sign in again.
+class OdooException implements Exception {
+  const OdooException(this.message, {this.sessionExpired = false});
+
+  final String message;
+  final bool sessionExpired;
+
+  @override
+  String toString() => message;
+}
+
+/// JSON-RPC client for the Odoo web API.
+///
+/// Authentication uses the Odoo session cookie (`session_id`) obtained from
+/// `/web/session/authenticate`. The password is only sent for that call and
+/// is never stored.
 class OdooJsonRpcService {
-  OdooJsonRpcService(this._client);
+  OdooJsonRpcService(
+    this._client, {
+    this.timeout = const Duration(seconds: 15),
+  });
 
   final http.Client _client;
-  String? _sessionCookie;
-  String? _username;
-  String? _password;
+  final Duration timeout;
+  String? _sessionId;
+  int _requestId = 0;
 
-  Future<IntegrationStatus> checkHealth() async {
-    if (!AppEnvironment.isOdooConfigured) {
-      return const IntegrationStatus(
-        name: 'Odoo',
-        state: IntegrationHealthState.notConfigured,
-        message:
-            'AMARNA_ODOO_BASE_URL ou base de données manquante.',
-      );
+  /// The current `session_id` cookie value, or null when signed out.
+  String? get sessionId => _sessionId;
+
+  bool get hasSession => _sessionId != null;
+
+  /// Reuses a session cookie saved by an earlier sign-in.
+  void useSession(String sessionId) => _sessionId = sessionId;
+
+  void clearSession() => _sessionId = null;
+
+  /// Signs in with the user's own Odoo account and keeps the server session.
+  /// Returns the session info (uid, name, username, ...).
+  Future<Map<String, dynamic>> authenticate(
+      String login, String password) async {
+    final result = await _call(
+      '/web/session/authenticate',
+      {
+        'db': AppEnvironment.odooDatabase,
+        'login': login,
+        'password': password,
+      },
+      captureSession: true,
+    );
+    final info = Map<String, dynamic>.from(result as Map);
+    final uid = info['uid'];
+    if (uid is! int || uid <= 0) {
+      _sessionId = null;
+      throw const OdooException('Identifiant ou mot de passe incorrect.');
     }
+    return info;
+  }
 
+  /// Returns the session info when the stored session is still valid,
+  /// or null when it has expired (or there is none).
+  Future<Map<String, dynamic>?> validateSession() async {
+    if (!hasSession) return null;
     try {
-      final sessionInfo = await authenticate();
-      return IntegrationStatus(
-        name: 'Odoo',
-        state: IntegrationHealthState.connected,
-        message: 'Session JSON-RPC active.',
-        details: {
-          'baseUrl': AppEnvironment.odooBaseUrl,
-          'database': AppEnvironment.odooDatabase,
-          'userId': sessionInfo['uid']?.toString() ?? '',
-          'company':
-              sessionInfo['user_companies']?['current_company']?.toString() ??
-                  '',
-        },
-      );
-    } catch (error) {
-      return IntegrationStatus(
-        name: 'Odoo',
-        state: IntegrationHealthState.disconnected,
-        message: error.toString(),
-        details: {
-          'baseUrl': AppEnvironment.odooBaseUrl,
-          'database': AppEnvironment.odooDatabase,
-        },
-      );
+      final result = await _call('/web/session/get_session_info', const {});
+      final info = Map<String, dynamic>.from(result as Map);
+      final uid = info['uid'];
+      if (uid is! int || uid <= 0) {
+        _sessionId = null;
+        return null;
+      }
+      return info;
+    } on OdooException catch (error) {
+      if (error.sessionExpired) return null;
+      rethrow;
     }
   }
 
-  Future<Map<String, dynamic>> authenticate({
-    String? username,
-    String? password,
-    bool persistSession = true,
-  }) async {
-    final resolvedUsername = username ?? _username;
-    final resolvedPassword = password ?? _password;
-
-    if (resolvedUsername == null || resolvedPassword == null) {
-      throw Exception('Aucun identifiant fourni pour l\'authentification Odoo.');
-    }
-
-    final response = await _client
-        .post(
-          Uri.parse('${AppEnvironment.odooBaseUrl}/web/session/authenticate'),
-          headers: const {
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'jsonrpc': '2.0',
-            'method': 'call',
-            'params': {
-              'db': AppEnvironment.odooDatabase,
-              'login': resolvedUsername,
-              'password': resolvedPassword,
-            },
-          }),
-        )
-        .timeout(const Duration(seconds: 10));
-
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-    if (decoded['error'] != null) {
-      throw Exception(_extractOdooError(decoded['error']));
-    }
-
-    final result = Map<String, dynamic>.from(decoded['result'] as Map);
-    final uid = result['uid'];
-    if (uid == null || uid == false || (uid is num && uid <= 0)) {
-      throw Exception('Identifiant ou mot de passe Odoo invalide.');
-    }
-
-    if (persistSession) {
-      _username = resolvedUsername;
-      _password = resolvedPassword;
-
-      final setCookie = response.headers['set-cookie'];
-      if (setCookie != null && setCookie.isNotEmpty) {
-        _sessionCookie = setCookie
-            .split(',')
-            .map((part) => part.split(';').first.trim())
-            .join('; ');
+  /// Ends the server session (best effort) and forgets it locally.
+  Future<void> logout() async {
+    if (hasSession) {
+      try {
+        await _call('/web/session/destroy', const {});
+      } on Object {
+        // The local session is dropped regardless.
       }
     }
-
-    return result;
+    _sessionId = null;
   }
 
   Future<List<Map<String, dynamic>>> searchRead({
     required String model,
     required List<dynamic> domain,
     required List<String> fields,
-    int limit = 80,
+    int limit = 500,
     String order = 'id desc',
   }) async {
     final result = await callKw(
@@ -130,12 +136,12 @@ class OdooJsonRpcService {
         'order': order,
       },
     );
-
     return (result as List)
         .map((item) => Map<String, dynamic>.from(item as Map))
         .toList();
   }
 
+  /// Creates one record and returns its id.
   Future<int> create({
     required String model,
     required Map<String, dynamic> values,
@@ -143,10 +149,13 @@ class OdooJsonRpcService {
     final result = await callKw(
       model: model,
       method: 'create',
-      args: [values],
+      args: [
+        [values],
+      ],
     );
-
-    return (result as num).toInt();
+    // Odoo 17 returns a list of ids for create(); accept a bare id too.
+    final id = result is List ? result.first : result;
+    return (id as num).toInt();
   }
 
   Future<bool> write({
@@ -162,8 +171,7 @@ class OdooJsonRpcService {
         values,
       ],
     );
-
-    return result == true;
+    return result != false;
   }
 
   Future<dynamic> callKw({
@@ -171,102 +179,119 @@ class OdooJsonRpcService {
     required String method,
     List<dynamic> args = const [],
     Map<String, dynamic> kwargs = const {},
-  }) async {
-    await _ensureAuthenticated();
-
-    final result = await _post(
-      '/web/dataset/call_kw/$model/$method',
-      body: {
-        'jsonrpc': '2.0',
-        'method': 'call',
-        'params': {
-          'model': model,
-          'method': method,
-          'args': args,
-          'kwargs': kwargs,
-        },
-      },
-    );
-
-    return result;
+  }) {
+    return _call('/web/dataset/call_kw/$model/$method', {
+      'model': model,
+      'method': method,
+      'args': args,
+      'kwargs': kwargs,
+    });
   }
 
-  Future<void> _ensureAuthenticated() async {
-    if (_sessionCookie != null) {
-      return;
+  Future<dynamic> _call(
+    String path,
+    Map<String, dynamic> params, {
+    bool captureSession = false,
+  }) async {
+    if (!AppEnvironment.isOdooConfigured) {
+      throw const OdooException(
+          'Serveur Odoo non configuré (AMARNA_ODOO_BASE_URL / AMARNA_ODOO_DB).');
     }
 
-    if (_username == null || _password == null) {
-      return; // Cannot re-authenticate without credentials.
-    }
-
-    await authenticate();
-  }
-
-  void clearSession() {
-    _sessionCookie = null;
-    _username = null;
-    _password = null;
-  }
-
-  Future<dynamic> _post(
-    String path, {
-    required Map<String, dynamic> body,
-    bool allowRetry = true,
-  }) async {
     final uri = Uri.parse('${AppEnvironment.odooBaseUrl}$path');
-    final response = await _client
-        .post(
-          uri,
-          headers: {
-            'Content-Type': 'application/json',
-            if (_sessionCookie != null) 'Cookie': _sessionCookie!,
-          },
-          body: jsonEncode(body),
-        )
-        .timeout(const Duration(seconds: 10));
+    final body = jsonEncode({
+      'jsonrpc': '2.0',
+      'method': 'call',
+      'id': ++_requestId,
+      'params': params,
+    });
 
-    final setCookie = response.headers['set-cookie'];
-    if (setCookie != null && setCookie.isNotEmpty) {
-      _sessionCookie = setCookie
-          .split(',')
-          .map((part) => part.split(';').first.trim())
-          .join('; ');
+    final http.Response response;
+    try {
+      response = await _client
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              if (_sessionId != null) 'Cookie': 'session_id=$_sessionId',
+            },
+            body: body,
+          )
+          .timeout(timeout);
+    } on TimeoutException {
+      throw const OdooException(
+          'Le serveur Odoo ne répond pas (délai dépassé).');
+    } on SocketException {
+      throw const OdooException(
+          'Connexion au serveur Odoo impossible. Vérifiez le réseau.');
+    } on http.ClientException {
+      throw const OdooException(
+          'Connexion au serveur Odoo impossible. Vérifiez le réseau.');
     }
 
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-    if (decoded['error'] != null) {
-      if (allowRetry && _looksLikeSessionError(decoded['error'])) {
-        _sessionCookie = null;
-        await authenticate();
-        return _post(path, body: body, allowRetry: false);
-      }
+    // Odoo answers in UTF-8 without declaring it: decode the bytes ourselves.
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(utf8.decode(response.bodyBytes));
+    } on FormatException {
+      throw OdooException(
+          'Réponse inattendue du serveur Odoo (HTTP ${response.statusCode}).');
+    }
+    if (decoded is! Map) {
+      throw OdooException(
+          'Réponse inattendue du serveur Odoo (HTTP ${response.statusCode}).');
+    }
 
-      throw Exception(_extractOdooError(decoded['error']));
+    final error = decoded['error'];
+    if (error != null) {
+      if (_isSessionExpired(error)) {
+        _sessionId = null;
+        throw const OdooException(
+          'Votre session a expiré. Veuillez vous reconnecter.',
+          sessionExpired: true,
+        );
+      }
+      throw OdooException(_errorMessage(error));
+    }
+
+    if (captureSession) {
+      final sessionId = extractSessionId(response.headers['set-cookie']);
+      if (sessionId != null) {
+        _sessionId = sessionId;
+      }
     }
 
     return decoded['result'];
   }
 
-  bool _looksLikeSessionError(dynamic error) {
-    final message = _extractOdooError(error).toLowerCase();
-    return message.contains('session') ||
-        message.contains('access denied') ||
-        message.contains('authentication');
+  /// Pulls the value of the `session_id` cookie out of a Set-Cookie header.
+  /// The `http` package joins several Set-Cookie headers with commas, so the
+  /// value is matched by name instead of splitting the header.
+  static String? extractSessionId(String? setCookie) {
+    if (setCookie == null) return null;
+    final match = RegExp(r'session_id=([^;,\s]+)').firstMatch(setCookie);
+    return match?.group(1);
   }
 
-  String _extractOdooError(dynamic error) {
-    if (error is Map<String, dynamic>) {
-      final data = error['data'];
-      if (data is Map<String, dynamic> && data['message'] != null) {
-        return data['message'].toString();
-      }
+  static bool _isSessionExpired(Object error) {
+    if (error is! Map) return false;
+    final data = error['data'];
+    final name = data is Map ? data['name']?.toString() : null;
+    return name == 'odoo.http.SessionExpiredException' || error['code'] == 100;
+  }
 
-      if (error['message'] != null) {
-        return error['message'].toString();
-      }
+  static String _errorMessage(Object error) {
+    if (error is! Map) return error.toString();
+    final data = error['data'];
+    final name = data is Map ? data['name']?.toString() ?? '' : '';
+    if (name.endsWith('AccessDenied')) {
+      return 'Accès refusé par le serveur Odoo.';
     }
-
-    return error.toString();
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+    return error['message']?.toString() ?? 'Erreur inconnue du serveur Odoo.';
   }
+
+  void dispose() => _client.close();
 }

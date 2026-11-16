@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'config/app_environment.dart';
 import 'routes.dart';
 import 'theme/app_theme.dart';
 import 'services/database_service.dart';
@@ -10,8 +9,6 @@ import 'providers/theme_mode_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await AppEnvironment.load();
 
   // Initialize French locale data for DateFormat (intl package)
   await initializeDateFormatting('fr_FR');

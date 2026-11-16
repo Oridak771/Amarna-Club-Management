@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/odoo_club_service.dart';
+import '../services/odoo_jsonrpc_service.dart';
 
 enum HorseStatus { available, resting, injured }
 
@@ -90,124 +90,14 @@ class Horse {
       DateTime.now().difference(lastDeworming).inDays > 90;
 }
 
-List<Horse> _seedHorses() {
-  final now = DateTime.now();
-  return [
-    Horse(
-      id: 'h1',
-      name: 'Tornade',
-      breed: 'Pur-sang arabe',
-      age: 7,
-      boxNumber: 'Box 1',
-      status: HorseStatus.available,
-      fatigue: 0.2,
-      diet: 'Foin + granulés (2x/jour)',
-      lastFarrier: now.subtract(const Duration(days: 21)),
-      lastVaccine: now.subtract(const Duration(days: 120)),
-      lastDeworming: now.subtract(const Duration(days: 30)),
-      ridesToday: const [
-        HorseRide(
-            timeRange: '09:00 – 10:00',
-            label: 'Entraînement saut',
-            rider: 'Jean Dupont'),
-        HorseRide(
-            timeRange: '14:30 – 15:30',
-            label: 'Balade forêt',
-            rider: 'Marie Curie'),
-      ],
-    ),
-    Horse(
-      id: 'h2',
-      name: 'Pégase',
-      breed: 'Selle français',
-      age: 11,
-      boxNumber: 'Box 2',
-      status: HorseStatus.resting,
-      fatigue: 0.8,
-      diet: 'Foin enrichi + compléments articulaires',
-      vetNote: 'Surveillance tendon antérieur droit.',
-      nextVetVisit: now.add(const Duration(days: 1)),
-      lastFarrier: now.subtract(const Duration(days: 50)),
-      lastVaccine: now.subtract(const Duration(days: 200)),
-      lastDeworming: now.subtract(const Duration(days: 95)),
-    ),
-    Horse(
-      id: 'h3',
-      name: 'Éclair',
-      breed: 'Barbe',
-      age: 5,
-      boxNumber: 'Box 3',
-      status: HorseStatus.available,
-      fatigue: 0.5,
-      diet: 'Foin + orge aplatie',
-      lastFarrier: now.subtract(const Duration(days: 10)),
-      lastVaccine: now.subtract(const Duration(days: 60)),
-      lastDeworming: now.subtract(const Duration(days: 45)),
-      ridesToday: const [
-        HorseRide(
-            timeRange: '11:00 – 12:00',
-            label: 'Cours débutant',
-            rider: 'Groupe enfants'),
-      ],
-    ),
-    Horse(
-      id: 'h4',
-      name: 'Ombre',
-      breed: 'Frison',
-      age: 9,
-      boxNumber: 'Box 4',
-      status: HorseStatus.injured,
-      fatigue: 0.0,
-      diet: 'Foin uniquement (repos)',
-      vetNote: 'Boiterie postérieure gauche — box strict jusqu\'au contrôle.',
-      nextVetVisit: now.add(const Duration(hours: 4)),
-      lastFarrier: now.subtract(const Duration(days: 35)),
-      lastVaccine: now.subtract(const Duration(days: 90)),
-      lastDeworming: now.subtract(const Duration(days: 20)),
-    ),
-    Horse(
-      id: 'h5',
-      name: 'Spirit',
-      breed: 'Mustang',
-      age: 6,
-      boxNumber: 'Box 5',
-      status: HorseStatus.available,
-      fatigue: 0.1,
-      diet: 'Foin + granulés (2x/jour)',
-      lastFarrier: now.subtract(const Duration(days: 14)),
-      lastVaccine: now.subtract(const Duration(days: 30)),
-      lastDeworming: now.subtract(const Duration(days: 60)),
-    ),
-    Horse(
-      id: 'h6',
-      name: 'Jumper',
-      breed: 'Hanovrien',
-      age: 8,
-      boxNumber: 'Box 6',
-      status: HorseStatus.resting,
-      fatigue: 0.9,
-      diet: 'Ration récupération + électrolytes',
-      lastFarrier: now.subtract(const Duration(days: 28)),
-      lastVaccine: now.subtract(const Duration(days: 150)),
-      lastDeworming: now.subtract(const Duration(days: 80)),
-      ridesToday: const [
-        HorseRide(
-            timeRange: '08:00 – 09:30',
-            label: 'Concours préparation',
-            rider: 'Sophie Marchand'),
-      ],
-    ),
-  ];
-}
-
 class HorsesNotifier extends StateNotifier<List<Horse>> {
-  HorsesNotifier(this._club) : super(_seedHorses()) {
+  HorsesNotifier(this._club) : super(const []) {
     refreshFromOdoo();
   }
 
   final OdooClubService _club;
 
-  /// Replaces the seeded demo herd with the live one from Odoo.
+  /// Loads the herd from Odoo. Empty until the first successful pull.
   Future<void> refreshFromOdoo() async {
     if (!_club.isConfigured) return;
     try {
@@ -216,7 +106,7 @@ class HorsesNotifier extends StateNotifier<List<Horse>> {
         state = remote;
       }
     } catch (error) {
-      debugPrint('Odoo horses pull failed: $error');
+      reportSyncIssue('Écurie (lecture)', error);
     }
   }
 
@@ -240,7 +130,7 @@ class HorsesNotifier extends StateNotifier<List<Horse>> {
     try {
       await _club.pushHorseStatus(id, status, horse.first.fatigue);
     } catch (error) {
-      debugPrint('Odoo horse status push failed for $id: $error');
+      reportSyncIssue('Statut cheval « $id »', error);
     }
   }
 }

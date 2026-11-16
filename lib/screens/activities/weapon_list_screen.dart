@@ -33,35 +33,6 @@ class WeaponListScreen extends ConsumerStatefulWidget {
 }
 
 class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
-  /// Offline demo armory, shown only when no weapon asset is available
-  /// from the synced asset cache (e.g. Odoo not configured).
-  final List<Weapon> _demoWeapons = [
-    Weapon(
-        id: 'w1',
-        serialNumber: 'SN-GLOCK-001',
-        model: 'Glock 17',
-        status: 'Disponible',
-        lastCleaned: DateTime.now().subtract(const Duration(days: 1))),
-    Weapon(
-        id: 'w2',
-        serialNumber: 'SN-GLOCK-002',
-        model: 'Glock 17',
-        status: 'En utilisation',
-        lastCleaned: DateTime.now().subtract(const Duration(days: 5))),
-    Weapon(
-        id: 'w3',
-        serialNumber: 'SN-AR15-001',
-        model: 'AR-15',
-        status: 'Maintenance',
-        lastCleaned: DateTime.now().subtract(const Duration(days: 30))),
-    Weapon(
-        id: 'w4',
-        serialNumber: 'SN-BERETTA-001',
-        model: 'Beretta 92FS',
-        status: 'Disponible',
-        lastCleaned: DateTime.now().subtract(const Duration(days: 2))),
-  ];
-
   List<Weapon> weapons = [];
 
   Weapon _weaponFromAsset(Asset asset) {
@@ -79,19 +50,6 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
     final weapon = weapons[index];
     // Updates the local asset cache and pushes to Odoo.
     ref.read(assetsProvider.notifier).markAssetCleaned(weapon.id);
-    setState(() {
-      final demoIndex = _demoWeapons.indexWhere((w) => w.id == weapon.id);
-      if (demoIndex != -1) {
-        final w = _demoWeapons[demoIndex];
-        _demoWeapons[demoIndex] = Weapon(
-          id: w.id,
-          serialNumber: w.serialNumber,
-          model: w.model,
-          status: w.status,
-          lastCleaned: DateTime.now(),
-        );
-      }
-    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: const Text('Nettoyage enregistré'),
@@ -107,9 +65,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
             a.activityId == 'shooting' &&
             a.category.toLowerCase().contains('arme'))
         .toList();
-    weapons = weaponAssets.isNotEmpty
-        ? weaponAssets.map(_weaponFromAsset).toList()
-        : _demoWeapons;
+    weapons = weaponAssets.map(_weaponFromAsset).toList();
 
     return Scaffold(
       appBar: AppBar(

@@ -6,6 +6,7 @@ import '../models/asset.dart';
 import '../models/inventory_item.dart';
 import '../models/work_ticket.dart';
 import '../providers/horses_provider.dart';
+import 'odoo_datetime.dart';
 import 'odoo_jsonrpc_service.dart';
 
 final odooClubServiceProvider = Provider<OdooClubService>((ref) {
@@ -29,18 +30,22 @@ class PoolReading {
   });
 }
 
-/// Read/write gateway to the `amarna.club.*` models of the Odoo backend
-/// suite. Model and field names are fixed by the backend modules — see
-/// `amarna_club_base/BACKEND_API.md` in the Odoo addons folder.
+/// Read/write gateway to the `amarna.club.*` models of the Odoo backend.
 ///
-/// Selection keys on the Odoo side equal the Dart enum names verbatim,
-/// so `enum.name` strings are pushed and parsed back with `values.byName`.
+/// Field and model names are defined by the `amarna_club_*` addons in the
+/// Odoo repository. Selection keys on the Odoo side equal the Dart enum names
+/// (`enum.name`), and every Datetime crosses this boundary in UTC (see
+/// `odoo_datetime.dart`).
 class OdooClubService {
   OdooClubService(this._odoo);
 
   final OdooJsonRpcService _odoo;
 
   bool get isConfigured => AppEnvironment.isOdooConfigured;
+
+  /// Date used for records Odoo has no value for: far in the past, so that
+  /// "no date recorded" is shown (and alerted) as overdue rather than fresh.
+  static final DateTime neverDate = DateTime.fromMillisecondsSinceEpoch(0);
 
   // ------------------------------------------------------------ Activities
 
@@ -56,6 +61,8 @@ class OdooClubService {
         'current_occupancy',
         'max_capacity',
         'assigned_staff',
+        'closure_start',
+        'closure_end',
       ],
       order: 'sequence asc',
     );
@@ -72,18 +79,20 @@ class OdooClubService {
               currentOccupancy: _toInt(row['current_occupancy']),
               maxCapacity: _toInt(row['max_capacity']),
               assignedStaff: _str(row['assigned_staff']),
+              closureStart: fromOdooDateTime(row['closure_start']),
+              closureEnd: fromOdooDateTime(row['closure_end']),
             ))
         .toList();
   }
 
   Future<void> pushActivityOccupancy(String code, int occupancy) {
-    return _writeByCode('amarna.club.activity', 'code', code,
+    return _writeByCode('amarna.club.activity', code,
         {'current_occupancy': occupancy});
   }
 
   Future<void> pushActivityStatus(String code, ActivityStatus status) {
     return _writeByCode(
-        'amarna.club.activity', 'code', code, {'mobile_status': status.name});
+        'amarna.club.activity', code, {'mobile_status': status.name});
   }
 
   // ----------------------------------------------------------------- Assets
@@ -105,7 +114,6 @@ class OdooClubService {
         'specs_json',
       ],
       order: 'id asc',
-      limit: 500,
     );
 
     return rows
@@ -118,8 +126,8 @@ class OdooClubService {
               activityId: _str(row['mobile_activity_code']),
               status: _enumByName(
                   AssetStatus.values, row['status'], AssetStatus.available),
-              lastMaintenance: _dateTime(row['last_maintenance']),
-              nextMaintenance: _dateTime(row['next_maintenance']),
+              lastMaintenance: fromOdooDateTime(row['last_maintenance']),
+              nextMaintenance: fromOdooDateTime(row['next_maintenance']),
               imageUrl:
                   _str(row['image_url']).isEmpty ? null : _str(row['image_url']),
               technicalSpecsJson: _str(row['specs_json']).isEmpty
@@ -130,14 +138,13 @@ class OdooClubService {
   }
 
   Future<void> pushAssetStatus(String code, AssetStatus status) {
-    return _writeByCode(
-        'amarna.club.asset', 'code', code, {'status': status.name});
+    return _writeByCode('amarna.club.asset', code, {'status': status.name});
   }
 
   /// Records a cleaning/maintenance done now (used by the armory screen).
   Future<void> pushAssetCleaned(String code) {
-    return _writeByCode('amarna.club.asset', 'code', code,
-        {'last_maintenance': _formatDateTime(DateTime.now())});
+    return _writeByCode('amarna.club.asset', code,
+        {'last_maintenance': toOdooDateTime(DateTime.now())});
   }
 
   // -------------------------------------------------------------- Inventory
@@ -156,7 +163,6 @@ class OdooClubService {
         'unit',
       ],
       order: 'id asc',
-      limit: 500,
     );
 
     return rows
@@ -174,8 +180,7 @@ class OdooClubService {
   }
 
   Future<void> pushInventoryQty(String code, int qty) {
-    return _writeByCode(
-        'amarna.club.inventory.item', 'code', code, {'qty': qty});
+    return _writeByCode('amarna.club.inventory.item', code, {'qty': qty});
   }
 
   // ----------------------------------------------------------------- Horses
@@ -200,10 +205,8 @@ class OdooClubService {
         'last_deworming',
       ],
       order: 'box_number asc',
-      limit: 200,
     );
 
-    final fallbackDate = DateTime.now();
     return rows
         .where((row) => _str(row['code']).isNotEmpty)
         .map((row) => Horse(
@@ -218,17 +221,17 @@ class OdooClubService {
               diet: _str(row['diet']),
               vetNote:
                   _str(row['vet_note']).isEmpty ? null : _str(row['vet_note']),
-              nextVetVisit: _dateTime(row['next_vet_visit']),
-              lastFarrier: _dateTime(row['last_farrier']) ?? fallbackDate,
-              lastVaccine: _dateTime(row['last_vaccine']) ?? fallbackDate,
-              lastDeworming: _dateTime(row['last_deworming']) ?? fallbackDate,
+              nextVetVisit: fromOdooDateTime(row['next_vet_visit']),
+              lastFarrier: fromOdooDate(row['last_farrier']) ?? neverDate,
+              lastVaccine: fromOdooDate(row['last_vaccine']) ?? neverDate,
+              lastDeworming: fromOdooDate(row['last_deworming']) ?? neverDate,
             ))
         .toList();
   }
 
   Future<void> pushHorseStatus(String code, HorseStatus status,
       double fatigue) {
-    return _writeByCode('amarna.club.horse', 'code', code,
+    return _writeByCode('amarna.club.horse', code,
         {'status': status.name, 'fatigue': fatigue});
   }
 
@@ -259,7 +262,7 @@ class OdooClubService {
       chlorine: _toDouble(row['chlorine']),
       ph: _toDouble(row['ph']),
       turbidity: _toDouble(row['turbidity']),
-      recordedAt: _dateTime(row['reading_time']) ?? DateTime.now(),
+      recordedAt: fromOdooDateTime(row['reading_time']) ?? DateTime.now(),
     );
   }
 
@@ -273,7 +276,7 @@ class OdooClubService {
     return _odoo.create(
       model: 'amarna.club.pool.reading',
       values: {
-        'reading_time': _formatDateTime(DateTime.now()),
+        'reading_time': toOdooDateTime(DateTime.now()),
         'temperature': temperature,
         'chlorine': chlorine,
         'ph': ph,
@@ -285,8 +288,11 @@ class OdooClubService {
 
   // ---------------------------------------------------------- Interventions
 
-  /// Pulls interventions from Odoo mapped to local [WorkTicket]s so status
-  /// changes made in the Odoo UI reach the tablet (two-way sync).
+  /// Pulls the interventions from Odoo as [WorkTicket]s.
+  ///
+  /// A ticket created in the tablet has its `mobile_id` as id. A ticket
+  /// created in the Odoo back office has no `mobile_id` and gets an
+  /// `odoo-<id>` identifier, so the tablet can write changes back to it.
   Future<List<WorkTicket>> fetchInterventions() async {
     final rows = await _odoo.searchRead(
       model: 'amarna.club.intervention',
@@ -300,60 +306,63 @@ class OdooClubService {
         'priority',
         'mobile_activity_code',
         'activity_id',
+        'mobile_asset_code',
+        'asset_id',
         'date_due',
         'date_completed',
         'assigned_to',
         'create_date',
       ],
       order: 'create_date desc',
-      limit: 300,
+      limit: 1000,
     );
 
     return rows.map((row) {
       final mobileId = _str(row['mobile_id']);
       final id = mobileId.isNotEmpty ? mobileId : 'odoo-${row['id']}';
-      var title = _str(row['name']);
-      // The app prefixes pushed titles with "[<mobile id>] " — strip it.
-      final prefix = '[$mobileId] ';
-      if (mobileId.isNotEmpty && title.startsWith(prefix)) {
-        title = title.substring(prefix.length);
-      }
+      final activityCode = _str(row['mobile_activity_code']);
+      final assetCode = _str(row['mobile_asset_code']);
+      final assigned = _str(row['assigned_to']);
       return WorkTicket(
         id: id,
-        title: title,
+        title: _str(row['name']),
         description: _str(row['description']),
-        activityId: _str(row['mobile_activity_code']),
-        activityName: _many2oneName(row['activity_id'],
-            fallback: _str(row['mobile_activity_code'])),
+        activityId: activityCode,
+        activityName:
+            _many2oneName(row['activity_id'], fallback: activityCode),
+        assetId: assetCode.isEmpty ? null : assetCode,
+        assetName: _many2oneName(row['asset_id']).isEmpty
+            ? null
+            : _many2oneName(row['asset_id']),
         type: _enumByName(TicketType.values, row['type'], TicketType.anomaly),
         priority: _enumByName(
             TicketPriority.values, row['priority'], TicketPriority.medium),
         status:
             _enumByName(TicketStatus.values, row['status'], TicketStatus.open),
-        dateCreated: _dateTime(row['create_date']) ?? DateTime.now(),
-        dateDue: _dateTime(row['date_due']),
-        dateCompleted: _dateTime(row['date_completed']),
-        assignedTechnician: _str(row['assigned_to']).isEmpty
-            ? null
-            : _str(row['assigned_to']),
+        dateCreated: fromOdooDateTime(row['create_date']) ?? DateTime.now(),
+        dateDue: fromOdooDateTime(row['date_due']),
+        dateCompleted: fromOdooDateTime(row['date_completed']),
+        assignedTechnician: assigned.isEmpty ? null : assigned,
       );
     }).toList();
   }
 
   // ---------------------------------------------------------------- Helpers
 
-  Future<void> _writeByCode(String model, String codeField, String code,
-      Map<String, dynamic> values) async {
+  /// Writes [values] to the record whose `code` is [code].
+  /// Throws when the record does not exist in Odoo, so the failure is visible.
+  Future<void> _writeByCode(
+      String model, String code, Map<String, dynamic> values) async {
     final rows = await _odoo.searchRead(
       model: model,
       domain: [
-        [codeField, '=', code],
+        ['code', '=', code],
       ],
       fields: const ['id'],
       limit: 1,
     );
     if (rows.isEmpty) {
-      return;
+      throw StateError('Élément « $code » introuvable dans Odoo ($model).');
     }
     await _odoo.write(
       model: model,
@@ -371,15 +380,8 @@ class OdooClubService {
 
   double _toDouble(dynamic value) => value is num ? value.toDouble() : 0.0;
 
-  DateTime? _dateTime(dynamic value) {
-    if (value is! String || value.isEmpty) {
-      return null;
-    }
-    return DateTime.tryParse(value);
-  }
-
   String _many2oneName(dynamic value, {String fallback = ''}) {
-    // Many2one fields come back as [id, "Display Name"].
+    // Many2one fields come back as [id, "Display Name"], or false when empty.
     if (value is List && value.length >= 2 && value[1] is String) {
       return value[1] as String;
     }
@@ -396,12 +398,5 @@ class OdooClubService {
       }
     }
     return fallback;
-  }
-
-  String _formatDateTime(DateTime value) {
-    final utc = value; // Odoo stores naive datetimes; keep local like the rest
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${utc.year}-${two(utc.month)}-${two(utc.day)} '
-        '${two(utc.hour)}:${two(utc.minute)}:${two(utc.second)}';
   }
 }

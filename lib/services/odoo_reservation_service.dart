@@ -1,58 +1,49 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
-import '../config/app_environment.dart';
 import '../models/reservation.dart';
+import 'odoo_datetime.dart';
 import 'odoo_jsonrpc_service.dart';
 
 final odooReservationServiceProvider = Provider<OdooReservationService>((ref) {
   return OdooReservationService(ref.watch(odooJsonRpcServiceProvider));
 });
 
+/// Reservations of the club, stored in `amarna.club.reservation`.
+///
+/// `start_at` / `end_at` are UTC on the Odoo side and converted here; the
+/// status is written as one of the canonical tokens the Odoo model expects.
 class OdooReservationService {
   OdooReservationService(this._odoo);
 
+  static const _model = 'amarna.club.reservation';
+  static const _fields = [
+    'name',
+    'mobile_activity_code',
+    'activity_id',
+    'client_name',
+    'people_count',
+    'start_at',
+    'end_at',
+    'status_normalized',
+    'notes',
+  ];
+
   final OdooJsonRpcService _odoo;
 
+  /// Reservations whose start falls on the local calendar day [day].
   Future<List<Reservation>> fetchReservationsForDay(DateTime day) async {
-    final start = DateTime(day.year, day.month, day.day);
-    final end = start.add(const Duration(days: 1));
-    final fields = <String>{
-      'id',
-      'name',
-      AppEnvironment.odooReservationStartField,
-      AppEnvironment.odooReservationEndField,
-      if (AppEnvironment.odooReservationActivityField.isNotEmpty)
-        AppEnvironment.odooReservationActivityField,
-      if (AppEnvironment.odooReservationClientField.isNotEmpty)
-        AppEnvironment.odooReservationClientField,
-      if (AppEnvironment.odooReservationPeopleCountField.isNotEmpty)
-        AppEnvironment.odooReservationPeopleCountField,
-      if (AppEnvironment.odooReservationStatusField.isNotEmpty)
-        AppEnvironment.odooReservationStatusField,
-      if (AppEnvironment.odooReservationNotesField.isNotEmpty)
-        AppEnvironment.odooReservationNotesField,
-    }.toList();
-
+    final (start, end) = odooDayBounds(day);
     final rows = await _odoo.searchRead(
-      model: AppEnvironment.odooReservationModel,
+      model: _model,
       domain: [
-        [
-          AppEnvironment.odooReservationStartField,
-          '>=',
-          _formatOdooDateTime(start),
-        ],
-        [
-          AppEnvironment.odooReservationStartField,
-          '<',
-          _formatOdooDateTime(end),
-        ],
+        ['start_at', '>=', start],
+        ['start_at', '<', end],
       ],
-      fields: fields,
-      order: '${AppEnvironment.odooReservationStartField} asc',
+      fields: _fields,
+      order: 'start_at asc',
+      limit: 500,
     );
-
-    return rows.map(_mapReservation).toList();
+    return rows.map(_mapReservation).whereType<Reservation>().toList();
   }
 
   Future<int> createReservation({
@@ -60,117 +51,97 @@ class OdooReservationService {
     required String activityName,
     required String clientName,
     required int peopleCount,
-    required String status,
+    required ReservationStatus status,
     required DateTime startAt,
     required DateTime endAt,
     String? notes,
   }) {
-    final payload = <String, dynamic>{
-      'name': '$activityName - $clientName',
-      AppEnvironment.odooReservationStartField: _formatOdooDateTime(startAt),
-      AppEnvironment.odooReservationEndField: _formatOdooDateTime(endAt),
-    };
-
-    _putIfConfigured(
-        payload, AppEnvironment.odooReservationActivityField, activityId);
-    _putIfConfigured(
-        payload, AppEnvironment.odooReservationClientField, clientName);
-    _putIfConfigured(
-        payload, AppEnvironment.odooReservationPeopleCountField, peopleCount);
-    _putIfConfigured(
-        payload, AppEnvironment.odooReservationStatusField, status);
-    _putIfConfigured(
-      payload,
-      AppEnvironment.odooReservationNotesField,
-      notes?.trim().isEmpty == true ? null : notes,
-    );
-
     return _odoo.create(
-      model: AppEnvironment.odooReservationModel,
-      values: payload,
+      model: _model,
+      values: {
+        'name': '$activityName - $clientName',
+        'mobile_activity_code': activityId,
+        'client_name': clientName,
+        'people_count': peopleCount,
+        'start_at': toOdooDateTime(startAt),
+        'end_at': toOdooDateTime(endAt),
+        'status': statusToken(status),
+        if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
+      },
     );
   }
 
-  /// Writes a new status value on the remote reservation.
-  /// No-op when the status field is not mapped in the environment.
-  Future<void> updateReservationStatus(int remoteId, String status) async {
-    if (AppEnvironment.odooReservationStatusField.isEmpty) return;
+  /// Writes a new status (e.g. check-in) on the remote reservation.
+  Future<void> updateReservationStatus(
+      int remoteId, ReservationStatus status) async {
     await _odoo.write(
-      model: AppEnvironment.odooReservationModel,
+      model: _model,
       id: remoteId,
-      values: {AppEnvironment.odooReservationStatusField: status},
+      values: {'status': statusToken(status)},
     );
   }
 
-  Reservation _mapReservation(Map<String, dynamic> row) {
-    final title = row['name']?.toString() ?? 'Reservation';
-    final activityValue =
-        row[AppEnvironment.odooReservationActivityField]?.toString();
-    final clientValue =
-        row[AppEnvironment.odooReservationClientField]?.toString();
-    final statusValue =
-        row[AppEnvironment.odooReservationStatusField]?.toString();
-    final notesValue =
-        row[AppEnvironment.odooReservationNotesField]?.toString();
-    final peopleValue = row[AppEnvironment.odooReservationPeopleCountField];
+  /// Canonical status token understood by `amarna.club.reservation`.
+  static String statusToken(ReservationStatus status) {
+    switch (status) {
+      case ReservationStatus.confirmed:
+        return 'confirmed';
+      case ReservationStatus.checkedIn:
+        return 'checkedin';
+      case ReservationStatus.cancelled:
+        return 'cancelled';
+      case ReservationStatus.pending:
+      case ReservationStatus.unknown:
+        return 'pending';
+    }
+  }
+
+  Reservation? _mapReservation(Map<String, dynamic> row) {
+    final startAt = fromOdooDateTime(row['start_at']);
+    final endAt = fromOdooDateTime(row['end_at']);
+    if (startAt == null || endAt == null) return null;
+
+    // Odoo returns `false` for empty Char/Text fields: read them as text.
+    final activityCode = _text(row['mobile_activity_code']);
+    final activityName = _many2oneName(row['activity_id']);
+    final clientName = _text(row['client_name']);
+    final notes = _text(row['notes']);
 
     return Reservation(
       remoteId: (row['id'] as num?)?.toInt(),
-      title: title,
-      activityId: activityValue ?? '',
-      activityName: activityValue ?? _inferActivityName(title),
-      clientName: clientValue ?? _inferClientName(title),
-      peopleCount: peopleValue is num ? peopleValue.toInt() : 0,
-      status: _parseStatus(statusValue),
-      startAt: DateTime.parse(
-          row[AppEnvironment.odooReservationStartField].toString()),
-      endAt: DateTime.parse(
-          row[AppEnvironment.odooReservationEndField].toString()),
-      notes: notesValue,
+      title: _text(row['name']).isEmpty ? 'Réservation' : _text(row['name']),
+      activityId: activityCode,
+      activityName: activityName.isEmpty ? activityCode : activityName,
+      clientName: clientName,
+      peopleCount: (row['people_count'] as num?)?.toInt() ?? 0,
+      status: _parseStatus(_text(row['status_normalized'])),
+      startAt: startAt,
+      endAt: endAt,
+      notes: notes.isEmpty ? null : notes,
     );
   }
 
-  ReservationStatus _parseStatus(String? value) {
-    final normalized = (value ?? '').toLowerCase();
-    if (normalized.contains('check') || normalized.contains('arriv')) {
-      return ReservationStatus.checkedIn;
-    }
-    if (normalized.contains('confirm')) {
-      return ReservationStatus.confirmed;
-    }
-    if (normalized.contains('attente') || normalized.contains('pending')) {
-      return ReservationStatus.pending;
-    }
-    if (normalized.contains('cancel') || normalized.contains('annul')) {
-      return ReservationStatus.cancelled;
-    }
+  String _text(Object? value) => value is String ? value : '';
 
-    return ReservationStatus.unknown;
+  ReservationStatus _parseStatus(String normalized) {
+    switch (normalized) {
+      case 'checked_in':
+        return ReservationStatus.checkedIn;
+      case 'confirmed':
+        return ReservationStatus.confirmed;
+      case 'pending':
+        return ReservationStatus.pending;
+      case 'cancelled':
+        return ReservationStatus.cancelled;
+      default:
+        return ReservationStatus.unknown;
+    }
   }
 
-  String _inferActivityName(String title) {
-    final parts = title.split(' - ');
-    return parts.isNotEmpty ? parts.first : title;
-  }
-
-  String _inferClientName(String title) {
-    final parts = title.split(' - ');
-    return parts.length > 1 ? parts.sublist(1).join(' - ') : title;
-  }
-
-  String _formatOdooDateTime(DateTime value) {
-    return DateFormat('yyyy-MM-dd HH:mm:ss').format(value);
-  }
-
-  void _putIfConfigured(
-    Map<String, dynamic> payload,
-    String field,
-    Object? value,
-  ) {
-    if (field.isEmpty || value == null) {
-      return;
+  String _many2oneName(dynamic value) {
+    if (value is List && value.length >= 2 && value[1] is String) {
+      return value[1] as String;
     }
-
-    payload[field] = value;
+    return '';
   }
 }

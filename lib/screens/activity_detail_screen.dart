@@ -35,6 +35,8 @@ class ActivityDetailScreen extends ConsumerWidget {
         currentOccupancy: 0,
         maxCapacity: 100,
         assignedStaff: 'Non assigné',
+        closureStart: null,
+        closureEnd: null,
       ),
     );
     final color = colors.getActivityColor(activity.id);

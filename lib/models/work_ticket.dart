@@ -77,6 +77,10 @@ class WorkTicket {
   final List<TicketEvent> events;
   final String? assignedTechnician;
 
+  /// True while local changes have not reached Odoo yet. Pulls from Odoo
+  /// never overwrite a ticket in this state.
+  bool syncPending;
+
   WorkTicket({
     this.isarId = Isar.autoIncrement,
     required this.id,
@@ -95,6 +99,7 @@ class WorkTicket {
     this.photoPaths = const [],
     this.events = const [],
     this.assignedTechnician,
+    this.syncPending = false,
   });
 
   WorkTicket copyWith({
@@ -104,6 +109,8 @@ class WorkTicket {
     List<String>? photoPaths,
     List<TicketEvent>? events,
     String? assignedTechnician,
+    bool? syncPending,
+    DateTime? dateDue,
   }) {
     return WorkTicket(
       isarId: isarId,
@@ -118,11 +125,12 @@ class WorkTicket {
       priority: priority ?? this.priority,
       status: status ?? this.status,
       dateCreated: dateCreated,
-      dateDue: dateDue,
+      dateDue: dateDue ?? this.dateDue,
       dateCompleted: dateCompleted ?? this.dateCompleted,
       photoPaths: photoPaths ?? this.photoPaths,
       events: events ?? this.events,
       assignedTechnician: assignedTechnician ?? this.assignedTechnician,
+      syncPending: syncPending ?? this.syncPending,
     );
   }
 

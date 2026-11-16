@@ -11,64 +11,9 @@ class NotificationCenterScreen extends StatefulWidget {
 }
 
 class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
-  // Mock notifications list
-  final List<MockNotification> _notifications = [
-    MockNotification(
-      id: 'notif-1',
-      title: 'Nouvel incident critique',
-      description:
-          'L\'extracteur d\'air principal stand de tir est HS. Stand fermé.',
-      timeAgo: 'Il y a 10 min',
-      category: 'incident',
-      routePath: '/tickets/inc-003',
-      isToday: true,
-      isRead: false,
-    ),
-    MockNotification(
-      id: 'notif-2',
-      title: 'Tâche de maintenance assignée',
-      description:
-          'Vous avez été assigné au remplacement du filet court 3 de padel.',
-      timeAgo: 'Il y a 1h',
-      category: 'maintenance',
-      routePath: '/tickets/maint-003',
-      isToday: true,
-      isRead: false,
-    ),
-    MockNotification(
-      id: 'notif-3',
-      title: 'Alerte stock bas',
-      description:
-          'Le stock de balles de padel (tube de 3) est sous le seuil bas (10 tubes restants).',
-      timeAgo: 'Il y a 3h',
-      category: 'inventory',
-      routePath: '/plus/inventaire',
-      isToday: true,
-      isRead: true,
-    ),
-    MockNotification(
-      id: 'notif-4',
-      title: 'Réservation modifiée',
-      description:
-          'La réservation pour "Groupe Belhaj" au stand de tir a été déplacée à 09:30.',
-      timeAgo: 'Hier',
-      category: 'reservation',
-      routePath: '/plus/reservations',
-      isToday: false,
-      isRead: true,
-    ),
-    MockNotification(
-      id: 'notif-5',
-      title: 'Incident résolu',
-      description:
-          'L\'incident "Fuite filtre pompe 2" de la piscine a été marqué comme résolu par Karim.',
-      timeAgo: 'Il y a 2 jours',
-      category: 'incident',
-      routePath: '/tickets/inc-001',
-      isToday: false,
-      isRead: true,
-    ),
-  ];
+  // Notifications are not connected to a source yet: the list stays empty
+  // until a real feed exists (no invented items are shown).
+  final List<MockNotification> _notifications = [];
 
   void _markAllAsRead() {
     setState(() {

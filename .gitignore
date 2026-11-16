@@ -52,3 +52,6 @@ ServiceDefinitions.json
 # Web
 doc/api/
 web/assets/
+
+# Local run configuration (server address only)
+config/dart_define.local.json

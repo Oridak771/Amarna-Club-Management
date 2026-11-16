@@ -7,6 +7,7 @@ import '../../services/odoo_club_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
 import '../../widgets/gauge_card.dart';
+import '../../services/odoo_jsonrpc_service.dart';
 
 /// Water quality reading with per-parameter safe ranges.
 class _Reading {
@@ -91,7 +92,7 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
         _turbidity = _current.turbidity;
       });
     } catch (error) {
-      debugPrint('Odoo pool reading pull failed: $error');
+      reportSyncIssue('Relevés piscine (lecture)', error);
     }
   }
 
@@ -106,7 +107,7 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
         turbidity: reading.turbidity,
       );
     } catch (error) {
-      debugPrint('Odoo pool reading push failed: $error');
+      reportSyncIssue('Relevé piscine', error);
     }
   }
 

@@ -81,7 +81,7 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
                   child: _message(
                     context,
                     Icons.cloud_off_rounded,
-                    'Odoo n\'est pas configuré.\nRenseignez les identifiants dans .env.',
+                    'Odoo n\'est pas configuré.\nContactez l’administrateur.',
                   ),
                 )
               else

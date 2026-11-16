@@ -24,6 +24,9 @@ class Activity {
   final int currentOccupancy;
   final int maxCapacity;
   final String assignedStaff;
+  /// Optional planned offline interval from Odoo.
+  final DateTime? closureStart;
+  final DateTime? closureEnd;
 
   Activity({
     this.isarId = Isar.autoIncrement,
@@ -34,6 +37,8 @@ class Activity {
     required this.currentOccupancy,
     required this.maxCapacity,
     required this.assignedStaff,
+    this.closureStart,
+    this.closureEnd,
   });
 
   @ignore
@@ -51,5 +56,20 @@ class Activity {
       case ActivityStatus.maintenance:
         return "En Maintenance";
     }
+  }
+
+  /// Mirrors `amarna.club.activity.is_available_at` on the Odoo side: open
+  /// and warning activities take bookings, and a booking may not overlap the
+  /// closure window (a booking ending exactly when the closure starts is fine).
+  bool isAvailableAt(DateTime start, DateTime end) {
+    if (!end.isAfter(start)) return false;
+    if (status != ActivityStatus.open && status != ActivityStatus.warning) {
+      return false;
+    }
+    final from = closureStart;
+    if (from == null) return true;
+    final until = closureEnd;
+    if (until == null) return !end.isAfter(from);
+    return !(start.isBefore(until) && end.isAfter(from));
   }
 }
