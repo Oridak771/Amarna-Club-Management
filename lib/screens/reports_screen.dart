@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import '../models/activity.dart';
 import '../models/work_ticket.dart';
 import '../providers/activities_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../providers/inventory_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
+/// « Rapports » — anomaly and maintenance rates, stock alerts and occupancy.
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
 
@@ -20,6 +22,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final activities = ref.watch(activitiesProvider);
     final tickets = ref.watch(ticketsProvider);
     final inventoryItems = ref.watch(inventoryProvider);
@@ -53,429 +56,330 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     final lowStockCount = filteredInventory.where((i) => i.isLowStock).length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Rapports & Statistiques'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    return AppPage(
+      title: 'Rapports',
+      subtitle: 'Anomalies, maintenance et stocks',
+      actions: [
+        IconButton.filledTonal(
+          tooltip: 'Exporter',
+          icon: const Icon(Icons.ios_share_rounded),
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content:
+                      Text('Rapport exporté en format PDF avec succès.')),
+            );
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.ios_share),
-            tooltip: 'Exporter',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content:
-                        Text('Rapport exporté en format PDF avec succès.')),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 900),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 1. Period and Activity Filters
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: context.colors.backgroundSecondary,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            dropdownColor: context.colors.backgroundSecondary,
-                            value: _selectedPeriod,
-                            items: [
-                              DropdownMenuItem(
-                                  value: '7',
-                                  child: Text('7 derniers jours',
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary))),
-                              DropdownMenuItem(
-                                  value: '30',
-                                  child: Text('30 derniers jours',
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary))),
-                              DropdownMenuItem(
-                                  value: '90',
-                                  child: Text('3 derniers mois',
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary))),
-                              DropdownMenuItem(
-                                  value: '365',
-                                  child: Text('Cette année',
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary))),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() => _selectedPeriod = val);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: context.colors.backgroundSecondary,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            dropdownColor: context.colors.backgroundSecondary,
-                            value: _selectedActivity,
-                            items: [
-                              DropdownMenuItem(
-                                  value: 'all',
-                                  child: Text('Toutes activités',
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary))),
-                              ...activities.map((act) => DropdownMenuItem(
-                                  value: act.id,
-                                  child: Text(act.name,
-                                      style: TextStyle(
-                                          color: context.colors.textPrimary)))),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() => _selectedActivity = val);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // 2. High-level KPI grid
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 550;
-                    return GridView.count(
-                      crossAxisCount: isWide ? 3 : 1,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: isWide ? 1.6 : 3,
-                      children: [
-                        _buildKPICard(
-                          'Anomalies Résolues',
-                          '$resolvedAnomalies / $totalAnomalies',
-                          'Taux : ${(anomalyResolutionRate * 100).toInt()}%',
-                          context.colors.danger,
-                        ),
-                        _buildKPICard(
-                          'Maintenance Complétée',
-                          '$completedMaintenance / $totalMaintenance',
-                          'Taux : ${(maintenanceRate * 100).toInt()}%',
-                          context.colors.info,
-                        ),
-                        _buildKPICard(
-                          'Alertes Stock Bas',
-                          '$lowStockCount articles',
-                          'Seuils critiques atteints',
-                          lowStockCount > 0
-                              ? context.colors.warning
-                              : context.colors.success,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // 3. Detailed stats & charts Section
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 650;
-                    return isWide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                  child: _buildAnomaliesChart(
-                                      anomalyResolutionRate)),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                  child:
-                                      _buildMaintenanceChart(maintenanceRate)),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _buildAnomaliesChart(anomalyResolutionRate),
-                              const SizedBox(height: 16),
-                              _buildMaintenanceChart(maintenanceRate),
-                            ],
-                          );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // 4. Activity Occupancy Distribution
-                _buildOccupancyDistribution(activities),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKPICard(
-      String title, String value, String subtext, Color accentColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            context.colors.backgroundSecondary,
-            context.colors.surface,
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+      ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(title,
-              style: TextStyle(
-                  color: context.colors.textSecondary, fontSize: 13)),
-          const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      color: accentColor, shape: BoxShape.circle)),
-              const SizedBox(width: 6),
-              Text(subtext,
+          // 1. Period and activity filters
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final periodField = _filterField(
+                colors,
+                DropdownButton<String>(
+                  dropdownColor: colors.backgroundSecondary,
+                  isExpanded: true,
+                  value: _selectedPeriod,
                   style: TextStyle(
-                      color: accentColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnomaliesChart(double rate) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Résolution d\'Anomalies',
-              style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 120,
-            width: 120,
-            child: Stack(
-              children: [
-                Center(
-                  child: SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: CircularProgressIndicator(
-                      value: rate,
-                      strokeWidth: 12,
-                      backgroundColor: context.colors.surface,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(context.colors.danger),
-                    ),
-                  ),
+                      color: colors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700),
+                  items: const [
+                    DropdownMenuItem(value: '7', child: Text('7 derniers jours')),
+                    DropdownMenuItem(
+                        value: '30', child: Text('30 derniers jours')),
+                    DropdownMenuItem(
+                        value: '90', child: Text('3 derniers mois')),
+                    DropdownMenuItem(value: '365', child: Text('Cette année')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _selectedPeriod = val);
+                    }
+                  },
                 ),
-                Center(
-                  child: Text(
-                    '${(rate * 100).toInt()}%',
-                    style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
+              );
+              final activityField = _filterField(
+                colors,
+                DropdownButton<String>(
+                  dropdownColor: colors.backgroundSecondary,
+                  isExpanded: true,
+                  value: _selectedActivity,
+                  style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700),
+                  items: [
+                    const DropdownMenuItem(
+                        value: 'all', child: Text('Toutes les activités')),
+                    ...activities.map((act) => DropdownMenuItem(
+                        value: act.id, child: Text(act.name))),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      setState(() => _selectedActivity = val);
+                    }
+                  },
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Taux d\'anomalies résolues',
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMaintenanceChart(double rate) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              'Complétion de Maintenance',
-              style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 20),
-          SizedBox(
-            height: 120,
-            width: 120,
-            child: Stack(
-              children: [
-                Center(
-                  child: SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: CircularProgressIndicator(
-                      value: rate,
-                      strokeWidth: 12,
-                      backgroundColor: context.colors.surface,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(context.colors.info),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    '${(rate * 100).toInt()}%',
-                    style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Taux de tâches préventives faites',
-            style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOccupancyDistribution(List<dynamic> activities) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Taux d\'occupation en temps réel',
-            style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 15,
-                fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: activities.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 14),
-            itemBuilder: (context, index) {
-              final act = activities[index];
-              final pct = act.occupancyPercentage;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              );
+              if (constraints.maxWidth < 520) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    periodField,
+                    const SizedBox(height: 10),
+                    activityField,
+                  ],
+                );
+              }
+              return Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(act.name,
-                          style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500)),
-                      Text(
-                          '${act.currentOccupancy} / ${act.maxCapacity} (${(pct * 100).toInt()}%)',
-                          style: TextStyle(
-                              color: context.colors.textSecondary, fontSize: 13)),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: pct,
-                      minHeight: 8,
-                      backgroundColor: context.colors.surface,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          _getActivityColor(act.id)),
-                    ),
-                  ),
+                  Expanded(child: periodField),
+                  const SizedBox(width: 12),
+                  Expanded(child: activityField),
                 ],
               );
             },
           ),
+          const SizedBox(height: 18),
+
+          // 2. High-level KPI tiles
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final tiles = [
+                AppStatTile(
+                  label: 'Anomalies résolues',
+                  value: '$resolvedAnomalies / $totalAnomalies',
+                  caption: 'Taux : ${(anomalyResolutionRate * 100).toInt()}%',
+                  icon: Icons.report_problem_outlined,
+                  color: colors.danger,
+                ),
+                AppStatTile(
+                  label: 'Maintenance complétée',
+                  value: '$completedMaintenance / $totalMaintenance',
+                  caption: 'Taux : ${(maintenanceRate * 100).toInt()}%',
+                  icon: Icons.build_outlined,
+                  color: colors.info,
+                ),
+                AppStatTile(
+                  label: 'Alertes stock bas',
+                  value: '$lowStockCount',
+                  caption: lowStockCount > 0
+                      ? 'Articles sous le seuil critique'
+                      : 'Aucune alerte',
+                  icon: Icons.inventory_2_outlined,
+                  color: lowStockCount > 0 ? colors.warning : colors.success,
+                ),
+              ];
+              if (constraints.maxWidth < 560) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final tile in tiles) ...[
+                      tile,
+                      const SizedBox(height: 12),
+                    ],
+                  ],
+                );
+              }
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < tiles.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: tiles[i]),
+                    ],
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+
+          // 3. Rates
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final anomaliesChart =
+                  _buildRateChart('Résolution d\'anomalies', anomalyResolutionRate,
+                      colors.danger, 'Taux d\'anomalies résolues');
+              final maintenanceChart = _buildRateChart(
+                  'Complétion de maintenance',
+                  maintenanceRate,
+                  colors.info,
+                  'Taux de tâches préventives faites');
+              if (constraints.maxWidth < 650) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    anomaliesChart,
+                    const SizedBox(height: 12),
+                    maintenanceChart,
+                  ],
+                );
+              }
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: anomaliesChart),
+                    const SizedBox(width: 12),
+                    Expanded(child: maintenanceChart),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 18),
+
+          // 4. Activity occupancy distribution
+          _buildOccupancyDistribution(activities),
+          const SizedBox(height: 12),
         ],
       ),
+    );
+  }
+
+  Widget _filterField(AppSemanticColors colors, Widget dropdown) {
+    return Container(
+      height: 56,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: colors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(AppTheme.radiusField),
+        border: Border.all(color: colors.border),
+      ),
+      child: DropdownButtonHideUnderline(child: dropdown),
+    );
+  }
+
+  Widget _buildRateChart(
+      String title, double rate, Color color, String caption) {
+    final colors = context.colors;
+    return AppPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              color: colors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: SizedBox(
+              height: 120,
+              width: 120,
+              child: Stack(
+                children: [
+                  Center(
+                    child: SizedBox(
+                      height: 104,
+                      width: 104,
+                      child: CircularProgressIndicator(
+                        value: rate,
+                        strokeWidth: 12,
+                        backgroundColor: colors.surface,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Text(
+                      '${(rate * 100).toInt()}%',
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            caption,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: colors.textSecondary, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOccupancyDistribution(List<Activity> activities) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionTitle(
+          title: 'Taux d\'occupation en temps réel',
+          icon: Icons.groups_2_outlined,
+        ),
+        AppPanel(
+          child: activities.isEmpty
+              ? Text(
+                  'Aucune activité synchronisée pour le moment.',
+                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < activities.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 16),
+                      _occupancyRow(activities[i]),
+                    ],
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _occupancyRow(Activity act) {
+    final colors = context.colors;
+    final pct = act.occupancyPercentage;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                act.name,
+                style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${act.currentOccupancy} / ${act.maxCapacity} (${(pct * 100).toInt()}%)',
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: pct,
+            minHeight: 8,
+            backgroundColor: colors.surface,
+            valueColor: AlwaysStoppedAnimation<Color>(_getActivityColor(act.id)),
+          ),
+        ),
+      ],
     );
   }
 

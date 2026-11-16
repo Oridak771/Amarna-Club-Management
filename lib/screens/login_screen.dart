@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
+/// Connexion — the single sign-in form. Large fields and a 56dp primary
+/// button, so it can be used with a tablet held in one hand.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -37,210 +40,224 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final authState = ref.watch(authProvider);
+    final authenticating = authState.status == AuthStatus.authenticating;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.error && next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur: ${next.errorMessage}'),
-            backgroundColor: Colors.red,
+            content: Text('Erreur : ${next.errorMessage}'),
+            backgroundColor: colors.danger,
           ),
         );
       } else if (next.status == AuthStatus.authenticated) {
         context.go('/accueil');
       }
     });
+
     return Scaffold(
-      backgroundColor: context.colors.backgroundPrimary,
+      backgroundColor: colors.backgroundPrimary,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final double horizontalPadding =
-                constraints.maxWidth > 600 ? 64.0 : 24.0;
-            final double contentWidth =
-                constraints.maxWidth > 600 ? 450.0 : double.infinity;
-
-            return Center(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: SizedBox(
-                  width: contentWidth,
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SizedBox(height: 40),
-                        // Branded Placeholder Logo
-                        Icon(
-                          Icons.sports_hockey,
-                          size: 64,
-                          color: context.colors.accentPrimary,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 24),
+                    Center(
+                      child: Container(
+                        width: 84,
+                        height: 84,
+                        decoration: BoxDecoration(
+                          color: colors.accentPrimary.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(26),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'AMARNA CLUB',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: context.colors.textPrimary,
-                            letterSpacing: 1.5,
-                          ),
+                        child: Icon(
+                          Icons.sports_hockey_rounded,
+                          size: 44,
+                          color: colors.accentPrimary,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Gestion Operationnelle',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: context.colors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 48),
-
-                        // Username / Email Field
-                        TextFormField(
-                          controller: _emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          style: TextStyle(color: context.colors.textPrimary),
-                          decoration: InputDecoration(
-                            labelText: 'Identifiant / E-mail',
-                            labelStyle:
-                                TextStyle(color: context.colors.textSecondary),
-                            prefixIcon: Icon(Icons.person_outline,
-                                color: context.colors.textSecondary),
-                            hintText: 'Entrez votre identifiant',
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Veuillez saisir votre identifiant';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Password Field
-                        TextFormField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          style: TextStyle(color: context.colors.textPrimary),
-                          decoration: InputDecoration(
-                            labelText: 'Mot de passe',
-                            labelStyle:
-                                TextStyle(color: context.colors.textSecondary),
-                            prefixIcon: Icon(Icons.lock_outline,
-                                color: context.colors.textSecondary),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                                color: context.colors.textSecondary,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'AMARNA CLUB',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: colors.textPrimary,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Gestion opérationnelle',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    AppPanel(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            style: TextStyle(
+                                color: colors.textPrimary, fontSize: 16),
+                            decoration: InputDecoration(
+                              labelText: 'Identifiant / E-mail',
+                              labelStyle:
+                                  TextStyle(color: colors.textSecondary),
+                              prefixIcon: Icon(Icons.person_outline_rounded,
+                                  color: colors.textSecondary),
+                              hintText: 'Entrez votre identifiant',
                             ),
-                            hintText: 'Entrez votre mot de passe',
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Veuillez saisir votre identifiant';
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez saisir votre mot de passe';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Remember me toggle
-                        Row(
-                          children: [
-                            SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: Checkbox(
-                                value: _rememberMe,
-                                activeColor: context.colors.accentPrimary,
-                                checkColor: Colors.black,
-                                side: BorderSide(
-                                    color: context.colors.border, width: 1.5),
-                                onChanged: (value) {
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            onFieldSubmitted: (_) => _handleLogin(),
+                            style: TextStyle(
+                                color: colors.textPrimary, fontSize: 16),
+                            decoration: InputDecoration(
+                              labelText: 'Mot de passe',
+                              labelStyle:
+                                  TextStyle(color: colors.textSecondary),
+                              prefixIcon: Icon(Icons.lock_outline_rounded,
+                                  color: colors.textSecondary),
+                              suffixIcon: IconButton(
+                                tooltip: _obscurePassword
+                                    ? 'Afficher le mot de passe'
+                                    : 'Masquer le mot de passe',
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_outlined
+                                      : Icons.visibility_outlined,
+                                  color: colors.textSecondary,
+                                ),
+                                onPressed: () {
                                   setState(() {
-                                    _rememberMe = value ?? false;
+                                    _obscurePassword = !_obscurePassword;
                                   });
                                 },
                               ),
+                              hintText: 'Entrez votre mot de passe',
                             ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Se souvenir de moi',
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                                fontSize: 14,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez saisir votre mot de passe';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          // Whole row toggles the option; the box is 48dp.
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => setState(() => _rememberMe = !_rememberMe),
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(minHeight: 48),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: _rememberMe,
+                                    activeColor: colors.accentPrimary,
+                                    checkColor: colors.textOnAccent,
+                                    side: BorderSide(
+                                        color: colors.border, width: 1.5),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _rememberMe = value ?? false;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'Se souvenir de moi',
+                                      style: TextStyle(
+                                        color: colors.textSecondary,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Login button
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: context.colors.accentPrimary,
-                            foregroundColor: context.colors.textOnAccent,
-                            minimumSize: const Size(double.infinity, 52),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: authState.status == AuthStatus.authenticating
-                              ? null
-                              : _handleLogin,
-                          child: authState.status == AuthStatus.authenticating
-                              ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Connexion'),
-                        ),
-                        const SizedBox(height: 48),
-
-                        // Biometrics hint
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.fingerprint,
-                              color: context.colors.textSecondary
-                                  .withValues(alpha: 0.8),
-                              size: 24,
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: colors.accentPrimary,
+                              foregroundColor: colors.textOnAccent,
+                              minimumSize: const Size.fromHeight(56),
+                              textStyle: const TextStyle(
+                                  fontSize: 17, fontWeight: FontWeight.w800),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Connexion biometrique disponible',
-                              style: TextStyle(
-                                color: context.colors.textSecondary
-                                    .withValues(alpha: 0.8),
-                                fontSize: 13,
-                              ),
-                            ),
-                          ],
+                            onPressed: authenticating ? null : _handleLogin,
+                            child: authenticating
+                                ? SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: colors.textOnAccent,
+                                    ),
+                                  )
+                                : const Text('Connexion'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.fingerprint_rounded,
+                          color: colors.textSecondary.withValues(alpha: 0.8),
+                          size: 24,
                         ),
-                        const SizedBox(height: 40),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Connexion biométrique disponible',
+                          style: TextStyle(
+                            color: colors.textSecondary.withValues(alpha: 0.8),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 32),
+                  ],
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );

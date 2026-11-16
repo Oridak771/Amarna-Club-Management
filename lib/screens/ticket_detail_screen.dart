@@ -7,20 +7,26 @@ import '../models/work_ticket.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 import '../ui/ticket_ui_adapter.dart';
-import '../widgets/priority_indicator.dart';
+import '../widgets/app_layout.dart';
 
+/// Detail of one incident or maintenance ticket.
+///
+/// The primary action (take over, then resolve) is pinned to the bottom bar.
+/// Everything else scrolls: details, technician, photos, timeline, comments.
 class TicketDetailScreen extends ConsumerStatefulWidget {
-  final String id;
   const TicketDetailScreen({super.key, required this.id});
 
+  final String id;
+
   @override
-  ConsumerState<TicketDetailScreen> createState() =>
-      _TicketDetailScreenState();
+  ConsumerState<TicketDetailScreen> createState() => _TicketDetailScreenState();
 }
 
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   final _commentController = TextEditingController();
 
+  // Technicians known to the tablet. Odoo has the users, but the app does not
+  // read them yet (see the report: res.users needs a read endpoint).
   static const _technicians = [
     'Karim (Technicien)',
     'Mourad (Technicien)',
@@ -41,258 +47,296 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       (t) => t.id == widget.id,
       orElse: () => WorkTicket(
         id: widget.id,
-        title: 'Ticket inconnu',
-        description: 'Aucune description disponible.',
+        title: 'Ticket introuvable',
+        description: '',
         activityId: '',
-        activityName: 'Inconnu',
+        activityName: '',
         type: TicketType.anomaly,
         priority: TicketPriority.low,
         status: TicketStatus.open,
         dateCreated: DateTime.now(),
       ),
     );
+    final isKnown = tickets.any((t) => t.id == widget.id);
+    final colors = context.colors;
+    final priorityColor = switch (ticket.priority) {
+      TicketPriority.critical => colors.priorityCritical,
+      TicketPriority.high => colors.priorityHigh,
+      TicketPriority.medium => colors.priorityMedium,
+      TicketPriority.low => colors.priorityLow,
+    };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(ticket.type == TicketType.anomaly
-            ? 'Détail incident'
-            : 'Détail intervention'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scanner QR',
-            onPressed: () => context.push('/scan'),
-          ),
-        ],
+    final isIncident = ticket.type == TicketType.anomaly;
+
+    return AppPage(
+      title: isIncident ? 'Incident' : 'Intervention',
+      subtitle: ticket.activityName.isEmpty ? null : ticket.activityName,
+      leading: IconButton(
+        tooltip: 'Retour',
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () => context.canPop()
+            ? context.pop()
+            : context.go('/tickets'),
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 820),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
+      actions: [
+        IconButton(
+          tooltip: 'Scanner QR',
+          icon: const Icon(Icons.qr_code_scanner_rounded),
+          onPressed: () => context.push('/scan'),
+        ),
+      ],
+      bottomBar: isKnown && ticket.status != TicketStatus.resolved
+          ? _PrimaryAction(ticket: ticket, isIncident: isIncident)
+          : null,
+      body: !isKnown
+          ? const AppErrorState(
+              title: 'Ticket introuvable',
+              message:
+                  'Ce ticket n’est plus dans la liste synchronisée. Revenez à la liste et actualisez.',
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeaderCard(ticket),
-                const SizedBox(height: 16),
-                _buildInfoCard(ticket),
+                AppPanel(
+                  accentColor: ticket.isOverdue ? colors.danger : priorityColor,
+                  padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+                  child: _Header(ticket: ticket),
+                ),
+                const SizedBox(height: 14),
+                AppPanel(child: _Details(ticket: ticket, technicians: _technicians)),
                 if (ticket.photoPaths.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  _buildPhotosCard(ticket),
+                  const SizedBox(height: 14),
+                  _PhotosPanel(paths: ticket.photoPaths),
                 ],
-                const SizedBox(height: 16),
-                if (ticket.status != TicketStatus.resolved) ...[
-                  _buildActions(ticket),
-                  const SizedBox(height: 16),
-                ],
-                _buildTimelineCard(ticket),
-                const SizedBox(height: 12),
-                _buildCommentComposer(ticket),
+                const SizedBox(height: 14),
+                AppPanel(child: _Timeline(events: ticket.events)),
+                const SizedBox(height: 14),
+                _CommentComposer(
+                  controller: _commentController,
+                  onSend: () => _sendComment(ticket),
+                ),
               ],
             ),
-          ),
-        ),
-      ),
     );
   }
 
-  // -- Header -----------------------------------------------------------
+  Future<void> _sendComment(WorkTicket ticket) async {
+    final text = _commentController.text.trim();
+    if (text.isEmpty) return;
+    _commentController.clear();
+    await ref.read(ticketsProvider.notifier).addComment(ticket.id, text);
+  }
+}
 
-  Widget _buildHeaderCard(WorkTicket ticket) {
+// ---------------------------------------------------------------------------
+
+class _Header extends StatelessWidget {
+  const _Header({required this.ticket});
+
+  final WorkTicket ticket;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    return PriorityIndicator(
-      priority: ticket.priority,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final statusColor = ticket.status.resolveColor(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
           children: [
-            Row(
-              children: [
-                _badge(ticket.typeTextFrench,
-                    ticket.type.resolveColor(context)),
-                const SizedBox(width: 8),
-                _badge(ticket.priorityTextFrench,
-                    ticket.priority.resolveColor(context)),
-                const Spacer(),
-                _badge(ticket.statusTextFrench,
-                    ticket.status.resolveColor(context)),
-              ],
+            AppPill(
+              label: ticket.typeTextFrench,
+              color: ticket.type.resolveColor(context),
             ),
-            const SizedBox(height: 12),
-            Text(ticket.title,
-                style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 16,
-              runSpacing: 6,
-              children: [
-                _iconLabel(
-                  Icons.grid_view_rounded,
-                  ticket.activityName,
-                  colors.getActivityColor(ticket.activityId),
-                ),
-                if (ticket.assetName != null)
-                  _iconLabel(Icons.settings_rounded, ticket.assetName!,
-                      colors.textSecondary),
-                _iconLabel(
-                  Icons.person_outline_rounded,
-                  ticket.assignedTechnician ?? 'Non assigné',
-                  ticket.assignedTechnician != null
-                      ? colors.textSecondary
-                      : colors.textMuted,
-                ),
-              ],
+            AppPill(
+              label: ticket.priorityTextFrench,
+              color: ticket.priority.resolveColor(context),
+              icon: Icons.flag_rounded,
             ),
+            AppPill(label: ticket.statusTextFrench, color: statusColor),
+            if (ticket.isOverdue)
+              AppPill(
+                label: 'En retard',
+                color: colors.danger,
+                icon: Icons.schedule_rounded,
+                filled: true,
+              ),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+        Text(
+          ticket.title,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            height: 1.2,
+            color: colors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 16,
+          runSpacing: 6,
+          children: [
+            _IconLabel(
+              icon: Icons.grid_view_rounded,
+              label: ticket.activityName.isEmpty
+                  ? 'Activité non renseignée'
+                  : ticket.activityName,
+              color: colors.getActivityColor(ticket.activityId),
+            ),
+            if (ticket.assetName != null)
+              _IconLabel(
+                icon: Icons.settings_rounded,
+                label: ticket.assetName!,
+                color: colors.textSecondary,
+              ),
+          ],
+        ),
+      ],
     );
   }
+}
 
-  Widget _badge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        style:
-            TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w800),
-      ),
-    );
-  }
+class _IconLabel extends StatelessWidget {
+  const _IconLabel({required this.icon, required this.label, required this.color});
 
-  Widget _iconLabel(IconData icon, String label, Color color) {
+  final IconData icon;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 6),
-        Text(label,
-            style: TextStyle(
-                color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ],
     );
   }
+}
 
-  // -- Info -------------------------------------------------------------
+// ---------------------------------------------------------------------------
 
-  Widget _buildInfoCard(WorkTicket ticket) {
+class _Details extends ConsumerWidget {
+  const _Details({required this.ticket, required this.technicians});
+
+  final WorkTicket ticket;
+  final List<String> technicians;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final dateFormat = DateFormat('dd/MM/yyyy à HH:mm');
+    final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
+    final assigned = ticket.assignedTechnician;
 
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Description',
-              style: TextStyle(color: colors.textSecondary, fontSize: 12)),
-          const SizedBox(height: 6),
-          Text(
-            ticket.description.isNotEmpty
-                ? ticket.description
-                : 'Aucune description fournie.',
-            style: TextStyle(
-                color: colors.textPrimary, fontSize: 14, height: 1.4),
-          ),
-          Divider(height: 24, color: colors.border),
-          Row(
-            children: [
-              Expanded(
-                child: _dateColumn(
-                  'Créé le',
-                  dateFormat.format(ticket.dateCreated),
-                  Icons.calendar_today_rounded,
-                  colors.textSecondary,
-                ),
-              ),
-              if (ticket.dateDue != null)
-                Expanded(
-                  child: _dateColumn(
-                    'Échéance',
-                    dateFormat.format(ticket.dateDue!),
-                    Icons.access_alarm_rounded,
-                    ticket.isOverdue ? colors.danger : colors.textSecondary,
-                  ),
-                ),
-              if (ticket.dateCompleted != null)
-                Expanded(
-                  child: _dateColumn(
-                    'Clôturé le',
-                    dateFormat.format(ticket.dateCompleted!),
-                    Icons.check_circle_outline_rounded,
-                    colors.success,
-                  ),
-                ),
-            ],
-          ),
-          Divider(height: 24, color: colors.border),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  ticket.assignedTechnician == null
-                      ? 'Aucun technicien assigné'
-                      : 'Assigné à ${ticket.assignedTechnician}',
-                  style: TextStyle(
-                    color: ticket.assignedTechnician == null
-                        ? colors.textMuted
-                        : colors.textPrimary,
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _pickTechnician(ticket),
-                icon: const Icon(Icons.person_add_alt_rounded, size: 18),
-                label: Text(ticket.assignedTechnician == null
-                    ? 'Assigner'
-                    : 'Réassigner'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _dateColumn(String label, String value, IconData icon, Color color) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: color, fontSize: 12)),
+        Text(
+          'Description',
+          style: TextStyle(
+            color: colors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         const SizedBox(height: 6),
+        Text(
+          ticket.description.isNotEmpty
+              ? ticket.description
+              : 'Aucune description fournie.',
+          style: TextStyle(
+            color: ticket.description.isNotEmpty
+                ? colors.textPrimary
+                : colors.textMuted,
+            fontSize: 15,
+            height: 1.45,
+          ),
+        ),
+        Divider(height: 28, color: colors.border),
+        Wrap(
+          spacing: 24,
+          runSpacing: 14,
+          children: [
+            _DateItem(
+              label: 'Créé le',
+              value: dateFormat.format(ticket.dateCreated),
+              icon: Icons.calendar_today_rounded,
+              color: colors.textSecondary,
+            ),
+            if (ticket.dateDue != null)
+              _DateItem(
+                label: 'Échéance',
+                value: dateFormat.format(ticket.dateDue!),
+                icon: Icons.alarm_rounded,
+                color: ticket.isOverdue ? colors.danger : colors.textSecondary,
+              ),
+            if (ticket.dateCompleted != null)
+              _DateItem(
+                label: 'Clôturé le',
+                value: dateFormat.format(ticket.dateCompleted!),
+                icon: Icons.check_circle_outline_rounded,
+                color: colors.success,
+              ),
+          ],
+        ),
+        Divider(height: 28, color: colors.border),
         Row(
           children: [
-            Icon(icon, size: 14, color: color),
-            const SizedBox(width: 6),
-            Text(value,
+            Icon(Icons.person_outline_rounded, color: colors.textSecondary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                assigned ?? 'Aucun technicien assigné',
                 style: TextStyle(
-                    color: context.colors.textPrimary, fontSize: 13)),
+                  color: assigned == null ? colors.textMuted : colors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: () => _pickTechnician(context, ref),
+              icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+              label: Text(assigned == null ? 'Assigner' : 'Changer'),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Future<void> _pickTechnician(WorkTicket ticket) async {
+  Future<void> _pickTechnician(BuildContext context, WidgetRef ref) async {
     final selected = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text('Assigner un technicien',
-                  style: Theme.of(sheetContext).textTheme.titleLarge),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              child: Text(
+                'Assigner un technicien',
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
             ),
-            for (final tech in _technicians)
+            for (final tech in technicians)
               ListTile(
+                minVerticalPadding: 14,
                 leading: const Icon(Icons.person_outline_rounded),
                 title: Text(tech),
                 trailing: ticket.assignedTechnician == tech
@@ -311,36 +355,144 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           .assignTechnician(ticket.id, selected);
     }
   }
+}
 
-  // -- Photos -----------------------------------------------------------
+class _DateItem extends StatelessWidget {
+  const _DateItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
 
-  Widget _buildPhotosCard(WorkTicket ticket) {
-    return _card(
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 6),
+            Text(
+              value,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+
+class _PrimaryAction extends ConsumerWidget {
+  const _PrimaryAction({required this.ticket, required this.isIncident});
+
+  final WorkTicket ticket;
+  final bool isIncident;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final notifier = ref.read(ticketsProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (ticket.status == TicketStatus.open) {
+      return FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: colors.warning,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(56),
+        ),
+        icon: const Icon(Icons.play_arrow_rounded, size: 26),
+        label: const Text('Prendre en charge'),
+        onPressed: () {
+          notifier.updateTicketStatus(ticket.id, TicketStatus.inProgress);
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Ticket pris en charge ✓')),
+          );
+        },
+      );
+    }
+
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: colors.success,
+        foregroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(56),
+      ),
+      icon: const Icon(Icons.check_rounded, size: 26),
+      label: Text(isIncident ? 'Marquer résolu' : 'Terminer l’intervention'),
+      onPressed: () {
+        notifier.updateTicketStatus(ticket.id, TicketStatus.resolved);
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Ticket résolu ✓')),
+        );
+      },
+    );
+  }
+}
+
+class _PhotosPanel extends StatelessWidget {
+  const _PhotosPanel({required this.paths});
+
+  final List<String> paths;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AppPanel(
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Photos (${ticket.photoPaths.length})',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'Photos (${paths.length})',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 120,
+            height: 128,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: ticket.photoPaths.length,
+              itemCount: paths.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) => ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
                 child: Image.asset(
-                  ticket.photoPaths[index],
-                  width: 160,
-                  height: 120,
+                  paths[index],
+                  width: 170,
+                  height: 128,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
-                    width: 160,
-                    height: 120,
-                    color: context.colors.surface,
+                    width: 170,
+                    height: 128,
+                    color: colors.surface,
+                    alignment: Alignment.center,
                     child: Icon(Icons.broken_image_outlined,
-                        color: context.colors.textMuted),
+                        color: colors.textMuted),
                   ),
                 ),
               ),
@@ -350,107 +502,55 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
       ),
     );
   }
+}
 
-  // -- Actions ----------------------------------------------------------
+class _Timeline extends StatelessWidget {
+  const _Timeline({required this.events});
 
-  Widget _buildActions(WorkTicket ticket) {
+  final List<TicketEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final notifier = ref.read(ticketsProvider.notifier);
-
-    return Row(
+    final ordered = events.reversed.toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (ticket.status == TicketStatus.open)
-          Expanded(
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.warning,
-                foregroundColor: Colors.black,
-                minimumSize: const Size(0, 52),
-              ),
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: const Text('Prendre en charge'),
-              onPressed: () {
-                notifier.updateTicketStatus(
-                    ticket.id, TicketStatus.inProgress);
-                _snack('Ticket pris en charge ✓');
-              },
-            ),
+        Text(
+          'Historique',
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: colors.textPrimary,
           ),
-        if (ticket.status == TicketStatus.inProgress)
-          Expanded(
-            child: FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.success,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(0, 52),
-              ),
-              icon: const Icon(Icons.check_rounded),
-              label: Text(ticket.type == TicketType.anomaly
-                  ? 'Marquer résolu'
-                  : 'Terminer l\'intervention'),
-              onPressed: () {
-                notifier.updateTicketStatus(ticket.id, TicketStatus.resolved);
-                _snack('Ticket résolu ✓');
-              },
-            ),
-          ),
+        ),
+        const SizedBox(height: 14),
+        if (ordered.isEmpty)
+          Text(
+            'Aucun évènement enregistré.',
+            style: TextStyle(color: colors.textMuted, fontSize: 13),
+          )
+        else
+          for (var i = 0; i < ordered.length; i++)
+            _TimelineRow(event: ordered[i], isLast: i == ordered.length - 1),
       ],
     );
   }
+}
 
-  void _snack(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({required this.event, required this.isLast});
 
-  // -- Timeline & comments ----------------------------------------------
+  final TicketEvent event;
+  final bool isLast;
 
-  Widget _buildTimelineCard(WorkTicket ticket) {
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final events = ticket.events.reversed.toList();
-
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Historique', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 16),
-          if (events.isEmpty)
-            Text(
-              'Aucun évènement enregistré.',
-              style: TextStyle(color: colors.textMuted, fontSize: 13),
-            )
-          else
-            for (var i = 0; i < events.length; i++)
-              _timelineRow(events[i], isLast: i == events.length - 1),
-        ],
-      ),
-    );
-  }
-
-  ({IconData icon, Color color}) _eventStyle(TicketEventType type) {
-    final colors = context.colors;
-    switch (type) {
-      case TicketEventType.created:
-        return (icon: Icons.flag_rounded, color: colors.accentPrimary);
-      case TicketEventType.statusChanged:
-        return (icon: Icons.sync_rounded, color: colors.info);
-      case TicketEventType.commented:
-        return (icon: Icons.chat_bubble_outline_rounded, color: colors.accentSecondary);
-      case TicketEventType.photoAdded:
-        return (icon: Icons.photo_camera_outlined, color: colors.gym);
-      case TicketEventType.assigned:
-        return (icon: Icons.person_add_alt_rounded, color: colors.success);
-    }
-  }
-
-  Widget _timelineRow(TicketEvent event, {required bool isLast}) {
-    final colors = context.colors;
-    final style = _eventStyle(event.type);
+    final style = _styleFor(context, event.type);
     final when = event.at != null
-        ? DateFormat('dd/MM à HH:mm').format(event.at!)
+        ? DateFormat('dd/MM · HH:mm').format(event.at!)
         : '';
-
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -458,8 +558,8 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
           Column(
             children: [
               Container(
-                width: 30,
-                height: 30,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: style.color.withValues(alpha: 0.14),
                   shape: BoxShape.circle,
@@ -467,45 +567,34 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                 child: Icon(style.icon, size: 16, color: style.color),
               ),
               if (!isLast)
-                Expanded(
-                  child: Container(width: 2, color: colors.border),
-                ),
+                Expanded(child: Container(width: 2, color: colors.border)),
             ],
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 18),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 18, top: 4),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          event.message ?? '',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                      Text(when,
-                          style: TextStyle(
-                              color: colors.textMuted, fontSize: 11)),
-                    ],
-                  ),
-                  if (event.author != null && event.author!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        event.author!,
-                        style: TextStyle(
-                            color: colors.textSecondary, fontSize: 12),
-                      ),
+                  Text(
+                    event.message ?? '',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      height: 1.35,
                     ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      if (event.author != null && event.author!.isNotEmpty)
+                        event.author!,
+                      when,
+                    ].join(' · '),
+                    style: TextStyle(color: colors.textMuted, fontSize: 12),
+                  ),
                 ],
               ),
             ),
@@ -515,53 +604,64 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
     );
   }
 
-  Widget _buildCommentComposer(WorkTicket ticket) {
+  static ({IconData icon, Color color}) _styleFor(
+      BuildContext context, TicketEventType type) {
+    final colors = context.colors;
+    switch (type) {
+      case TicketEventType.created:
+        return (icon: Icons.flag_rounded, color: colors.accentPrimary);
+      case TicketEventType.statusChanged:
+        return (icon: Icons.sync_rounded, color: colors.info);
+      case TicketEventType.commented:
+        return (
+          icon: Icons.chat_bubble_outline_rounded,
+          color: colors.accentSecondary
+        );
+      case TicketEventType.photoAdded:
+        return (icon: Icons.photo_camera_outlined, color: colors.gym);
+      case TicketEventType.assigned:
+        return (icon: Icons.person_add_alt_rounded, color: colors.success);
+    }
+  }
+}
+
+class _CommentComposer extends StatelessWidget {
+  const _CommentComposer({required this.controller, required this.onSend});
+
+  final TextEditingController controller;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         Expanded(
           child: TextField(
-            controller: _commentController,
+            controller: controller,
+            minLines: 1,
+            maxLines: 4,
             textInputAction: TextInputAction.send,
             decoration: const InputDecoration(
               hintText: 'Ajouter un commentaire…',
               prefixIcon: Icon(Icons.chat_bubble_outline_rounded),
             ),
-            onSubmitted: (_) => _sendComment(ticket),
+            onSubmitted: (_) => onSend(),
           ),
         ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 52,
-          height: 52,
+          width: 56,
+          height: 56,
           child: FilledButton(
-            onPressed: () => _sendComment(ticket),
-            style: FilledButton.styleFrom(padding: EdgeInsets.zero),
-            child: const Icon(Icons.send_rounded, size: 20),
+            onPressed: onSend,
+            style: FilledButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(56, 56),
+            ),
+            child: const Icon(Icons.send_rounded, size: 22),
           ),
         ),
       ],
-    );
-  }
-
-  Future<void> _sendComment(WorkTicket ticket) async {
-    final text = _commentController.text.trim();
-    if (text.isEmpty) return;
-    _commentController.clear();
-    await ref.read(ticketsProvider.notifier).addComment(ticket.id, text);
-  }
-
-  // -- Shared card decoration --------------------------------------------
-
-  Widget _card({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: child,
     );
   }
 }

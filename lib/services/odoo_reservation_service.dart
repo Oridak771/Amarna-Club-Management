@@ -24,7 +24,7 @@ class OdooReservationService {
     'people_count',
     'start_at',
     'end_at',
-    'status_normalized',
+    'status',
     'notes',
   ];
 
@@ -114,7 +114,7 @@ class OdooReservationService {
       activityName: activityName.isEmpty ? activityCode : activityName,
       clientName: clientName,
       peopleCount: (row['people_count'] as num?)?.toInt() ?? 0,
-      status: _parseStatus(_text(row['status_normalized'])),
+      status: _parseStatus(_text(row['status'])),
       startAt: startAt,
       endAt: endAt,
       notes: notes.isEmpty ? null : notes,
@@ -123,9 +123,10 @@ class OdooReservationService {
 
   String _text(Object? value) => value is String ? value : '';
 
-  ReservationStatus _parseStatus(String normalized) {
-    switch (normalized) {
-      case 'checked_in':
+  /// Odoo `status` selection: pending, confirmed, checkedin, cancelled.
+  ReservationStatus _parseStatus(String status) {
+    switch (status) {
+      case 'checkedin':
         return ReservationStatus.checkedIn;
       case 'confirmed':
         return ReservationStatus.confirmed;

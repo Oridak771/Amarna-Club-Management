@@ -6,9 +6,10 @@ const _storage = FlutterSecureStorage();
 const _storageKey = 'theme_mode';
 
 /// Controls the active [ThemeMode] across the app and persists the choice.
-/// Default is [ThemeMode.system] so the app follows the OS setting.
+/// Default is [ThemeMode.light]: the club's front-desk tablets are used in
+/// daylight. The user can still switch to dark in Plus → Profil.
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
-  ThemeModeNotifier() : super(ThemeMode.system) {
+  ThemeModeNotifier() : super(ThemeMode.light) {
     _restore();
   }
 
@@ -17,7 +18,7 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
     if (saved == null) return;
     state = ThemeMode.values.firstWhere(
       (mode) => mode.name == saved,
-      orElse: () => ThemeMode.system,
+      orElse: () => ThemeMode.light,
     );
   }
 

@@ -34,7 +34,7 @@ class GaugeCard extends StatelessWidget {
     return Card(
       color: context.colors.backgroundSecondary,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(
           color: isSafe
               ? context.colors.border
@@ -51,7 +51,7 @@ class GaugeCard extends StatelessWidget {
               title,
               style: TextStyle(
                 color: context.colors.textSecondary,
-                fontSize: isHero ? 14 : 12,
+                fontSize: isHero ? 15 : 13,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
@@ -79,7 +79,7 @@ class GaugeCard extends StatelessWidget {
                         value.toStringAsFixed(1),
                         style: TextStyle(
                           color: context.colors.textPrimary,
-                          fontSize: isHero ? 24 : 14,
+                          fontSize: isHero ? 26 : 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -87,7 +87,7 @@ class GaugeCard extends StatelessWidget {
                         unit,
                         style: TextStyle(
                           color: context.colors.textSecondary,
-                          fontSize: isHero ? 12 : 9,
+                          fontSize: isHero ? 13 : 11,
                         ),
                       ),
                     ],
@@ -120,7 +120,7 @@ class GaugeCard extends StatelessWidget {
                 'Limites : $safeMin - $safeMax',
                 style: TextStyle(
                   color: context.colors.textMuted,
-                  fontSize: 10,
+                  fontSize: 12,
                 ),
               ),
             ]

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/app_layout.dart';
 
 class HorseProfileScreen extends ConsumerWidget {
   final String id;
@@ -16,9 +17,13 @@ class HorseProfileScreen extends ConsumerWidget {
     final horse = ref.watch(horseByIdProvider(id));
 
     if (horse == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Cheval introuvable')),
-        body: const Center(child: Text('Ce cheval n\'existe pas.')),
+      return const AppPage(
+        title: 'Cheval introuvable',
+        body: AppEmptyState(
+          icon: Icons.search_off_rounded,
+          title: 'Ce cheval n\'existe pas.',
+          message: 'Revenez à la liste de l\'écurie pour choisir un cheval.',
+        ),
       );
     }
 
@@ -28,42 +33,53 @@ class HorseProfileScreen extends ConsumerWidget {
       HorseStatus.injured => colors.danger,
     };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(horse.name),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+    return AppPage(
+      title: horse.name,
+      subtitle: '${horse.breed} · ${horse.age} ans · ${horse.boxNumber}',
+      maxWidth: 860,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildIdentityCard(context, horse, statusColor),
+          const SizedBox(height: 14),
+          _buildStatusSelector(context, ref, horse),
+          if (horse.vetNote != null) ...[
+            const SizedBox(height: 14),
+            _buildVetNote(context, horse),
+          ],
+          const SizedBox(height: 14),
+          _buildHealthCard(context, horse),
+          const SizedBox(height: 14),
+          _buildCareCard(context, horse),
+          const SizedBox(height: 14),
+          _buildFeedingCard(context, horse),
+          const SizedBox(height: 14),
+          _buildRidesCard(context, horse),
+          const SizedBox(height: 22),
+          _buildInjuryButton(context, ref, horse),
+        ],
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 860),
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildIdentityCard(context, horse, statusColor),
-              const SizedBox(height: 16),
-              _buildStatusSelector(context, ref, horse),
-              if (horse.vetNote != null) ...[
-                const SizedBox(height: 16),
-                _buildVetNote(context, horse),
-              ],
-              const SizedBox(height: 16),
-              _buildHealthCard(context, horse),
-              const SizedBox(height: 16),
-              _buildCareCard(context, horse),
-              const SizedBox(height: 16),
-              _buildFeedingCard(context, horse),
-              const SizedBox(height: 16),
-              _buildRidesCard(context, horse),
-              const SizedBox(height: 16),
-              _buildInjuryButton(context, ref, horse),
-              const SizedBox(height: 32),
-            ],
-          ),
-        ),
+    );
+  }
+
+  // ── Injury shortcut (inline, not sticky: it changes the horse status) ──
+
+  Widget _buildInjuryButton(BuildContext context, WidgetRef ref, Horse horse) {
+    final colors = context.colors;
+    return OutlinedButton.icon(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colors.danger,
+        side: BorderSide(color: colors.danger.withValues(alpha: 0.5)),
+        minimumSize: const Size.fromHeight(56),
       ),
+      onPressed: () {
+        ref
+            .read(horsesProvider.notifier)
+            .updateStatus(horse.id, HorseStatus.injured);
+        context.go('/tickets/nouveau');
+      },
+      icon: const Icon(Icons.healing_outlined),
+      label: Text('Signaler une blessure — ${horse.name}'),
     );
   }
 
@@ -71,62 +87,38 @@ class HorseProfileScreen extends ConsumerWidget {
 
   Widget _buildIdentityCard(
       BuildContext context, Horse horse, Color statusColor) {
-    final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            statusColor.withValues(alpha: 0.12),
-            colors.backgroundSecondary,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-      ),
+    return AppPanel(
+      color: statusColor.withValues(alpha: 0.08),
       child: Row(
         children: [
           Container(
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
-              color: statusColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
+              color: statusColor.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(18),
             ),
             child: Icon(Icons.bedroom_baby_outlined,
-                size: 38, color: statusColor),
+                size: 34, color: statusColor),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(horse.name,
-                    style: Theme.of(context).textTheme.headlineMedium),
-                const SizedBox(height: 4),
                 Text(
-                  '${horse.breed} · ${horse.age} ans · ${horse.boxNumber}',
-                  style:
-                      TextStyle(color: colors.textSecondary, fontSize: 13.5),
+                  'Statut actuel',
+                  style: TextStyle(
+                    color: context.colors.textSecondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    horse.status.labelFrench,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 12.5,
-                    ),
-                  ),
+                const SizedBox(height: 6),
+                AppPill(
+                  label: horse.status.labelFrench,
+                  color: statusColor,
+                  filled: true,
                 ),
               ],
             ),
@@ -139,15 +131,18 @@ class HorseProfileScreen extends ConsumerWidget {
   // ── Status change (functional) ─────────────────────────────
 
   Widget _buildStatusSelector(BuildContext context, WidgetRef ref, Horse horse) {
-    return _card(
-      context,
+    return AppPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Changer le statut',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
+          const SectionTitle(
+            title: 'Changer le statut',
+            icon: Icons.swap_horiz_rounded,
+          ),
           SegmentedButton<HorseStatus>(
+            style: const ButtonStyle(
+              minimumSize: WidgetStatePropertyAll(Size(0, 48)),
+            ),
             segments: const [
               ButtonSegment(
                 value: HorseStatus.available,
@@ -184,18 +179,13 @@ class HorseProfileScreen extends ConsumerWidget {
 
   Widget _buildVetNote(BuildContext context, Horse horse) {
     final colors = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colors.danger.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.danger.withValues(alpha: 0.3)),
-      ),
+    return AppPanel(
+      color: colors.danger.withValues(alpha: 0.07),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.medical_information_outlined,
-              color: colors.danger, size: 20),
+              color: colors.danger, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -206,14 +196,14 @@ class HorseProfileScreen extends ConsumerWidget {
                   style: TextStyle(
                     color: colors.danger,
                     fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   horse.vetNote!,
                   style: TextStyle(
-                      color: colors.textPrimary, fontSize: 13, height: 1.4),
+                      color: colors.textPrimary, fontSize: 14, height: 1.4),
                 ),
               ],
             ),
@@ -227,13 +217,14 @@ class HorseProfileScreen extends ConsumerWidget {
 
   Widget _buildHealthCard(BuildContext context, Horse horse) {
     final colors = context.colors;
-    return _card(
-      context,
+    return AppPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('État de forme', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 14),
+          const SectionTitle(
+            title: 'État de forme',
+            icon: Icons.favorite_outline_rounded,
+          ),
           _gauge(context, 'Fatigue', horse.fatigue,
               horse.fatigue > 0.7 ? colors.danger : colors.horses,
               invertLabel: true),
@@ -259,10 +250,10 @@ class HorseProfileScreen extends ConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+                style: TextStyle(color: colors.textSecondary, fontSize: 14)),
             Text(display,
                 style: TextStyle(
-                    color: color, fontSize: 13, fontWeight: FontWeight.w800)),
+                    color: color, fontSize: 14, fontWeight: FontWeight.w800)),
           ],
         ),
         const SizedBox(height: 8),
@@ -289,40 +280,41 @@ class HorseProfileScreen extends ConsumerWidget {
         {bool alert = false}) {
       final color = alert ? colors.warning : colors.textSecondary;
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color),
+            Icon(icon, size: 20, color: color),
             const SizedBox(width: 10),
             Expanded(
               child: Text(label,
-                  style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 14)),
             ),
             Text(
               value,
               style: TextStyle(
                 color: alert ? colors.warning : colors.textPrimary,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: alert ? FontWeight.w800 : FontWeight.w600,
               ),
             ),
             if (alert) ...[
               const SizedBox(width: 6),
               Icon(Icons.warning_amber_rounded,
-                  size: 15, color: colors.warning),
+                  size: 16, color: colors.warning),
             ],
           ],
         ),
       );
     }
 
-    return _card(
-      context,
+    return AppPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Carnet de soins', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
+          const SectionTitle(
+            title: 'Carnet de soins',
+            icon: Icons.menu_book_outlined,
+          ),
           if (horse.nextVetVisit != null)
             row(
               Icons.medical_services_outlined,
@@ -354,7 +346,7 @@ class HorseProfileScreen extends ConsumerWidget {
                   : 'Vermifuge recommandé tous les 3 mois — à planifier.',
               style: TextStyle(
                   color: colors.warning,
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600),
             ),
           ],
@@ -367,32 +359,36 @@ class HorseProfileScreen extends ConsumerWidget {
 
   Widget _buildFeedingCard(BuildContext context, Horse horse) {
     final colors = context.colors;
-    return _card(
-      context,
+    return AppPanel(
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               color: colors.success.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(Icons.restaurant_outlined,
-                color: colors.success, size: 22),
+            child:
+                Icon(Icons.restaurant_outlined, color: colors.success, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Alimentation',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Alimentation',
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   horse.diet,
-                  style:
-                      TextStyle(color: colors.textSecondary, fontSize: 13),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
                 ),
               ],
             ),
@@ -406,20 +402,21 @@ class HorseProfileScreen extends ConsumerWidget {
 
   Widget _buildRidesCard(BuildContext context, Horse horse) {
     final colors = context.colors;
-    return _card(
-      context,
+    return AppPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Montes du jour (${horse.ridesToday.length})',
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
+          SectionTitle(
+            title: 'Montes du jour',
+            count: horse.ridesToday.length,
+            icon: Icons.event_note_outlined,
+          ),
           if (horse.ridesToday.isEmpty)
             Text(
               horse.status == HorseStatus.available
                   ? 'Aucune monte planifiée aujourd\'hui.'
                   : 'Pas de monte — ${horse.status.labelFrench.toLowerCase()}.',
-              style: TextStyle(color: colors.textMuted, fontSize: 13),
+              style: TextStyle(color: colors.textMuted, fontSize: 14),
             )
           else
             for (final ride in horse.ridesToday)
@@ -429,7 +426,7 @@ class HorseProfileScreen extends ConsumerWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                          horizontal: 8, vertical: 5),
                       decoration: BoxDecoration(
                         color: colors.horses.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
@@ -438,7 +435,7 @@ class HorseProfileScreen extends ConsumerWidget {
                         ride.timeRange,
                         style: TextStyle(
                           color: colors.horses,
-                          fontSize: 11.5,
+                          fontSize: 12,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -451,11 +448,11 @@ class HorseProfileScreen extends ConsumerWidget {
                           Text(ride.label,
                               style: TextStyle(
                                   color: colors.textPrimary,
-                                  fontSize: 13.5,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w700)),
                           Text(ride.rider,
                               style: TextStyle(
-                                  color: colors.textSecondary, fontSize: 12)),
+                                  color: colors.textSecondary, fontSize: 13)),
                         ],
                       ),
                     ),
@@ -464,43 +461,6 @@ class HorseProfileScreen extends ConsumerWidget {
               ),
         ],
       ),
-    );
-  }
-
-  // ── Injury shortcut ────────────────────────────────────────
-
-  Widget _buildInjuryButton(BuildContext context, WidgetRef ref, Horse horse) {
-    final colors = context.colors;
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: colors.danger,
-        side: BorderSide(color: colors.danger.withValues(alpha: 0.5)),
-        minimumSize: const Size(0, 52),
-      ),
-      onPressed: () {
-        ref
-            .read(horsesProvider.notifier)
-            .updateStatus(horse.id, HorseStatus.injured);
-        context.go('/tickets/nouveau');
-      },
-      icon: const Icon(Icons.healing_outlined),
-      label: Text('Signaler une blessure — ${horse.name}'),
-    );
-  }
-
-  // ── Shared card ────────────────────────────────────────────
-
-  Widget _card(BuildContext context, {required Widget child}) {
-    final colors = context.colors;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
-      child: child,
     );
   }
 }

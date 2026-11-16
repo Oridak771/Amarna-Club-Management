@@ -9,7 +9,11 @@ import '../models/activity.dart';
 import '../models/reservation.dart';
 import '../services/odoo_reservation_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
+/// « Nouvelle réservation » — a short form: activity, slot, client, people.
+///
+/// One sticky primary action at the bottom; every control is at least 48dp.
 class CreateReservationScreen extends ConsumerStatefulWidget {
   const CreateReservationScreen({super.key});
 
@@ -73,15 +77,6 @@ class _CreateReservationScreenState
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.colors.accentPrimary,
-            surface: context.colors.backgroundSecondary,
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -92,15 +87,6 @@ class _CreateReservationScreenState
     final picked = await showTimePicker(
       context: context,
       initialTime: isStart ? _startTime : _endTime,
-      builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: context.colors.accentPrimary,
-            surface: context.colors.backgroundSecondary,
-          ),
-        ),
-        child: child!,
-      ),
     );
     if (picked == null) {
       return;
@@ -127,7 +113,7 @@ class _CreateReservationScreenState
     }
     if (_selectedActivity == null) {
       _showSnack(
-        'Veuillez selectionner une activite',
+        'Veuillez sélectionner une activité',
         context.colors.danger,
       );
       return;
@@ -152,7 +138,7 @@ class _CreateReservationScreenState
 
     if (!endAt.isAfter(startAt)) {
       _showSnack(
-        'L heure de fin doit etre apres l heure de debut.',
+        'L\'heure de fin doit être après l\'heure de début.',
         context.colors.warning,
       );
       return;
@@ -202,7 +188,7 @@ class _CreateReservationScreenState
         return;
       }
       _showSnack(
-        'Reservation creee pour ${_clientNameCtrl.text.trim()}',
+        'Réservation créée pour ${_clientNameCtrl.text.trim()}',
         context.colors.success,
       );
       context.pop();
@@ -211,7 +197,7 @@ class _CreateReservationScreenState
         return;
       }
       _showSnack(
-        'Creation impossible : $error',
+        'Création impossible : $error',
         context.colors.danger,
       );
     } finally {
@@ -224,7 +210,8 @@ class _CreateReservationScreenState
   void _showSnack(String message, Color backgroundColor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, style: const TextStyle(color: Colors.white)),
+        content: Text(message,
+            style: TextStyle(color: context.colors.textOnAccent)),
         backgroundColor: backgroundColor,
       ),
     );
@@ -232,359 +219,320 @@ class _CreateReservationScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nouvelle Reservation'),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _save,
-            child: _isSaving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(
-                    'Enregistrer',
-                    style: TextStyle(
-                      color: context.colors.accentPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-          ),
-        ],
+    final colors = context.colors;
+    return AppPage(
+      title: 'Nouvelle réservation',
+      subtitle: 'Créneau, client et nombre de personnes',
+      maxWidth: 760,
+      leading: IconButton(
+        tooltip: 'Fermer',
+        icon: const Icon(Icons.close_rounded),
+        onPressed: () => context.pop(),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 700;
-          return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(
-              horizontal: isWide ? constraints.maxWidth * 0.15 : 16,
-              vertical: 20,
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sectionLabel('Activite *'),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: _activities.map((act) {
-                      final color = _activityColor(act.id);
-                      final isSelected = _selectedActivity == act.id;
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedActivity = act.id),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
+      bottomBar: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        onPressed: _isSaving ? null : _save,
+        icon: _isSaving
+            ? const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.check_circle_outline_rounded),
+        label: Text(_isSaving
+            ? 'Enregistrement…'
+            : 'Confirmer la réservation'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionLabel('Activité *'),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _activities.map((act) {
+                final color = _activityColor(act.id);
+                final isSelected = _selectedActivity == act.id;
+                return Semantics(
+                  button: true,
+                  selected: isSelected,
+                  label: act.label,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? color.withValues(alpha: 0.16)
+                          : colors.backgroundSecondary,
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusField),
+                      border: Border.all(
+                        color: isSelected ? color : colors.border,
+                        width: isSelected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: InkWell(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusField),
+                      onTap: () => setState(() => _selectedActivity = act.id),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: 52),
+                        child: Padding(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.withValues(alpha: 0.18)
-                                : context.colors.backgroundSecondary,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected ? color : context.colors.border,
-                              width: isSelected ? 1.5 : 1,
-                            ),
-                          ),
+                              horizontal: 16, vertical: 12),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
                                 act.icon,
-                                size: 16,
-                                color: isSelected
-                                    ? color
-                                    : context.colors.textMuted,
+                                size: 20,
+                                color: isSelected ? color : colors.textMuted,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Text(
                                 act.label,
                                 style: TextStyle(
                                   color: isSelected
                                       ? color
-                                      : context.colors.textSecondary,
-                                  fontSize: 13,
+                                      : colors.textSecondary,
+                                  fontSize: 15,
                                   fontWeight: isSelected
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                                      ? FontWeight.w800
+                                      : FontWeight.w600,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionLabel('Date *'),
-                  const SizedBox(height: 8),
-                  _FieldCard(
-                    onTap: _pickDate,
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today,
-                            color: context.colors.accentPrimary, size: 20),
-                        const SizedBox(width: 12),
-                        Text(
-                          DateFormat('EEEE d MMMM yyyy', 'fr_FR')
-                              .format(_selectedDate),
-                          style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const Spacer(),
-                        Icon(Icons.chevron_right,
-                            color: context.colors.textMuted, size: 18),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _sectionLabel('Creneau horaire *'),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _FieldCard(
-                          onTap: () => _pickTime(isStart: true),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Debut',
-                                style: TextStyle(
-                                  color: context.colors.textMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  Icon(Icons.access_time,
-                                      color: context.colors.accentPrimary,
-                                      size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _startTime.format(context),
-                                    style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Icon(Icons.arrow_forward,
-                            color: context.colors.textMuted, size: 18),
-                      ),
-                      Expanded(
-                        child: _FieldCard(
-                          onTap: () => _pickTime(isStart: false),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Fin',
-                                style: TextStyle(
-                                  color: context.colors.textMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  Icon(Icons.access_time_filled,
-                                      color: context.colors.accentPrimary,
-                                      size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _endTime.format(context),
-                                    style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionLabel('Client / Groupe *'),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                    controller: _clientNameCtrl,
-                    hint: 'Ex: Groupe famille, client entreprise...',
-                    icon: Icons.person_outline,
-                    validator: (v) => v == null || v.trim().isEmpty
-                        ? 'Ce champ est requis'
-                        : null,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _sectionLabel('Nb. personnes'),
-                            const SizedBox(height: 8),
-                            _FieldCard(
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _CounterButton(
-                                    icon: Icons.remove,
-                                    onTap: () {
-                                      if (_peopleCount > 1) {
-                                        setState(() => _peopleCount--);
-                                      }
-                                    },
-                                  ),
-                                  Text(
-                                    '$_peopleCount pers.',
-                                    style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  _CounterButton(
-                                    icon: Icons.add,
-                                    onTap: () => setState(() => _peopleCount++),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _sectionLabel('Statut'),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: context.colors.backgroundSecondary,
-                                borderRadius: BorderRadius.circular(12),
-                                border:
-                                    Border.all(color: context.colors.border),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<ReservationStatus>(
-                                  value: _status,
-                                  isExpanded: true,
-                                  dropdownColor:
-                                      context.colors.backgroundSecondary,
-                                  style: TextStyle(
-                                    color: context.colors.textPrimary,
-                                    fontSize: 14,
-                                  ),
-                                  items: _statuses
-                                      .map(
-                                        (s) => DropdownMenuItem(
-                                          value: s,
-                                          child: Text(_statusLabel(s)),
-                                        ),
-                                      )
-                                      .toList(),
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setState(() => _status = val);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _sectionLabel('Notes'),
-                  const SizedBox(height: 8),
-                  _buildTextField(
-                    controller: _notesCtrl,
-                    hint: 'Besoins speciaux, materiel requis...',
-                    icon: Icons.note_alt_outlined,
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton.icon(
-                      onPressed: _isSaving ? null : _save,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.check_circle_outline,
-                              color: Colors.white),
-                      label: Text(
-                        _isSaving
-                            ? 'Enregistrement...'
-                            : 'Confirmer la reservation',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.colors.accentPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 22),
+            _sectionLabel('Date *'),
+            const SizedBox(height: 10),
+            _FieldCard(
+              onTap: _pickDate,
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today_rounded,
+                      color: colors.accentPrimary, size: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      DateFormat('EEEE d MMMM yyyy', 'fr_FR')
+                          .format(_selectedDate),
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: colors.textMuted, size: 22),
                 ],
               ),
             ),
-          );
-        },
+            const SizedBox(height: 22),
+            _sectionLabel('Créneau horaire *'),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _FieldCard(
+                    onTap: () => _pickTime(isStart: true),
+                    child: _timeContent(
+                      'Début',
+                      _startTime.format(context),
+                      Icons.access_time_rounded,
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Icon(Icons.arrow_forward_rounded,
+                      color: colors.textMuted, size: 20),
+                ),
+                Expanded(
+                  child: _FieldCard(
+                    onTap: () => _pickTime(isStart: false),
+                    child: _timeContent(
+                      'Fin',
+                      _endTime.format(context),
+                      Icons.access_time_filled_rounded,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 22),
+            _sectionLabel('Client / Groupe *'),
+            const SizedBox(height: 10),
+            _buildTextField(
+              controller: _clientNameCtrl,
+              hint: 'Ex: Groupe famille, client entreprise…',
+              icon: Icons.person_outline_rounded,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Ce champ est requis'
+                  : null,
+            ),
+            const SizedBox(height: 22),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Two side-by-side fields on tablets; stacked on phones so the
+                // 48dp counter buttons never overflow the field.
+                final people = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel('Nb. personnes'),
+                    const SizedBox(height: 10),
+                    _FieldCard(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _CounterButton(
+                            icon: Icons.remove_rounded,
+                            tooltip: 'Retirer une personne',
+                            onTap: () {
+                              if (_peopleCount > 1) {
+                                setState(() => _peopleCount--);
+                              }
+                            },
+                          ),
+                          Text(
+                            '$_peopleCount pers.',
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          _CounterButton(
+                            icon: Icons.add_rounded,
+                            tooltip: 'Ajouter une personne',
+                            onTap: () => setState(() => _peopleCount++),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+                final status = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionLabel('Statut'),
+                    const SizedBox(height: 10),
+                    Container(
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: colors.backgroundSecondary,
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusField),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<ReservationStatus>(
+                          value: _status,
+                          isExpanded: true,
+                          dropdownColor: colors.backgroundSecondary,
+                          style: TextStyle(
+                            color: colors.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          items: _statuses
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text(_statusLabel(s)),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() => _status = val);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+                if (constraints.maxWidth < 520) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      people,
+                      const SizedBox(height: 22),
+                      status,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: people),
+                    const SizedBox(width: 12),
+                    Expanded(child: status),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 22),
+            _sectionLabel('Notes'),
+            const SizedBox(height: 10),
+            _buildTextField(
+              controller: _notesCtrl,
+              hint: 'Besoins spéciaux, matériel requis…',
+              icon: Icons.note_alt_outlined,
+              maxLines: 3,
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _timeContent(String label, String value, IconData icon) {
+    final colors = context.colors;
+    return Row(
+      children: [
+        Icon(icon, color: colors.accentPrimary, size: 22),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -593,9 +541,9 @@ class _CreateReservationScreenState
       label,
       style: TextStyle(
         color: context.colors.textSecondary,
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.6,
+        fontSize: 13,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.4,
       ),
     );
   }
@@ -607,40 +555,45 @@ class _CreateReservationScreenState
     String? Function(String?)? validator,
     int maxLines = 1,
   }) {
+    final colors = context.colors;
+    final radius = BorderRadius.circular(AppTheme.radiusField);
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       validator: validator,
-      style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
+      style: TextStyle(
+        color: colors.textPrimary,
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 13),
-        prefixIcon: Icon(icon, color: context.colors.textMuted, size: 20),
+        hintStyle: TextStyle(color: colors.textMuted, fontSize: 15),
+        prefixIcon: Icon(icon, color: colors.textMuted, size: 22),
         filled: true,
-        fillColor: context.colors.backgroundSecondary,
+        fillColor: colors.backgroundSecondary,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.colors.border),
+          borderRadius: radius,
+          borderSide: BorderSide(color: colors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.colors.border),
+          borderRadius: radius,
+          borderSide: BorderSide(color: colors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: context.colors.accentPrimary, width: 1.5),
+          borderRadius: radius,
+          borderSide: BorderSide(color: colors.accentPrimary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.colors.danger),
+          borderRadius: radius,
+          borderSide: BorderSide(color: colors.danger),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: context.colors.danger, width: 1.5),
+          borderRadius: radius,
+          borderSide: BorderSide(color: colors.danger, width: 1.5),
         ),
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
@@ -673,17 +626,19 @@ class _FieldCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Material(
-      color: context.colors.backgroundSecondary,
-      borderRadius: BorderRadius.circular(12),
+      color: colors.backgroundSecondary,
+      borderRadius: BorderRadius.circular(AppTheme.radiusField),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusField),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.colors.border),
+            borderRadius: BorderRadius.circular(AppTheme.radiusField),
+            border: Border.all(color: colors.border),
           ),
           child: child,
         ),
@@ -694,23 +649,22 @@ class _FieldCard extends StatelessWidget {
 
 class _CounterButton extends StatelessWidget {
   final IconData icon;
+  final String tooltip;
   final VoidCallback onTap;
 
-  const _CounterButton({required this.icon, required this.onTap});
+  const _CounterButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.colors.surface,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(6),
-          child: Icon(icon, size: 18, color: context.colors.textPrimary),
-        ),
-      ),
+    final colors = context.colors;
+    return IconButton.filledTonal(
+      tooltip: tooltip,
+      onPressed: onTap,
+      icon: Icon(icon, size: 22, color: colors.textPrimary),
     );
   }
 }

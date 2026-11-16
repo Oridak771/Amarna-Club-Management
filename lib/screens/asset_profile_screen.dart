@@ -9,6 +9,7 @@ import '../models/work_ticket.dart';
 import '../providers/assets_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
 class AssetProfileScreen extends ConsumerWidget {
   final String id;
@@ -16,6 +17,7 @@ class AssetProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
     final assets = ref.watch(assetsProvider);
     final asset = assets.firstWhere(
       (a) => a.id == id || a.serialNumber == id,
@@ -32,45 +34,21 @@ class AssetProfileScreen extends ConsumerWidget {
     final isNotFound = asset.name == 'Équipement non répertorié';
 
     if (isNotFound) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Profil Équipement')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.warning_amber_rounded,
-                    size: 64, color: context.colors.danger),
-                const SizedBox(height: 16),
-                Text(
-                  'Équipement introuvable',
-                  style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Le code "$id" ne correspond à aucun équipement enregistré.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: context.colors.textSecondary),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.accentPrimary,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(200, 48),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                  ),
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Scanner à nouveau'),
-                  onPressed: () => context.pushReplacement('/scan'),
-                ),
-              ],
+      return AppPage(
+        title: 'Profil équipement',
+        body: AppEmptyState(
+          icon: Icons.warning_amber_rounded,
+          title: 'Équipement introuvable',
+          message: 'Le code "$id" ne correspond à aucun équipement enregistré.',
+          action: FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: colors.accentPrimary,
+              foregroundColor: colors.textOnAccent,
+              minimumSize: const Size(220, 52),
             ),
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            label: const Text('Scanner à nouveau'),
+            onPressed: () => context.pushReplacement('/scan'),
           ),
         ),
       );
@@ -112,7 +90,7 @@ class AssetProfileScreen extends ConsumerWidget {
               'Maintenance préventive de routine approuvée et finalisée.',
           type: TimelineEventType.maintenance,
           statusLabel: 'Terminé',
-          color: context.colors.success,
+          color: colors.success,
         ));
       }
       events.add(TimelineEvent(
@@ -122,7 +100,7 @@ class AssetProfileScreen extends ConsumerWidget {
             'Installation initiale et configuration des paramètres de fonctionnement.',
         type: TimelineEventType.system,
         statusLabel: 'Actif',
-        color: context.colors.success,
+        color: colors.success,
       ));
     }
 
@@ -130,297 +108,232 @@ class AssetProfileScreen extends ConsumerWidget {
     events.sort((a, b) => b.date.compareTo(a.date));
 
     final dateFormat = DateFormat('dd MMMM yyyy HH:mm', 'fr_FR');
+    final statusColor = asset.status.resolveColor(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fiche Équipement'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+    return AppPage(
+      title: asset.name,
+      subtitle: 'SN ${asset.serialNumber}  •  ID ${asset.id}',
+      maxWidth: 800,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Hero card: category icon and current status
+          AppPanel(
+            padding: const EdgeInsets.all(18),
+            color: statusColor.withValues(alpha: 0.07),
+            child: Row(
               children: [
-                // 1. Hero Photo Card
                 Container(
-                  height: 180,
+                  width: 68,
+                  height: 68,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        context.colors.surface,
-                        context.colors.backgroundSecondary,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: context.colors.border, width: 1.5),
+                    color: statusColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Stack(
+                  child: Icon(
+                    _getCategoryIcon(asset.category),
+                    size: 34,
+                    color: statusColor,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Center Placeholder icon or actual image
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _getCategoryIcon(asset.category),
-                              size: 56,
-                              color: asset.status.resolveColor(context).withValues(alpha: 0.8),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              asset.category,
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        asset.category,
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      // Status Pill
-                      Positioned(
-                        top: 16,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: asset.status.resolveColor(context).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border:
-                                Border.all(color: asset.status.resolveColor(context), width: 1),
-                          ),
-                          child: Text(
-                            asset.statusTextFrench.toUpperCase(),
-                            style: TextStyle(
-                              color: asset.status.resolveColor(context),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 8),
+                      AppPill(
+                        label: asset.statusTextFrench.toUpperCase(),
+                        color: statusColor,
+                        filled: true,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
-
-                // 2. Asset Name & ID Strip
-                Text(
-                  asset.name,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'SN: ${asset.serialNumber}  •  ID: ${asset.id}',
-                  style: TextStyle(
-                    color: context.colors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // 3. Technical Specs Matrix
-                if (asset.technicalSpecs != null &&
-                    asset.technicalSpecs!.isNotEmpty) ...[
-                  Text(
-                    'Spécifications Techniques',
-                    style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: context.colors.backgroundSecondary,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: context.colors.border),
-                    ),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: asset.technicalSpecs!.length,
-                      separatorBuilder: (context, index) =>
-                          Divider(color: context.colors.border, height: 1),
-                      itemBuilder: (context, index) {
-                        final entry =
-                            asset.technicalSpecs!.entries.elementAt(index);
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(entry.key,
-                                  style: TextStyle(
-                                      color: context.colors.textSecondary,
-                                      fontSize: 14)),
-                              Text(entry.value,
-                                  style: TextStyle(
-                                      color: context.colors.textPrimary,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500)),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-
-                // 4. Maintenance Dates Strip
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildDateTile(
-                        context,
-                        'Dernière Maintenance',
-                        asset.lastMaintenance != null
-                            ? DateFormat('dd/MM/yyyy')
-                                .format(asset.lastMaintenance!)
-                            : 'N/A',
-                        Icons.settings_backup_restore,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildDateTile(
-                        context,
-                        'Prochaine Maintenance',
-                        asset.nextMaintenance != null
-                            ? DateFormat('dd/MM/yyyy')
-                                .format(asset.nextMaintenance!)
-                            : 'N/A',
-                        Icons.event,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // 5. Quick Actions Row (glove-friendly minimum touch bounds)
-                Text(
-                  'Actions Rapides',
-                  style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isWide = constraints.maxWidth > 500;
-                    return Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        _buildActionButton(
-                          context,
-                          'Signaler Problème',
-                          Icons.warning_amber_rounded,
-                          context.colors.danger,
-                          width: isWide
-                              ? (constraints.maxWidth - 24) / 3
-                              : double.infinity,
-                          onPressed: () {
-                            context.push('/tickets/nouveau', extra: {
-                              'prefilledAssetId': asset.id,
-                              'prefilledAssetName': asset.name
-                            });
-                          },
-                        ),
-                        _buildActionButton(
-                          context,
-                          'Créer Maintenance',
-                          Icons.build_outlined,
-                          context.colors.info,
-                          width: isWide
-                              ? (constraints.maxWidth - 24) / 3
-                              : double.infinity,
-                          onPressed: () {
-                            context.push('/tickets/nouveau', extra: {
-                              'prefilledAssetId': asset.id,
-                              'prefilledAssetName': asset.name
-                            });
-                          },
-                        ),
-                        _buildActionButton(
-                          context,
-                          'Modifier Statut',
-                          Icons.sync_alt,
-                          context.colors.warning,
-                          width: isWide
-                              ? (constraints.maxWidth - 24) / 3
-                              : double.infinity,
-                          onPressed: () =>
-                              _showStatusBottomSheet(context, ref, asset),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
-
-                // 6. Chronological Events Timeline
-                Text(
-                  'Historique de l\'équipement',
-                  style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                _buildTimelineList(events, dateFormat),
-                const SizedBox(height: 32),
               ],
             ),
           ),
-        ),
+
+          // 2. Technical specs
+          if (asset.technicalSpecs != null &&
+              asset.technicalSpecs!.isNotEmpty) ...[
+            const SizedBox(height: 22),
+            const SectionTitle(
+              title: 'Spécifications techniques',
+              icon: Icons.memory_rounded,
+            ),
+            AppPanel(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (var index = 0;
+                      index < asset.technicalSpecs!.length;
+                      index++) ...[
+                    if (index > 0) Divider(color: colors.border, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              asset.technicalSpecs!.entries
+                                  .elementAt(index)
+                                  .key,
+                              style: TextStyle(
+                                  color: colors.textSecondary, fontSize: 14),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              asset.technicalSpecs!.entries
+                                  .elementAt(index)
+                                  .value,
+                              textAlign: TextAlign.end,
+                              style: TextStyle(
+                                  color: colors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+
+          // 3. Maintenance dates
+          const SizedBox(height: 22),
+          Row(
+            children: [
+              Expanded(
+                child: _buildDateTile(
+                  context,
+                  'Dernière maintenance',
+                  asset.lastMaintenance != null
+                      ? DateFormat('dd/MM/yyyy').format(asset.lastMaintenance!)
+                      : 'N/A',
+                  Icons.settings_backup_restore_rounded,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildDateTile(
+                  context,
+                  'Prochaine maintenance',
+                  asset.nextMaintenance != null
+                      ? DateFormat('dd/MM/yyyy').format(asset.nextMaintenance!)
+                      : 'N/A',
+                  Icons.event_rounded,
+                ),
+              ),
+            ],
+          ),
+
+          // 4. Quick actions (glove-friendly, 56dp)
+          const SizedBox(height: 22),
+          const SectionTitle(
+            title: 'Actions rapides',
+            icon: Icons.bolt_rounded,
+          ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 500;
+              final width =
+                  isWide ? (constraints.maxWidth - 24) / 3 : double.infinity;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  _buildActionButton(
+                    context,
+                    'Signaler un problème',
+                    Icons.warning_amber_rounded,
+                    colors.danger,
+                    width: width,
+                    onPressed: () {
+                      context.push('/tickets/nouveau', extra: {
+                        'prefilledAssetId': asset.id,
+                        'prefilledAssetName': asset.name
+                      });
+                    },
+                  ),
+                  _buildActionButton(
+                    context,
+                    'Créer maintenance',
+                    Icons.build_outlined,
+                    colors.info,
+                    width: width,
+                    onPressed: () {
+                      context.push('/tickets/nouveau', extra: {
+                        'prefilledAssetId': asset.id,
+                        'prefilledAssetName': asset.name
+                      });
+                    },
+                  ),
+                  _buildActionButton(
+                    context,
+                    'Modifier le statut',
+                    Icons.sync_alt_rounded,
+                    colors.warning,
+                    width: width,
+                    onPressed: () =>
+                        _showStatusBottomSheet(context, ref, asset),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          // 5. Chronological events timeline
+          const SizedBox(height: 26),
+          const SectionTitle(
+            title: 'Historique de l\'équipement',
+            icon: Icons.history_rounded,
+          ),
+          _buildTimelineList(context, events, dateFormat),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
 
   Widget _buildDateTile(
       BuildContext context, String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.colors.border),
-      ),
+    final colors = context.colors;
+    return AppPanel(
+      padding: const EdgeInsets.all(14),
       child: Row(
         children: [
-          Icon(icon, color: context.colors.textSecondary, size: 20),
-          const SizedBox(width: 12),
+          Icon(icon, color: colors.textSecondary, size: 22),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label,
                     style: TextStyle(
-                        color: context.colors.textSecondary, fontSize: 11)),
+                        color: colors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
                 const SizedBox(height: 4),
                 Text(value,
                     style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold)),
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -437,26 +350,26 @@ class AssetProfileScreen extends ConsumerWidget {
     required double width,
     required VoidCallback onPressed,
   }) {
+    final colors = context.colors;
     return SizedBox(
       width: width,
-      height: 52, // glove friendly minimum 48px touch bound
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: context.colors.backgroundSecondary,
+      child: OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
           foregroundColor: color,
-          elevation: 0,
+          side: BorderSide(color: color.withValues(alpha: 0.5), width: 1.5),
+          minimumSize: const Size(0, 56),
+          backgroundColor: colors.backgroundSecondary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: color.withValues(alpha: 0.5), width: 1.5),
+            borderRadius: BorderRadius.circular(AppTheme.radiusField),
           ),
         ),
-        icon: Icon(icon, size: 20),
+        icon: Icon(icon, size: 22),
         label: Text(
           label,
           style: TextStyle(
-            color: context.colors.textPrimary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
+            color: colors.textPrimary,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
           ),
         ),
         onPressed: onPressed,
@@ -493,9 +406,10 @@ class AssetProfileScreen extends ConsumerWidget {
 
   void _showStatusBottomSheet(
       BuildContext context, WidgetRef ref, Asset asset) {
+    final colors = context.colors;
     showModalBottomSheet(
       context: context,
-      backgroundColor: context.colors.backgroundSecondary,
+      backgroundColor: colors.backgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -505,39 +419,39 @@ class AssetProfileScreen extends ConsumerWidget {
       builder: (context) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: const EdgeInsets.symmetric(vertical: 12.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
                   child: Text(
                     'Modifier le statut de l\'équipement',
                     style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold),
+                        color: colors.textPrimary,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800),
                   ),
                 ),
-                Divider(color: context.colors.border, height: 1),
+                Divider(color: colors.border, height: 1),
                 _buildStatusSelectionRow(context, ref, asset,
-                    AssetStatus.available, 'Disponible', context.colors.success),
+                    AssetStatus.available, 'Disponible', colors.success),
                 _buildStatusSelectionRow(context, ref, asset, AssetStatus.inUse,
-                    'En utilisation', context.colors.info),
+                    'En utilisation', colors.info),
                 _buildStatusSelectionRow(
                     context,
                     ref,
                     asset,
                     AssetStatus.maintenance,
                     'En maintenance',
-                    context.colors.warning),
+                    colors.warning),
                 _buildStatusSelectionRow(
                     context,
                     ref,
                     asset,
                     AssetStatus.broken,
-                    'Hors-service / En panne',
-                    context.colors.danger),
+                    'Hors service / En panne',
+                    colors.danger),
               ],
             ),
           ),
@@ -554,69 +468,75 @@ class AssetProfileScreen extends ConsumerWidget {
     String label,
     Color color,
   ) {
+    final colors = context.colors;
     final isSelected = asset.status == status;
-    return InkWell(
+    return ListTile(
+      minTileHeight: 56,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      leading: Container(
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? colors.textPrimary : colors.textSecondary,
+          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+          fontSize: 16,
+        ),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check_rounded, color: colors.accentPrimary)
+          : null,
       onTap: () {
         ref.read(assetsProvider.notifier).updateAssetStatus(asset.id, status);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Statut de "${asset.name}" mis à jour : $label'),
-            backgroundColor: color.withValues(alpha: 0.8),
+            backgroundColor: color.withValues(alpha: 0.85),
           ),
         );
       },
-      child: Container(
-        height: 52, // glove friendly minimum 48px
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration:
-                      BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 16),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? context.colors.textPrimary
-                        : context.colors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 15,
-                  ),
-                ),
-              ],
-            ),
-            if (isSelected)
-              Icon(Icons.check, color: context.colors.accentPrimary),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTimelineList(List<TimelineEvent> events, DateFormat dateFormat) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final ev = events[index];
-        final isLast = index == events.length - 1;
+  Widget _buildTimelineList(
+      BuildContext context, List<TimelineEvent> events, DateFormat dateFormat) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var index = 0; index < events.length; index++)
+          _timelineRow(
+            context,
+            events[index],
+            dateFormat,
+            isLast: index == events.length - 1,
+            colors: colors,
+          ),
+      ],
+    );
+  }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Timeline line & indicator
-            Column(
+  Widget _timelineRow(
+    BuildContext context,
+    TimelineEvent ev,
+    DateFormat dateFormat, {
+    required bool isLast,
+    required AppSemanticColors colors,
+  }) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Timeline line & indicator
+          SizedBox(
+            width: 20,
+            child: Column(
               children: [
+                const SizedBox(height: 18),
                 Container(
                   width: 16,
                   height: 16,
@@ -629,87 +549,69 @@ class AssetProfileScreen extends ConsumerWidget {
                     child: Container(
                       width: 6,
                       height: 6,
-                      decoration: BoxDecoration(
-                          color: ev.color, shape: BoxShape.circle),
+                      decoration:
+                          BoxDecoration(color: ev.color, shape: BoxShape.circle),
                     ),
                   ),
                 ),
                 if (!isLast)
-                  Container(
-                    width: 2,
-                    height: 80,
-                    color: context.colors.border,
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: colors.border,
+                    ),
                   ),
               ],
             ),
-            const SizedBox(width: 16),
+          ),
+          const SizedBox(width: 12),
 
-            // Card content
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24.0),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: context.colors.backgroundSecondary,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: context.colors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              ev.title,
-                              style: TextStyle(
-                                color: context.colors.textPrimary,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
+          // Card content
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: AppPanel(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            ev.title,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: ev.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              ev.statusLabel,
-                              style: TextStyle(
-                                  color: ev.color,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dateFormat.format(ev.date),
-                        style: TextStyle(
-                            color: context.colors.textMuted, fontSize: 11),
-                      ),
-                      if (ev.description.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          ev.description,
-                          style: TextStyle(
-                              color: context.colors.textSecondary, fontSize: 13),
                         ),
+                        const SizedBox(width: 8),
+                        AppPill(label: ev.statusLabel, color: ev.color),
                       ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      dateFormat.format(ev.date),
+                      style: TextStyle(color: colors.textMuted, fontSize: 12),
+                    ),
+                    if (ev.description.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        ev.description,
+                        style: TextStyle(
+                            color: colors.textSecondary, fontSize: 14),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 }

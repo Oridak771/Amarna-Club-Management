@@ -1,5 +1,22 @@
 # Amarna Club — Odoo Data Specification
 
+> **Current state (Nov 2026).** The backend is the `amarna_club_*` addons and
+> `abonnement_amarna` in `odoo17/custom_addons`. The planned names below
+> (`amarna.reservation`, `amarna.stock.item`, `maintenance.request`, …) are
+> historical. The live contract is the one in `lib/services/` and in
+> `odoo17/custom_addons/README.md`:
+>
+> | App service | Odoo model |
+> |---|---|
+> | `odoo_club_service.dart` | `amarna.club.activity`, `amarna.club.asset`, `amarna.club.inventory.item`, `amarna.club.horse`, `amarna.club.pool.reading`, `amarna.club.intervention` |
+> | `odoo_reservation_service.dart` | `amarna.club.reservation` (`status`: pending, confirmed, checkedin, cancelled) |
+> | `odoo_subscription_service.dart` | `amarna.subscription` (`subscription_status`, `billing_state`, `amount_due`) |
+>
+> Billing lives in accounting: invoices (`account.move`) linked to the
+> subscription or reservation, paid through the standard payment wizard.
+>
+> The tables below are kept for the original design rationale.
+
 Goal: make **Odoo the single backend/database** for the mobile app. Every screen
 should read (and where relevant write) its data from an Odoo model over JSON-RPC,
 replacing the app's local Isar seed data and hardcoded demo data.

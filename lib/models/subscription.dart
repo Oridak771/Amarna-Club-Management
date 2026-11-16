@@ -9,9 +9,14 @@ class Subscription {
   final int remainingSessions;
   final DateTime? startDate;
   final DateTime? expirationDate;
-  final String status; // subscription_status key
-  final String paymentState; // payment_state key
+  /// Odoo `subscription_status`: draft, active, unpaid, expired, cancelled.
+  final String status;
+
+  /// Odoo `billing_state` of the current period: free, to_invoice, unpaid,
+  /// partial, paid. Driven by the invoices and payments in accounting.
+  final String paymentState;
   final double amountTotal;
+  final double amountDue;
 
   const Subscription({
     required this.id,
@@ -25,6 +30,7 @@ class Subscription {
     required this.status,
     required this.paymentState,
     required this.amountTotal,
+    this.amountDue = 0,
   });
 
   bool get isExpired =>
@@ -35,9 +41,10 @@ class Subscription {
         DateTime.now().day,
       ));
 
-  bool get isActive => status == 'running' || status == 'paid';
+  bool get isActive => status == 'active';
 
-  bool get isPaid => paymentState == 'paid';
+  /// Current period is free or fully paid (access is granted).
+  bool get isPaid => paymentState == 'paid' || paymentState == 'free';
 
   /// Expiring within the next 7 days (and not already expired).
   bool get isExpiringSoon {
@@ -49,14 +56,14 @@ class Subscription {
   String get statusLabelFrench {
     switch (status) {
       case 'draft':
-        return 'Devis';
-      case 'running':
-        return 'En cours';
-      case 'paid':
-        return 'Payé';
-      case 'closed':
-        return 'Clos';
-      case 'cancel':
+        return 'Brouillon';
+      case 'active':
+        return 'Actif';
+      case 'unpaid':
+        return 'Impayé';
+      case 'expired':
+        return 'Expiré';
+      case 'cancelled':
         return 'Annulé';
       default:
         return status;
@@ -65,16 +72,16 @@ class Subscription {
 
   String get paymentLabelFrench {
     switch (paymentState) {
-      case 'paid':
-        return 'Payé';
-      case 'not_paid':
+      case 'free':
+        return 'Gratuit';
+      case 'to_invoice':
+        return 'À facturer';
+      case 'unpaid':
         return 'Non payé';
       case 'partial':
         return 'Partiel';
-      case 'in_payment':
-        return 'En paiement';
-      case 'reversed':
-        return 'Remboursé';
+      case 'paid':
+        return 'Payé';
       default:
         return paymentState;
     }
@@ -105,8 +112,9 @@ class Subscription {
       startDate: _date(row['start_date']),
       expirationDate: _date(row['expiration_date']),
       status: _text(row['subscription_status']),
-      paymentState: _text(row['payment_state']),
+      paymentState: _text(row['billing_state']),
       amountTotal: (row['amount_total'] as num?)?.toDouble() ?? 0,
+      amountDue: (row['amount_due'] as num?)?.toDouble() ?? 0,
     );
   }
 }

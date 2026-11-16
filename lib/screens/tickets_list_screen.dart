@@ -1,5 +1,3 @@
-import 'package:amarna_club/ui/ticket_ui_adapter.dart';
-import 'package:amarna_club/ui/activity_ui_adapter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,9 +6,13 @@ import '../models/work_ticket.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_filter_chip.dart';
-import '../widgets/priority_indicator.dart';
+import '../widgets/app_layout.dart';
 
-/// Ecran liste des tickets consolidés (Anomalies et Interventions de maintenance).
+/// « Interventions » — incidents and maintenance tickets, most urgent first.
+///
+/// Filters sit above the list with live counts, so staff can jump straight to
+/// what is overdue. Tapping a card opens the ticket; the extended button
+/// reports a new incident in one step.
 class TicketsListScreen extends ConsumerStatefulWidget {
   const TicketsListScreen({super.key});
 
@@ -18,384 +20,257 @@ class TicketsListScreen extends ConsumerStatefulWidget {
   ConsumerState<TicketsListScreen> createState() => _TicketsListScreenState();
 }
 
+enum _TicketFilter {
+  all('Tout'),
+  incidents('Incidents'),
+  maintenance('Maintenances'),
+  overdue('En retard'),
+  inProgress('En cours'),
+  resolved('Résolus');
+
+  const _TicketFilter(this.label);
+  final String label;
+
+  bool matches(WorkTicket ticket) {
+    switch (this) {
+      case _TicketFilter.all:
+        return true;
+      case _TicketFilter.incidents:
+        return ticket.type == TicketType.anomaly;
+      case _TicketFilter.maintenance:
+        return ticket.type == TicketType.preventive ||
+            ticket.type == TicketType.corrective;
+      case _TicketFilter.overdue:
+        return ticket.isOverdue;
+      case _TicketFilter.inProgress:
+        return ticket.status == TicketStatus.inProgress;
+      case _TicketFilter.resolved:
+        return ticket.status == TicketStatus.resolved;
+    }
+  }
+}
+
 class _TicketsListScreenState extends ConsumerState<TicketsListScreen> {
-  String _selectedFilter = 'Tout';
-
-  static const List<String> _filters = [
-    'Tout',
-    'Incidents',
-    'Maintenances',
-    'En retard',
-    'En cours',
-    'Resolus',
-  ];
-
-  List<WorkTicket> _applyFilter(List<WorkTicket> tickets) {
-    switch (_selectedFilter) {
-      case 'Incidents':
-        return tickets.where((t) => t.type == TicketType.anomaly).toList();
-      case 'Maintenances':
-        return tickets
-            .where((t) =>
-                t.type == TicketType.preventive ||
-                t.type == TicketType.corrective)
-            .toList();
-      case 'En retard':
-        return tickets.where((t) => t.isOverdue).toList();
-      case 'En cours':
-        return tickets
-            .where((t) => t.status == TicketStatus.inProgress)
-            .toList();
-      case 'Resolus':
-        return tickets.where((t) => t.status == TicketStatus.resolved).toList();
-      default:
-        return tickets;
-    }
-  }
-
-  String _relativeTime(DateTime dateCreated) {
-    final diff = DateTime.now().difference(dateCreated);
-
-    if (diff.inSeconds < 60) {
-      return 'il y a quelques secondes';
-    } else if (diff.inMinutes < 60) {
-      final m = diff.inMinutes;
-      return 'il y a $m minute${m > 1 ? 's' : ''}';
-    } else if (diff.inHours < 24) {
-      final h = diff.inHours;
-      return 'il y a $h heure${h > 1 ? 's' : ''}';
-    } else {
-      final d = diff.inDays;
-      return 'il y a $d jour${d > 1 ? 's' : ''}';
-    }
-  }
+  _TicketFilter _filter = _TicketFilter.all;
 
   @override
   Widget build(BuildContext context) {
-    final allTickets = ref.watch(ticketsProvider);
-    final filteredTickets = _applyFilter(allTickets);
+    final tickets = ref.watch(ticketsProvider);
+    final colors = context.colors;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Interventions'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scanner QR',
-            onPressed: () => context.push('/scan'),
+    final open = tickets.where((t) => t.status != TicketStatus.resolved);
+    final overdue = open.where((t) => t.isOverdue).length;
+
+    final visible = tickets.where(_filter.matches).toList()
+      ..sort(_urgencyOrder);
+
+    return AppPage(
+      title: 'Interventions',
+      subtitle: overdue > 0
+          ? '${open.length} ouverts · $overdue en retard'
+          : '${open.length} ouverts',
+      onRefresh: () => ref.read(ticketsProvider.notifier).pullFromOdoo(),
+      actions: [
+        IconButton.filledTonal(
+          tooltip: 'Scanner QR',
+          icon: const Icon(Icons.qr_code_scanner_rounded),
+          onPressed: () => context.push('/scan'),
+        ),
+      ],
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: colors.danger,
+        foregroundColor: Colors.white,
+        onPressed: () => context.push('/tickets/nouveau'),
+        icon: const Icon(Icons.add_alert_rounded),
+        label: const Text('Signaler'),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 46,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _TicketFilter.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final filter = _TicketFilter.values[index];
+                final count = tickets.where(filter.matches).length;
+                return AppFilterChip(
+                  label: filter.label,
+                  count: count,
+                  isSelected: _filter == filter,
+                  onTap: () => setState(() => _filter = filter),
+                );
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            tooltip: 'Notifications',
-            onPressed: () => context.push('/notifications'),
+          const SizedBox(height: 16),
+          if (visible.isEmpty)
+            AppEmptyState(
+              icon: Icons.task_alt_rounded,
+              title: tickets.isEmpty
+                  ? 'Aucune intervention'
+                  : 'Aucun ticket dans ce filtre',
+              message: tickets.isEmpty
+                  ? 'Signalez un incident dès qu’un problème est constaté.'
+                  : 'Changez de filtre pour voir les autres tickets.',
+              action: tickets.isEmpty
+                  ? FilledButton.icon(
+                      onPressed: () => context.push('/tickets/nouveau'),
+                      icon: const Icon(Icons.add_alert_rounded),
+                      label: const Text('Signaler un incident'),
+                    )
+                  : null,
+            )
+          else
+            for (final ticket in visible)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _TicketCard(ticket: ticket),
+              ),
+        ],
+      ),
+    );
+  }
+
+  /// Overdue first, then resolved last, then priority, then newest.
+  static int _urgencyOrder(WorkTicket a, WorkTicket b) {
+    int rank(WorkTicket t) {
+      if (t.status == TicketStatus.resolved) return 3;
+      if (t.isOverdue) return 0;
+      return 1;
+    }
+
+    final byRank = rank(a).compareTo(rank(b));
+    if (byRank != 0) return byRank;
+    final byPriority = b.priority.index.compareTo(a.priority.index);
+    if (byPriority != 0) return byPriority;
+    return b.dateCreated.compareTo(a.dateCreated);
+  }
+}
+
+class _TicketCard extends StatelessWidget {
+  const _TicketCard({required this.ticket});
+
+  final WorkTicket ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final priorityColor = switch (ticket.priority) {
+      TicketPriority.critical => colors.priorityCritical,
+      TicketPriority.high => colors.priorityHigh,
+      TicketPriority.medium => colors.priorityMedium,
+      TicketPriority.low => colors.priorityLow,
+    };
+    final resolved = ticket.status == TicketStatus.resolved;
+    final statusColor = switch (ticket.status) {
+      TicketStatus.open => colors.info,
+      TicketStatus.inProgress => colors.warning,
+      TicketStatus.resolved => colors.success,
+    };
+
+    return AppPanel(
+      accentColor: ticket.isOverdue ? colors.danger : priorityColor,
+      onTap: () => context.push('/tickets/${ticket.id}'),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  ticket.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: resolved ? colors.textSecondary : colors.textPrimary,
+                    decoration: resolved ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppPill(label: ticket.statusTextFrench, color: statusColor),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              AppPill(
+                label: ticket.priorityTextFrench,
+                color: priorityColor,
+                icon: Icons.flag_rounded,
+              ),
+              if (ticket.isOverdue)
+                AppPill(
+                  label: 'En retard',
+                  color: colors.danger,
+                  icon: Icons.schedule_rounded,
+                  filled: true,
+                ),
+              Text(
+                [
+                  if (ticket.activityName.isNotEmpty) ticket.activityName,
+                  if (ticket.assetName != null) ticket.assetName!,
+                ].join(' · '),
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(Icons.schedule_outlined, size: 15, color: colors.textMuted),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  _relativeTime(ticket.dateCreated),
+                  style: TextStyle(fontSize: 12, color: colors.textMuted),
+                ),
+              ),
+              if (ticket.assignedTechnician != null) ...[
+                Icon(Icons.person_outline_rounded,
+                    size: 15, color: colors.textMuted),
+                const SizedBox(width: 4),
+                Text(
+                  ticket.assignedTechnician!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            children: [
-              // Create Ticket Button
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: context.colors.accentPrimary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    icon: const Icon(Icons.add_circle_outline, size: 22),
-                    label: const Text(
-                      'Creer un ticket',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: () => context.push('/tickets/nouveau'),
-                  ),
-                ),
-              ),
-
-              // Filter chips
-              SizedBox(
-                height: 48,
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filters.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (context, index) {
-                    final label = _filters[index];
-                    return AppFilterChip(
-                      label: label,
-                      isSelected: _selectedFilter == label,
-                      onTap: () => setState(() => _selectedFilter = label),
-                    );
-                  },
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Tickets list/grid
-              Expanded(
-                child: filteredTickets.isEmpty
-                    ? _buildEmptyState()
-                    : LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isWide = constraints.maxWidth > 600;
-                          if (isWide) {
-                            return GridView.builder(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 2.6,
-                              ),
-                              itemCount: filteredTickets.length,
-                              itemBuilder: (context, index) {
-                                final ticket = filteredTickets[index];
-                                return _buildTicketCard(ticket);
-                              },
-                            );
-                          } else {
-                            return ListView.separated(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              itemCount: filteredTickets.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final ticket = filteredTickets[index];
-                                return _buildTicketCard(ticket);
-                              },
-                            );
-                          }
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              size: 72,
-              color: context.colors.success.withValues(alpha: 0.6),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Aucun ticket trouve - tout fonctionne.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.colors.textSecondary,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTicketCard(WorkTicket ticket) {
-    return GestureDetector(
-      onTap: () => context.push('/tickets/${ticket.id}'),
-      child: PriorityIndicator(
-        priority: ticket.priority,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Row 1: title + priority badge
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      ticket.title,
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _buildPriorityBadge(ticket),
-                ],
-              ),
-
-              const SizedBox(height: 4),
-
-              // Row 2: Type badge • Activity name
-              Row(
-                children: [
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: ticket.type.resolveColor(context).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      ticket.typeTextFrench,
-                      style: TextStyle(
-                        color: ticket.type.resolveColor(context),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: resolveActivityColor(context, ticket.activityId),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    ticket.activityName,
-                    style: TextStyle(
-                      color: context.colors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 6),
-
-              // Row 3: asset details or date info
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      ticket.assetName != null
-                          ? 'Equipement : ${ticket.assetName}'
-                          : 'General',
-                      style: TextStyle(
-                        color: context.colors.textMuted,
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Text(
-                    _relativeTime(ticket.dateCreated),
-                    style: TextStyle(
-                      color: context.colors.textMuted,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 6),
-
-              // Row 4: technician + status badge + sync icon
-              Row(
-                children: [
-                  if (ticket.assignedTechnician != null) ...[
-                    Icon(
-                      Icons.person_outline,
-                      size: 14,
-                      color: context.colors.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        ticket.assignedTechnician!,
-                        style: TextStyle(
-                          color: context.colors.textSecondary,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ] else
-                    Expanded(
-                      child: Text(
-                        'Non assigne',
-                        style: TextStyle(
-                          color: context.colors.textMuted,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                  _buildStatusChip(ticket),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriorityBadge(WorkTicket ticket) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: ticket.priority.resolveColor(context).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: ticket.priority.resolveColor(context).withValues(alpha: 0.4),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        ticket.priorityTextFrench,
-        style: TextStyle(
-          color: ticket.priority.resolveColor(context),
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(WorkTicket ticket) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: ticket.status.resolveColor(context).withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        ticket.statusTextFrench,
-        style: TextStyle(
-          color: ticket.status.resolveColor(context),
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
+  static String _relativeTime(DateTime dateCreated) {
+    final diff = DateTime.now().difference(dateCreated);
+    if (diff.inMinutes < 1) return 'à l’instant';
+    if (diff.inMinutes < 60) {
+      final m = diff.inMinutes;
+      return 'il y a $m min';
+    }
+    if (diff.inHours < 24) {
+      final h = diff.inHours;
+      return 'il y a $h h';
+    }
+    final d = diff.inDays;
+    return 'il y a $d j';
   }
 }

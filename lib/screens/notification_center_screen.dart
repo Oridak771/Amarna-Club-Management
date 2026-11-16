@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
 class NotificationCenterScreen extends StatefulWidget {
   const NotificationCenterScreen({super.key});
@@ -32,97 +33,71 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
   Widget build(BuildContext context) {
     final todayNotifs = _notifications.where((n) => n.isToday).toList();
     final earlierNotifs = _notifications.where((n) => !n.isToday).toList();
+    final unread = _notifications.where((n) => !n.isRead).length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          if (_notifications.any((n) => !n.isRead))
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: Text(
-                'Tout lire',
-                style: TextStyle(
-                    color: context.colors.accentPrimary,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-        ],
+    return AppPage(
+      title: 'Notifications',
+      subtitle: unread > 0 ? '$unread non lue${unread > 1 ? 's' : ''}' : null,
+      leading: IconButton(
+        tooltip: 'Retour',
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () => context.pop(),
       ),
+      actions: [
+        if (_notifications.any((n) => !n.isRead))
+          TextButton(
+            style: TextButton.styleFrom(minimumSize: const Size(0, 48)),
+            onPressed: _markAllAsRead,
+            child: Text(
+              'Tout lire',
+              style: TextStyle(
+                  color: context.colors.accentPrimary,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15),
+            ),
+          ),
+      ],
       body: _notifications.isEmpty
           ? _buildEmptyState()
-          : SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: Center(
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (todayNotifs.isNotEmpty) ...[
-                        _buildSectionHeader('Aujourd\'hui'),
-                        ...todayNotifs.map((n) => _buildNotificationRow(n)),
-                      ],
-                      if (earlierNotifs.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        _buildSectionHeader('Plus tôt'),
-                        ...earlierNotifs.map((n) => _buildNotificationRow(n)),
-                      ],
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-              ),
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (todayNotifs.isNotEmpty) ...[
+                  const SectionTitle(title: 'Aujourd\'hui'),
+                  for (final n in todayNotifs) ...[
+                    _buildNotificationRow(n),
+                    const SizedBox(height: 10),
+                  ],
+                ],
+                if (earlierNotifs.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  const SectionTitle(title: 'Plus tôt'),
+                  for (final n in earlierNotifs) ...[
+                    _buildNotificationRow(n),
+                    const SizedBox(height: 10),
+                  ],
+                ],
+              ],
             ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: context.colors.textSecondary,
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.8,
-        ),
-      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.notifications_off_outlined,
-              size: 64, color: context.colors.textMuted),
-          const SizedBox(height: 16),
-          Text(
-            'Aucune notification',
-            style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Vous êtes à jour ! Vos alertes apparaîtront ici.',
-            style: TextStyle(color: context.colors.textSecondary),
-          ),
-        ],
-      ),
+    return const AppEmptyState(
+      icon: Icons.notifications_off_outlined,
+      title: 'Aucune notification',
+      message: 'Vous êtes à jour ! Vos alertes apparaîtront ici.',
     );
   }
 
   Widget _buildNotificationRow(MockNotification notif) {
-    return InkWell(
+    final colors = context.colors;
+    final categoryColor = _getCategoryColor(notif.category);
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+      color: notif.isRead
+          ? null
+          : colors.accentPrimary.withValues(alpha: 0.04),
       onTap: () {
         setState(() {
           notif.isRead = true;
@@ -131,89 +106,76 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           context.push(notif.routePath!);
         }
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-        decoration: BoxDecoration(
-          color: notif.isRead
-              ? Colors.transparent
-              : context.colors.accentPrimary.withValues(alpha: 0.04),
-          border: Border(
-            bottom: BorderSide(color: context.colors.border, width: 0.5),
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Category Icon Badge
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color:
-                    _getCategoryColor(notif.category).withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                _getCategoryIcon(notif.category),
-                color: _getCategoryColor(notif.category),
-                size: 20,
-              ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Category icon badge
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: categoryColor.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: 16),
+            child: Icon(
+              _getCategoryIcon(notif.category),
+              color: categoryColor,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
 
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          notif.title,
-                          style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontWeight: notif.isRead
-                                ? FontWeight.w500
-                                : FontWeight.bold,
-                            fontSize: 14,
-                          ),
+          // Content
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        notif.title,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontWeight:
+                              notif.isRead ? FontWeight.w600 : FontWeight.w800,
+                          fontSize: 15,
                         ),
                       ),
-                      Text(
-                        notif.timeAgo,
-                        style: TextStyle(
-                            color: context.colors.textMuted, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    notif.description,
-                    style: TextStyle(
-                      color: context.colors.textSecondary,
-                      fontSize: 13,
-                      height: 1.4,
                     ),
+                    const SizedBox(width: 8),
+                    Text(
+                      notif.timeAgo,
+                      style: TextStyle(color: colors.textMuted, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  notif.description,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 14,
+                    height: 1.4,
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Unread dot
+          if (!notif.isRead)
+            Container(
+              margin: const EdgeInsets.only(top: 6),
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: colors.accentPrimary,
+                shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Unread Dot
-            if (!notif.isRead)
-              Container(
-                margin: const EdgeInsets.only(top: 6),
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: context.colors.accentPrimary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }

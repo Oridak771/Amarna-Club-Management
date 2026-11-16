@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
+import '../../widgets/app_layout.dart';
 import '../../widgets/quick_action_button.dart';
 
 class PaintballFieldScreen extends StatefulWidget {
@@ -39,241 +40,226 @@ class _PaintballFieldScreenState extends State<PaintballFieldScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Terrain Paintball'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    final colors = context.colors;
+    return AppPage(
+      title: 'Terrain Paintball',
+      subtitle: _isSessionActive ? 'Session en cours' : 'Aucune session active',
+      bottomBar: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
+          backgroundColor:
+              _isSessionActive ? colors.danger : colors.paintball,
+          foregroundColor: colors.textOnAccent,
+        ),
+        onPressed: _toggleSession,
+        icon: Icon(_isSessionActive
+            ? Icons.stop_circle_outlined
+            : Icons.play_circle_outline_rounded),
+        label: Text(
+          _isSessionActive ? 'Terminer la session' : 'Démarrer une session',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Session Control Card
-            Card(
-              color: _isSessionActive
-                  ? context.colors.paintball.withValues(alpha: 0.1)
-                  : context.colors.backgroundSecondary,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color:
-                      _isSessionActive ? context.colors.paintball : context.colors.border,
-                  width: _isSessionActive ? 2 : 1,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  children: [
-                    Text(
-                      _isSessionActive
-                          ? 'Session en cours'
-                          : 'Aucune session active',
-                      style: TextStyle(
-                        color: _isSessionActive
-                            ? context.colors.paintball
-                            : context.colors.textPrimary,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    if (_isSessionActive) ...[
-                      Text(
-                        'Joueurs sur le terrain',
-                        style: TextStyle(
-                            color: context.colors.textSecondary, fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline,
-                                size: 40),
-                            color: context.colors.textMuted,
-                            onPressed: _playerCount > 0
-                                ? () => setState(() => _playerCount--)
-                                : null,
-                          ),
-                          const SizedBox(width: 24),
-                          Text(
-                            '$_playerCount / $_maxPlayers',
-                            style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          IconButton(
-                            icon:
-                                const Icon(Icons.add_circle_outline, size: 40),
-                            color: context.colors.textPrimary,
-                            onPressed: _playerCount < _maxPlayers
-                                ? () => setState(() => _playerCount++)
-                                : null,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: _playerCount / _maxPlayers,
-                          backgroundColor: context.colors.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            _playerCount >= _maxPlayers
-                                ? context.colors.danger
-                                : context.colors.paintball,
-                          ),
-                          minHeight: 8,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isSessionActive
-                              ? context.colors.danger
-                              : context.colors.paintball,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _toggleSession,
-                        child: Text(
-                          _isSessionActive
-                              ? 'Terminer la session'
-                              : 'Démarrer une session',
-                          style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Field Status Overview
-            Text(
-              'État des Infrastructures',
-              style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-
-            _buildStatusToggle(
-              'Filets de protection',
-              _netsOk,
-              Icons.grid_4x4,
-              (val) {
-                if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content:
-                          Text('Impossible de modifier pendant une session.')));
-                  return;
-                }
-                setState(() => _netsOk = val);
-              },
-            ),
-            const SizedBox(height: 12),
-            _buildStatusToggle(
-              'Obstacles gonflables',
-              _obstaclesOk,
-              Icons.sports_gymnastics,
-              (val) {
-                if (_isSessionActive) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content:
-                          Text('Impossible de modifier pendant une session.')));
-                  return;
-                }
-                setState(() => _obstaclesOk = val);
-              },
-            ),
-
-            const SizedBox(height: 32),
-            Row(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Session control panel
+          AppPanel(
+            padding: const EdgeInsets.all(20),
+            color: _isSessionActive
+                ? colors.paintball.withValues(alpha: 0.1)
+                : null,
+            child: Column(
               children: [
-                Expanded(
-                  child: QuickActionButton(
-                    icon: Icons.warning,
-                    label: 'Signaler Dégât',
-                    color: context.colors.danger,
-                    onTap: () => context.go('/tickets/nouveau'),
+                Text(
+                  _isSessionActive
+                      ? 'Session en cours'
+                      : 'Aucune session active',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _isSessionActive
+                        ? colors.paintball
+                        : colors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: QuickActionButton(
-                    icon: Icons.inventory,
-                    label: 'Stocks (billes, CO2)',
-                    color: context.colors.info,
-                    onTap: () => context.go('/plus/inventaire'),
+                if (_isSessionActive) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    'Joueurs sur le terrain',
+                    style:
+                        TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        tooltip: 'Retirer un joueur',
+                        icon: const Icon(Icons.remove_circle_outline,
+                            size: 40),
+                        color: colors.textPrimary,
+                        onPressed: _playerCount > 0
+                            ? () => setState(() => _playerCount--)
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        '$_playerCount / $_maxPlayers',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      IconButton(
+                        tooltip: 'Ajouter un joueur',
+                        icon: const Icon(Icons.add_circle_outline, size: 40),
+                        color: colors.textPrimary,
+                        onPressed: _playerCount < _maxPlayers
+                            ? () => setState(() => _playerCount++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _playerCount / _maxPlayers,
+                      backgroundColor: colors.surface,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _playerCount >= _maxPlayers
+                            ? colors.danger
+                            : colors.paintball,
+                      ),
+                      minHeight: 8,
+                    ),
+                  ),
+                ],
               ],
             ),
-            const SizedBox(height: 28),
-            const ActivityReservationsPanel(
-              activityId: 'paintball',
-              activityName: 'Paintball',
-            ),
-            const SizedBox(height: 20),
-            const ActivityTicketsPanel(activityId: 'paintball'),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Field status overview
+          const SectionTitle(
+            title: 'État des infrastructures',
+            icon: Icons.fact_check_outlined,
+          ),
+          _buildStatusToggle(
+            'Filets de protection',
+            _netsOk,
+            Icons.grid_4x4,
+            (val) {
+              if (_isSessionActive) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text('Impossible de modifier pendant une session.')));
+                return;
+              }
+              setState(() => _netsOk = val);
+            },
+          ),
+          const SizedBox(height: 10),
+          _buildStatusToggle(
+            'Obstacles gonflables',
+            _obstaclesOk,
+            Icons.sports_gymnastics,
+            (val) {
+              if (_isSessionActive) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content:
+                        Text('Impossible de modifier pendant une session.')));
+                return;
+              }
+              setState(() => _obstaclesOk = val);
+            },
+          ),
+
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: QuickActionButton(
+                  icon: Icons.warning,
+                  label: 'Signaler Dégât',
+                  color: colors.danger,
+                  onTap: () => context.go('/tickets/nouveau'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: QuickActionButton(
+                  icon: Icons.inventory,
+                  label: 'Stocks (billes, CO2)',
+                  color: colors.info,
+                  onTap: () => context.go('/plus/inventaire'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const ActivityReservationsPanel(
+            activityId: 'paintball',
+            activityName: 'Paintball',
+          ),
+          const SizedBox(height: 20),
+          const ActivityTicketsPanel(activityId: 'paintball'),
+        ],
       ),
     );
   }
 
   Widget _buildStatusToggle(
       String label, bool isOk, IconData icon, ValueChanged<bool> onChanged) {
-    return Card(
-      color: context.colors.backgroundSecondary,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: isOk ? context.colors.border : context.colors.danger),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: (isOk ? context.colors.success : context.colors.danger)
-                .withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
+    final colors = context.colors;
+    final tone = isOk ? colors.success : colors.danger;
+    return AppPanel(
+      padding: const EdgeInsets.fromLTRB(14, 6, 6, 6),
+      color: isOk ? null : colors.danger.withValues(alpha: 0.06),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: tone, size: 22),
           ),
-          child: Icon(icon, color: isOk ? context.colors.success : context.colors.danger),
-        ),
-        title: Text(label,
-            style: TextStyle(
-                color: context.colors.textPrimary, fontWeight: FontWeight.bold)),
-        subtitle: Text(isOk ? 'Sécurisé' : 'Maintenance requise',
-            style: TextStyle(
-                color: isOk ? context.colors.textSecondary : context.colors.danger)),
-        trailing: Switch(
-          value: isOk,
-          onChanged: onChanged,
-          activeThumbColor: context.colors.success,
-          inactiveThumbColor: context.colors.danger,
-          inactiveTrackColor: context.colors.danger.withValues(alpha: 0.3),
-        ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(isOk ? 'Sécurisé' : 'Maintenance requise',
+                    style: TextStyle(
+                        color: isOk ? colors.textSecondary : colors.danger,
+                        fontSize: 13,
+                        fontWeight:
+                            isOk ? FontWeight.w500 : FontWeight.w700)),
+              ],
+            ),
+          ),
+          Switch(
+            value: isOk,
+            onChanged: onChanged,
+            activeThumbColor: colors.success,
+            inactiveThumbColor: colors.danger,
+            inactiveTrackColor: colors.danger.withValues(alpha: 0.3),
+          ),
+        ],
       ),
     );
   }

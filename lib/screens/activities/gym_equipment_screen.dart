@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
-import '../../widgets/priority_indicator.dart';
-import '../../models/work_ticket.dart';
+import '../../widgets/app_layout.dart';
 
 class GymMachine {
   final String id;
@@ -87,35 +86,37 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Équipement Gym'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    final colors = context.colors;
+    return AppPage(
+      title: 'Équipement Gym',
+      subtitle: 'Nettoyage et pannes du jour',
+      actions: [
+        IconButton.filledTonal(
+          tooltip: 'Scanner QR',
+          icon: const Icon(Icons.qr_code_scanner_rounded),
+          onPressed: () => context.push('/scan'),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.cleaning_services),
-            onPressed: _markAllCleaned,
-            tooltip: 'Tout marquer nettoyé',
-          ),
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () => context.push('/scan'),
-          ),
-        ],
+      ],
+      bottomBar: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          backgroundColor: colors.success,
+          foregroundColor: colors.textOnAccent,
+        ),
+        onPressed: _markAllCleaned,
+        icon: const Icon(Icons.cleaning_services_rounded),
+        label: const Text('Tout marquer nettoyé'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildCleaningHeader(),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           for (final machine in machines) ...[
             _buildMachineCard(machine),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           const ActivityTicketsPanel(activityId: 'gym'),
         ],
       ),
@@ -128,15 +129,9 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
     final brokenCount = machines.where((m) => m.isBroken).length;
     final colors = context.colors;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
+    return AppPanel(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
@@ -146,22 +141,19 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
                   style: TextStyle(
                     color: colors.textPrimary,
                     fontWeight: FontWeight.w800,
-                    fontSize: 14.5,
+                    fontSize: 15,
                   ),
                 ),
               ),
               if (brokenCount > 0)
-                Text(
-                  '$brokenCount HS',
-                  style: TextStyle(
-                    color: colors.danger,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                  ),
+                AppPill(
+                  label: '$brokenCount HS',
+                  color: colors.danger,
+                  icon: Icons.build_circle_outlined,
                 ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
@@ -179,171 +171,136 @@ class _GymEquipmentScreenState extends State<GymEquipmentScreen> {
   }
 
   Widget _buildMachineCard(GymMachine machine) {
-    return PriorityIndicator(
-            priority:
-                machine.isBroken ? TicketPriority.high : TicketPriority.low,
-            child: Card(
-              color: context.colors.backgroundSecondary,
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: machine.isBroken ? context.colors.danger : context.colors.border,
-                ),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
+    final colors = context.colors;
+    return AppPanel(
+      accentColor: machine.isBroken ? colors.danger : null,
+      padding: const EdgeInsets.fromLTRB(16, 10, 4, 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                machine.name,
-                                style: TextStyle(
-                                  color: machine.isBroken
-                                      ? context.colors.textSecondary
-                                      : context.colors.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: machine.isBroken
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                ),
-                              ),
-                              if (machine.isBroken) ...[
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        context.colors.danger.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text('HS',
-                                      style: TextStyle(
-                                          color: context.colors.danger,
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            machine.category,
-                            style: TextStyle(
-                                color: context.colors.textSecondary, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    if (!machine.isBroken) ...[
-                      // Cleaning Toggle
-                      Column(
-                        children: [
-                          Icon(
-                            machine.isCleaned
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            color: machine.isCleaned
-                                ? context.colors.success
-                                : context.colors.textMuted,
-                          ),
-                          const SizedBox(height: 4),
-                          Text('Nettoyé',
-                              style: TextStyle(
-                                  color: context.colors.textSecondary,
-                                  fontSize: 10)),
-                        ],
-                      ),
-                      Switch(
-                        value: machine.isCleaned,
-                        onChanged: (val) {
-                          setState(() {
-                            machine.isCleaned = val;
-                          });
-                        },
-                        activeThumbColor: context.colors.success,
-                      ),
-                    ] else ...[
-                      // Broken State Action
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: context.colors.surface,
-                          foregroundColor: context.colors.textPrimary,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                    Flexible(
+                      child: Text(
+                        machine.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: machine.isBroken
+                              ? colors.textSecondary
+                              : colors.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          decoration: machine.isBroken
+                              ? TextDecoration.lineThrough
+                              : null,
                         ),
-                        onPressed: () => context.go('/tickets/nouveau'),
-                        icon: Icon(Icons.build,
-                            size: 16, color: context.colors.warning),
-                        label: const Text('Réparer',
-                            style: TextStyle(fontSize: 12)),
                       ),
-                    ],
-
-                    // More Menu
-                    PopupMenuButton<String>(
-                      icon: Icon(Icons.more_vert,
-                          color: context.colors.textSecondary),
-                      color: context.colors.backgroundElevated,
-                      onSelected: (val) {
-                        if (val == 'report') {
-                          setState(() {
-                            machine.isBroken = true;
-                            machine.isCleaned =
-                                false; // logic: if broken, cleaning isn't relevant
-                          });
-                          context.go('/tickets/nouveau');
-                        } else if (val == 'resolve') {
-                          setState(() {
-                            machine.isBroken = false;
-                          });
-                        }
-                      },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                        if (!machine.isBroken)
-                          PopupMenuItem<String>(
-                            value: 'report',
-                            child: Row(
-                              children: [
-                                Icon(Icons.warning,
-                                    color: context.colors.danger, size: 20),
-                                const SizedBox(width: 8),
-                                Text('Signaler Panne',
-                                    style: TextStyle(
-                                        color: context.colors.textPrimary)),
-                              ],
-                            ),
-                          )
-                        else
-                          PopupMenuItem<String>(
-                            value: 'resolve',
-                            child: Row(
-                              children: [
-                                Icon(Icons.check,
-                                    color: context.colors.success, size: 20),
-                                const SizedBox(width: 8),
-                                Text('Marquer Fonctionnel',
-                                    style: TextStyle(
-                                        color: context.colors.textPrimary)),
-                              ],
-                            ),
-                          ),
-                      ],
                     ),
+                    if (machine.isBroken) ...[
+                      const SizedBox(width: 8),
+                      AppPill(label: 'HS', color: colors.danger),
+                    ],
                   ],
                 ),
-              ),
+                const SizedBox(height: 4),
+                Text(
+                  machine.category,
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                ),
+              ],
             ),
-          );
+          ),
+          if (!machine.isBroken) ...[
+            // Cleaning toggle
+            Icon(
+              machine.isCleaned
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked,
+              color: machine.isCleaned ? colors.success : colors.textMuted,
+              size: 22,
+            ),
+            const SizedBox(width: 4),
+            Text('Nettoyé',
+                style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700)),
+            Switch(
+              value: machine.isCleaned,
+              onChanged: (val) {
+                setState(() {
+                  machine.isCleaned = val;
+                });
+              },
+              activeThumbColor: colors.success,
+            ),
+          ] else ...[
+            // Broken state action
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: colors.textPrimary,
+                minimumSize: const Size(0, 48),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+              ),
+              onPressed: () => context.go('/tickets/nouveau'),
+              icon: Icon(Icons.build, size: 18, color: colors.warning),
+              label: const Text('Réparer'),
+            ),
+          ],
+
+          // More menu
+          PopupMenuButton<String>(
+            tooltip: 'Actions',
+            padding: const EdgeInsets.all(12),
+            icon: Icon(Icons.more_vert, color: colors.textSecondary),
+            color: colors.backgroundElevated,
+            onSelected: (val) {
+              if (val == 'report') {
+                setState(() {
+                  machine.isBroken = true;
+                  machine.isCleaned =
+                      false; // logic: if broken, cleaning isn't relevant
+                });
+                context.go('/tickets/nouveau');
+              } else if (val == 'resolve') {
+                setState(() {
+                  machine.isBroken = false;
+                });
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              if (!machine.isBroken)
+                PopupMenuItem<String>(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(Icons.warning, color: colors.danger, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Signaler Panne',
+                          style: TextStyle(color: colors.textPrimary)),
+                    ],
+                  ),
+                )
+              else
+                PopupMenuItem<String>(
+                  value: 'resolve',
+                  child: Row(
+                    children: [
+                      Icon(Icons.check, color: colors.success, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Marquer Fonctionnel',
+                          style: TextStyle(color: colors.textPrimary)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

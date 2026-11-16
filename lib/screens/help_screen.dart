@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final faqs = [
       _FAQ(
         question: 'Mes données sont-elles synchronisées avec Odoo ?',
@@ -35,179 +36,135 @@ class HelpScreen extends StatelessWidget {
       ),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Aide & FAQ'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
+    return AppPage(
+      title: 'Aide & FAQ',
+      subtitle: 'Guide d\'utilisation et support',
+      maxWidth: 800,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 1. Support card
+          AppPanel(
+            padding: const EdgeInsets.all(20),
+            color: colors.accentPrimary.withValues(alpha: 0.07),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Support Banner Card
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        context.colors.accentPrimary.withValues(alpha: 0.15),
-                        context.colors.accentSecondary.withValues(alpha: 0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: context.colors.accentPrimary.withValues(alpha: 0.3),
-                        width: 1.5),
+                    color: colors.accentPrimary.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
                   ),
-                  child: Column(
-                    children: [
-                      Icon(Icons.help_center_outlined,
-                          color: context.colors.accentPrimary, size: 48),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Besoin d\'une assistance directe ?',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels de 8h à 20h.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: context.colors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Support actions (glove-friendly size)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: context.colors.accentPrimary,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                                icon: const Icon(Icons.phone),
-                                label: const Text('Appeler',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold)),
-                                onPressed: () {
-                                  // Action simulation
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: SizedBox(
-                              height: 48,
-                              child: OutlinedButton.icon(
-                                style: OutlinedButton.styleFrom(
-                                  side:
-                                      BorderSide(color: context.colors.border),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                ),
-                                icon: Icon(Icons.mail_outline,
-                                    color: context.colors.textPrimary),
-                                label: Text('Email',
-                                    style: TextStyle(
-                                        color: context.colors.textPrimary,
-                                        fontWeight: FontWeight.bold)),
-                                onPressed: () {
-                                  // Action simulation
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  child: Icon(Icons.support_agent_rounded,
+                      color: colors.accentPrimary, size: 32),
                 ),
-                const SizedBox(height: 28),
-
-                // 2. FAQ Section Header
+                const SizedBox(height: 14),
                 Text(
-                  'Foire Aux Questions (FAQ)',
+                  'Besoin d\'une assistance directe ?',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: context.colors.textPrimary,
+                    color: colors.textPrimary,
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 12),
-
-                // 3. Expandable FAQ Accordion Cards
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: faqs.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final faq = faqs[index];
-                    return Theme(
-                      data: Theme.of(context)
-                          .copyWith(dividerColor: Colors.transparent),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: context.colors.backgroundSecondary,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: ExpansionTile(
-                          iconColor: context.colors.accentPrimary,
-                          collapsedIconColor: context.colors.textSecondary,
-                          title: Text(
-                            faq.question,
-                            style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                              child: Text(
-                                faq.answer,
-                                style: TextStyle(
-                                  color: context.colors.textSecondary,
-                                  fontSize: 13,
-                                  height: 1.5,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                const SizedBox(height: 8),
+                Text(
+                  'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels de 8h à 20h.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colors.accentPrimary,
+                          foregroundColor: colors.textOnAccent,
+                          minimumSize: const Size(0, 52),
+                        ),
+                        icon: const Icon(Icons.phone_rounded),
+                        label: const Text('Appeler',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        onPressed: () {
+                          // Action simulation
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: colors.textPrimary,
+                          side: BorderSide(color: colors.border),
+                          minimumSize: const Size(0, 52),
+                        ),
+                        icon: const Icon(Icons.mail_outline_rounded),
+                        label: const Text('E-mail',
+                            style: TextStyle(fontWeight: FontWeight.w800)),
+                        onPressed: () {
+                          // Action simulation
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+
+          // 2. FAQ
+          const SectionTitle(
+            title: 'Foire aux questions',
+            icon: Icons.quiz_outlined,
+          ),
+          for (final faq in faqs) ...[
+            AppPanel(
+              padding: EdgeInsets.zero,
+              child: Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  shape: const Border(),
+                  collapsedShape: const Border(),
+                  tilePadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  iconColor: colors.accentPrimary,
+                  collapsedIconColor: colors.textSecondary,
+                  title: Text(
+                    faq.question,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  expandedAlignment: Alignment.centerLeft,
+                  children: [
+                    Text(
+                      faq.answer,
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 14),
+        ],
       ),
     );
   }

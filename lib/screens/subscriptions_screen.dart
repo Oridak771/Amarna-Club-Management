@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../config/app_environment.dart';
@@ -8,6 +7,7 @@ import '../models/subscription.dart';
 import '../providers/subscriptions_provider.dart';
 import '../services/odoo_subscription_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
 
 /// Abonnements — front-desk lookup of client subscriptions from Odoo.
 class SubscriptionsScreen extends ConsumerStatefulWidget {
@@ -31,114 +31,99 @@ class _SubscriptionsScreenState extends ConsumerState<SubscriptionsScreen> {
   Widget build(BuildContext context) {
     final async = ref.watch(subscriptionsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Abonnements'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    return AppPage(
+      title: 'Abonnements',
+      subtitle: 'Séances et échéances des clients',
+      scrollable: true,
+      actions: [
+        IconButton.filledTonal(
+          icon: const Icon(Icons.refresh_rounded),
+          tooltip: 'Actualiser',
+          onPressed: () => ref.invalidate(subscriptionsProvider),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Actualiser',
-            onPressed: () => ref.invalidate(subscriptionsProvider),
+      ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.search,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (value) => ref
+                .read(subscriptionQueryProvider.notifier)
+                .state = value,
+            decoration: InputDecoration(
+              hintText: 'Rechercher un client…',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _controller.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Effacer la recherche',
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () {
+                        _controller.clear();
+                        ref.read(subscriptionQueryProvider.notifier).state =
+                            '';
+                        setState(() {});
+                      },
+                    ),
+            ),
           ),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: TextField(
-                  controller: _controller,
-                  textInputAction: TextInputAction.search,
-                  onSubmitted: (value) => ref
-                      .read(subscriptionQueryProvider.notifier)
-                      .state = value,
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher un client…',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _controller.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.close_rounded),
-                            onPressed: () {
-                              _controller.clear();
-                              ref
-                                  .read(subscriptionQueryProvider.notifier)
-                                  .state = '';
-                            },
-                          ),
-                  ),
-                ),
-              ),
-              if (!AppEnvironment.isOdooConfigured)
-                Expanded(
-                  child: _message(
-                    context,
-                    Icons.cloud_off_rounded,
-                    'Odoo n\'est pas configuré.\nContactez l’administrateur.',
-                  ),
-                )
-              else
-                Expanded(
-                  child: async.when(
+          const SizedBox(height: 16),
+          Expanded(
+            child: !AppEnvironment.isOdooConfigured
+                ? ListView(
+                    children: const [
+                      AppEmptyState(
+                        icon: Icons.cloud_off_rounded,
+                        title: 'Odoo n\'est pas configuré.',
+                        message: 'Contactez l\'administrateur.',
+                      ),
+                    ],
+                  )
+                : async.when(
                     data: (subs) {
                       if (subs.isEmpty) {
-                        return _message(
-                          context,
-                          Icons.card_membership_outlined,
-                          _controller.text.isEmpty
-                              ? 'Aucun abonnement enregistré dans Odoo.'
-                              : 'Aucun abonnement pour « ${_controller.text} ».',
+                        return ListView(
+                          children: [
+                            AppEmptyState(
+                              icon: Icons.card_membership_outlined,
+                              title: _controller.text.isEmpty
+                                  ? 'Aucun abonnement enregistré'
+                                  : 'Aucun abonnement trouvé',
+                              message: _controller.text.isEmpty
+                                  ? 'Aucun abonnement n\'est enregistré dans Odoo.'
+                                  : 'Aucun abonnement pour « ${_controller.text} ».',
+                            ),
+                          ],
                         );
                       }
                       return ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        padding: const EdgeInsets.only(bottom: 24),
                         itemCount: subs.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) =>
                             _SubscriptionCard(subscription: subs[index]),
                       );
                     },
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (error, _) => _message(
-                      context,
-                      Icons.error_outline_rounded,
-                      'Impossible de charger les abonnements.\n$error',
+                    loading: () => ListView(
+                      children: const [
+                        AppLoadingState(
+                            message: 'Chargement des abonnements…'),
+                      ],
+                    ),
+                    error: (error, _) => ListView(
+                      children: [
+                        AppErrorState(
+                          title: 'Impossible de charger les abonnements',
+                          message: '$error',
+                          onRetry: () => ref.invalidate(subscriptionsProvider),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-            ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _message(BuildContext context, IconData icon, String text) {
-    final colors = context.colors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: colors.textMuted),
-            const SizedBox(height: 12),
-            Text(
-              text,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -244,21 +229,15 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
     final colors = context.colors;
     final s = widget.subscription;
 
-    final (statusColor, _) = s.isExpired
-        ? (colors.danger, 'Expiré')
+    final statusColor = s.isExpired
+        ? colors.danger
         : s.isActive
-            ? (colors.success, s.statusLabelFrench)
-            : (colors.textMuted, s.statusLabelFrench);
+            ? colors.success
+            : colors.textMuted;
 
     final dateFormat = DateFormat('dd/MM/yyyy');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
-      ),
+    return AppPanel(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -269,7 +248,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                 height: 44,
                 decoration: BoxDecoration(
                   color: colors.accentSecondary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(Icons.card_membership_rounded,
                     color: colors.accentSecondary, size: 22),
@@ -285,7 +264,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: colors.textPrimary,
-                        fontSize: 15.5,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -295,30 +274,19 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          color: colors.textSecondary, fontSize: 12.5),
+                          color: colors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  s.isExpired ? 'Expiré' : s.statusLabelFrench,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
-                  ),
-                ),
+              const SizedBox(width: 8),
+              AppPill(
+                label: s.isExpired ? 'Expiré' : s.statusLabelFrench,
+                color: statusColor,
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -360,15 +328,15 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
             const SizedBox(height: 12),
             Container(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: colors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
                   Icon(Icons.info_outline_rounded,
-                      size: 16, color: colors.warning),
+                      size: 18, color: colors.warning),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -377,8 +345,8 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                           : 'Abonnement bientôt expiré.',
                       style: TextStyle(
                         color: colors.warning,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -388,7 +356,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
           ],
           const SizedBox(height: 14),
           Divider(height: 1, color: colors.border),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
@@ -396,30 +364,30 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                   onPressed: (_busy || s.remainingSessions <= 0)
                       ? null
                       : _consumeSession,
-                  style: FilledButton.styleFrom(minimumSize: const Size(0, 46)),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 52),
+                  ),
                   icon: _busy
                       ? const SizedBox(
-                          width: 16,
-                          height: 16,
+                          width: 18,
+                          height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.how_to_reg_rounded, size: 18),
+                      : const Icon(Icons.how_to_reg_rounded, size: 20),
                   label: const Text('Consommer une séance'),
                 ),
               ),
               const SizedBox(width: 8),
-              _actionIcon(
-                context,
-                icon: Icons.tune_rounded,
+              IconButton.outlined(
                 tooltip: 'Ajuster les séances',
-                onTap: _busy ? null : _adjustSessions,
+                onPressed: _busy ? null : _adjustSessions,
+                icon: const Icon(Icons.tune_rounded),
               ),
               const SizedBox(width: 8),
-              _actionIcon(
-                context,
-                icon: Icons.event_repeat_rounded,
+              IconButton.outlined(
                 tooltip: 'Prolonger l\'expiration',
-                onTap: _busy ? null : _extendExpiration,
+                onPressed: _busy ? null : _extendExpiration,
+                icon: const Icon(Icons.event_repeat_rounded),
               ),
             ],
           ),
@@ -428,61 +396,45 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
     );
   }
 
-  Widget _actionIcon(BuildContext context,
-      {required IconData icon,
-      required String tooltip,
-      required VoidCallback? onTap}) {
-    final colors = context.colors;
-    return Tooltip(
-      message: tooltip,
-      child: Material(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: SizedBox(
-            width: 46,
-            height: 46,
-            child: Icon(icon,
-                size: 20,
-                color: onTap == null ? colors.textMuted : colors.textPrimary),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _stat(BuildContext context, IconData icon, String label, String value,
       Color valueColor) {
     final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 13, color: colors.textMuted),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: colors.textMuted, fontSize: 10.5),
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 15, color: colors.textMuted),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(
-            color: valueColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

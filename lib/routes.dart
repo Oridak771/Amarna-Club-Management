@@ -35,6 +35,8 @@ final GlobalKey<NavigatorState> _rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _accueilNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'accueil');
+final GlobalKey<NavigatorState> _planningNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'planning');
 final GlobalKey<NavigatorState> _activitesNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'activites');
 final GlobalKey<NavigatorState> _ticketsNavigatorKey =
@@ -113,6 +115,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/accueil',
                 builder: (BuildContext context, GoRouterState state) =>
                     const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _planningNavigatorKey,
+            routes: <RouteBase>[
+              GoRoute(
+                path: '/planning',
+                builder: (BuildContext context, GoRouterState state) =>
+                    const ReservationsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'nouvelle',
+                    builder: (BuildContext context, GoRouterState state) =>
+                        const CreateReservationScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -208,18 +227,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'inventaire',
                     builder: (BuildContext context, GoRouterState state) =>
                         const GlobalInventoryScreen(),
-                  ),
-                  GoRoute(
-                    path: 'reservations',
-                    builder: (BuildContext context, GoRouterState state) =>
-                        const ReservationsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: 'nouvelle',
-                        builder: (BuildContext context, GoRouterState state) =>
-                            const CreateReservationScreen(),
-                      ),
-                    ],
                   ),
                   GoRoute(
                     path: 'abonnements',

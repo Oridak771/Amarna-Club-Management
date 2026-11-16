@@ -4,10 +4,15 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../models/reservation.dart';
-import '../providers/checkin_provider.dart';
 import '../providers/reservations_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_layout.dart';
+import '../widgets/reservation_tile.dart';
 
+/// « Planning » — the day's bookings, one tab away from home.
+///
+/// Pick a day in the strip (today and the next two weeks), see the day's
+/// totals, then check people in from the list grouped by activity.
 class ReservationsScreen extends ConsumerStatefulWidget {
   const ReservationsScreen({super.key});
 
@@ -16,139 +21,144 @@ class ReservationsScreen extends ConsumerStatefulWidget {
 }
 
 class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
-  DateTime _selectedDate = _normalize(DateTime.now());
+  static const _dayCount = 14;
+
+  final DateTime _today = _normalize(DateTime.now());
+  late DateTime _selectedDate = _today;
 
   static DateTime _normalize(DateTime date) =>
       DateTime(date.year, date.month, date.day);
 
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
   @override
   Widget build(BuildContext context) {
-    final reservationsAsync = ref.watch(
-      reservationsForDateProvider(_selectedDate),
-    );
+    final reservationsAsync =
+        ref.watch(reservationsForDateProvider(_selectedDate));
+    final dayLabel = DateFormat('EEEE d MMMM', 'fr_FR').format(_selectedDate);
+    final isToday = _sameDay(_selectedDate, _today);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Reservations'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    return AppPage(
+      title: 'Planning',
+      subtitle: dayLabel[0].toUpperCase() + dayLabel.substring(1),
+      onRefresh: () async {
+        ref.invalidate(reservationsForDateProvider(_selectedDate));
+      },
+      actions: [
+        IconButton(
+          tooltip: 'Actualiser',
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: () =>
+              ref.invalidate(reservationsForDateProvider(_selectedDate)),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Actualiser',
-            onPressed: () {
-              ref.read(reservationsRefreshProvider.notifier).state++;
-            },
-          ),
-        ],
-      ),
+      ],
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/plus/reservations/nouvelle'),
-        backgroundColor: context.colors.accentPrimary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
-          'Nouvelle reservation',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        onPressed: () => context.push('/planning/nouvelle'),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text('Réserver'),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildHorizontalDatePicker(),
-          Divider(height: 1, color: context.colors.border),
-          Expanded(
-            child: reservationsAsync.when(
-              data: (items) {
-                if (items.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    return _buildReservationCard(items[index]);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _buildErrorState(error),
+          _DayStrip(
+            today: _today,
+            days: _dayCount,
+            selected: _selectedDate,
+            onSelected: (day) => setState(() => _selectedDate = day),
+          ),
+          const SizedBox(height: 16),
+          reservationsAsync.when(
+            loading: () => const AppLoadingState(message: 'Chargement du planning…'),
+            error: (error, _) => AppErrorState(
+              message: _errorText(error),
+              onRetry: () =>
+                  ref.invalidate(reservationsForDateProvider(_selectedDate)),
+            ),
+            data: (items) => _DayContent(
+              items: items,
+              isToday: isToday,
             ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHorizontalDatePicker() {
-    final today = _normalize(DateTime.now());
-    return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      color: context.colors.backgroundSecondary,
-      child: ListView.builder(
+bool _isSameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+class _DayStrip extends StatelessWidget {
+  const _DayStrip({
+    required this.today,
+    required this.days,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final DateTime today;
+  final int days;
+  final DateTime selected;
+  final ValueChanged<DateTime> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return SizedBox(
+      height: 84,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: 8,
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        itemCount: days,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final date = today.add(Duration(days: index));
-          final isSelected = date.day == _selectedDate.day &&
-              date.month == _selectedDate.month &&
-              date.year == _selectedDate.year;
-
-          final dayName = DateFormat('EEE', 'fr_FR')
-              .format(date)
-              .toUpperCase()
-              .replaceAll('.', '');
-          final dayNumber = DateFormat('d').format(date);
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: SizedBox(
-              width: 56,
-              child: Material(
-                color: isSelected
-                    ? context.colors.accentPrimary
-                    : context.colors.surface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color:
-                        isSelected ? Colors.transparent : context.colors.border,
+          final isSelected = _isSameDay(date, selected);
+          final foreground = isSelected ? colors.textOnAccent : colors.textPrimary;
+          return Material(
+            color: isSelected ? colors.accentPrimary : colors.backgroundSecondary,
+            borderRadius: BorderRadius.circular(AppTheme.radiusField),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppTheme.radiusField),
+              onTap: () => onSelected(date),
+              child: Container(
+                width: 64,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusField),
+                  border: Border.all(
+                    color: isSelected ? colors.accentPrimary : colors.border,
                   ),
                 ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () =>
-                      setState(() => _selectedDate = _normalize(date)),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        dayName,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : context.colors.textSecondary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      index == 0
+                          ? 'AUJ.'
+                          : DateFormat('EEE', 'fr_FR')
+                              .format(date)
+                              .toUpperCase()
+                              .replaceAll('.', ''),
+                      style: TextStyle(
+                        color: isSelected
+                            ? foreground
+                            : colors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        dayNumber,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : context.colors.textPrimary,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      DateFormat('d').format(date),
+                      style: TextStyle(
+                        color: foreground,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -157,245 +167,141 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
       ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+class _DayContent extends StatelessWidget {
+  const _DayContent({required this.items, required this.isToday});
+
+  final List<Reservation> items;
+  final bool isToday;
+
+  @override
+  Widget build(BuildContext context) {
+    final active =
+        items.where((r) => r.status != ReservationStatus.cancelled).toList();
+    if (active.isEmpty) {
+      return AppEmptyState(
+        icon: Icons.event_available_rounded,
+        title: 'Aucune réservation ce jour',
+        message: isToday
+            ? 'Vous pouvez enregistrer une réservation pour aujourd’hui.'
+            : 'Choisissez un autre jour ou créez une réservation.',
+        action: FilledButton.icon(
+          onPressed: () => context.push('/planning/nouvelle'),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Nouvelle réservation'),
+        ),
+      );
+    }
+
+    final arrived =
+        active.where((r) => r.status == ReservationStatus.checkedIn).length;
+    final pending = active.length - arrived;
+
+    final byActivity = <String, List<Reservation>>{};
+    for (final reservation in active) {
+      final key = reservation.activityName.isNotEmpty
+          ? reservation.activityName
+          : (reservation.activityId.isNotEmpty
+              ? reservation.activityId
+              : 'Sans activité');
+      byActivity.putIfAbsent(key, () => []).add(reservation);
+    }
+    final groups = byActivity.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 64, color: context.colors.textMuted),
-            const SizedBox(height: 16),
-            Text(
-              'Aucune reservation',
-              style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+            Expanded(
+              child: _Totals(
+                label: 'Réservations',
+                value: '${active.length}',
+                color: context.colors.info,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Aucune activite n\'est planifiee pour le ${DateFormat('d MMMM', 'fr_FR').format(_selectedDate)}.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textSecondary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _Totals(
+                label: 'Arrivées',
+                value: '$arrived',
+                color: context.colors.success,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _Totals(
+                label: 'À venir',
+                value: '$pending',
+                color: context.colors.warning,
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: context.colors.warning),
-            const SizedBox(height: 12),
-            Text(
-              'Impossible de charger les reservations Odoo',
-              style: TextStyle(
-                color: context.colors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildReservationCard(Reservation reservation) {
-    final activityColor = _getActivityColor(reservation.activityId);
-    ref.watch(checkinProvider);
-    final checkinNotifier = ref.read(checkinProvider.notifier);
-    final today = DateTime.now();
-    final isToday = _selectedDate.year == today.year &&
-        _selectedDate.month == today.month &&
-        _selectedDate.day == today.day;
-    final isCheckedIn = checkinNotifier.isCheckedIn(reservation);
-    final canCheckIn = isToday &&
-        !isCheckedIn &&
-        reservation.status != ReservationStatus.cancelled;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(width: 5, color: activityColor),
-              const SizedBox(width: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      DateFormat('HH:mm').format(reservation.startAt),
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      DateFormat('HH:mm').format(reservation.endAt),
-                      style: TextStyle(
-                        color: context.colors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: activityColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              reservation.activityName,
-                              style: TextStyle(
-                                color: activityColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: Text(
-                              reservation.statusLabel,
-                              style: TextStyle(
-                                color: reservation.status ==
-                                        ReservationStatus.confirmed
-                                    ? context.colors.success
-                                    : context.colors.warning,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        reservation.clientName,
-                        style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.people_outline,
-                              size: 14, color: context.colors.textSecondary),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              reservation.peopleCount > 0
-                                  ? '${reservation.peopleCount} personnes'
-                                  : 'Capacite non renseignee',
-                              style: TextStyle(
-                                color: context.colors.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                          if (isCheckedIn)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: context.colors.success
-                                    .withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.check_rounded,
-                                      size: 15,
-                                      color: context.colors.success),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Arrivé',
-                                    style: TextStyle(
-                                      color: context.colors.success,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else if (canCheckIn)
-                            FilledButton.icon(
-                              onPressed: () async {
-                                await runCheckIn(context, checkinNotifier, reservation);
-                              },
-                              style: FilledButton.styleFrom(
-                                minimumSize: const Size(0, 38),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12),
-                              ),
-                              icon:
-                                  const Icon(Icons.how_to_reg_rounded, size: 17),
-                              label: const Text('Check-in'),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+        const SizedBox(height: 20),
+        for (final group in groups) ...[
+          SectionTitle(
+            title: group.key,
+            count: group.value.length,
+            icon: Icons.circle,
           ),
-        ),
+          for (final reservation in group.value)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ReservationTile(
+                reservation: reservation,
+                showActivity: false,
+              ),
+            ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _Totals extends StatelessWidget {
+  const _Totals({required this.label, required this.value, required this.color});
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AppPanel(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w800,
+              color: color,
+              height: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: colors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
+}
 
-  Color _getActivityColor(String activityId) {
-    return context.colors.getActivityColor(activityId);
-  }
+String _errorText(Object error) {
+  final text = error.toString();
+  return text.replaceFirst('Bad state: ', '').replaceFirst('StateError: ', '');
 }

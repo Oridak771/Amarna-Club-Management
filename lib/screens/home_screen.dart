@@ -4,21 +4,24 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../models/activity.dart';
+import '../models/inventory_item.dart';
 import '../models/reservation.dart';
 import '../models/work_ticket.dart';
 import '../providers/activities_provider.dart';
-import '../providers/checkin_provider.dart';
 import '../providers/inventory_provider.dart';
 import '../providers/reservations_provider.dart';
-import '../services/odoo_jsonrpc_service.dart';
 import '../providers/tickets_provider.dart';
+import '../services/odoo_jsonrpc_service.dart';
 import '../theme/app_theme.dart';
+import '../ui/activity_ui_adapter.dart';
+import '../widgets/app_layout.dart';
+import '../widgets/reservation_tile.dart';
 
 /// « Ma journée » — the staff home page.
 ///
-/// Action-first: urgent interventions, today's reservations with one-tap
-/// check-in, quick actions and a glanceable activity strip. Global KPIs
-/// live in Plus → Rapports.
+/// Reads top to bottom in the order staff act: what needs attention now,
+/// the day's arrivals with one-tap check-in, the open tickets, then the state
+/// of each activity. The four most common actions sit within reach at the top.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -26,946 +29,99 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tickets = ref.watch(ticketsProvider);
     final activities = ref.watch(activitiesProvider);
-    final lowStockCount =
-        ref.watch(inventoryProvider).where((i) => i.isLowStock).length;
+    final inventory = ref.watch(inventoryProvider);
+    final reservations = ref.watch(todaysReservationsProvider);
 
-    final urgentTickets = _urgentTickets(tickets);
+    final openTickets =
+        tickets.where((t) => t.status != TicketStatus.resolved).toList();
+    final overdueCount = openTickets.where((t) => t.isOverdue).length;
+    final lowStock = inventory.where((i) => i.isLowStock).toList();
+    final openActivities =
+        activities.where((a) => a.status == ActivityStatus.open).length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ma journée'),
-        actions: [
-          IconButton.filledTonal(
-            icon: const Icon(Icons.qr_code_scanner_rounded),
-            tooltip: 'Scanner QR/NFC',
-            onPressed: () => context.push('/scan'),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filledTonal(
-            icon: const Icon(Icons.notifications_none_rounded),
-            tooltip: 'Notifications',
-            onPressed: () => context.push('/notifications'),
-          ),
-          const SizedBox(width: 12),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            children: [
-              const _SyncBanner(),
-              _GreetingHeader(
-                openCount: activities
-                    .where((a) => a.status == ActivityStatus.open)
-                    .length,
-                totalCount: activities.length,
-              ),
-              const SizedBox(height: 16),
-              _AlertStrip(
-                tickets: tickets,
-                activities: activities,
-                lowStockCount: lowStockCount,
-              ),
-              const SizedBox(height: 20),
-              const _QuickActions(),
-              const SizedBox(height: 24),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 860;
-                  final urgent = _UrgentTicketsSection(tickets: urgentTickets);
-                  const reservations = _TodayReservationsSection();
-                  if (!isWide) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        urgent,
-                        const SizedBox(height: 24),
-                        reservations,
-                      ],
-                    );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: urgent),
-                      const SizedBox(width: 20),
-                      const Expanded(child: reservations),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              _ActivitiesStrip(activities: activities),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  List<WorkTicket> _urgentTickets(List<WorkTicket> tickets) {
-    final open =
-        tickets.where((t) => t.status != TicketStatus.resolved).toList()
-          ..sort((a, b) {
-            if (a.isOverdue != b.isOverdue) return a.isOverdue ? -1 : 1;
-            final byPriority = b.priority.index.compareTo(a.priority.index);
-            if (byPriority != 0) return byPriority;
-            return b.dateCreated.compareTo(a.dateCreated);
-          });
-    return open.take(4).toList();
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _GreetingHeader extends StatelessWidget {
-  const _GreetingHeader({required this.openCount, required this.totalCount});
-
-  final int openCount;
-  final int totalCount;
-
-  @override
-  Widget build(BuildContext context) {
     final now = DateTime.now();
-    final hour = now.hour;
-    final greeting = hour < 12
-        ? 'Bonjour'
-        : hour < 18
-            ? 'Bon après-midi'
-            : 'Bonsoir';
-    final date = DateFormat('EEEE d MMMM', 'fr_FR').format(now);
+    final dateLabel = DateFormat('EEEE d MMMM', 'fr_FR').format(now);
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$greeting 👋',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                date[0].toUpperCase() + date.substring(1),
-                style: TextStyle(
-                  color: context.colors.textSecondary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: context.colors.accentPrimary.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.sports_tennis_rounded,
-                  size: 18, color: context.colors.accentPrimary),
-              const SizedBox(width: 8),
-              Text(
-                '$openCount/$totalCount activités ouvertes',
-                style: TextStyle(
-                  color: context.colors.accentPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _AlertStrip extends ConsumerWidget {
-  const _AlertStrip({
-    required this.tickets,
-    required this.activities,
-    required this.lowStockCount,
-  });
-
-  final List<WorkTicket> tickets;
-  final List<Activity> activities;
-  final int lowStockCount;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final criticalCount = tickets
-        .where((t) =>
-            t.status != TicketStatus.resolved &&
-            t.priority == TicketPriority.critical)
-        .length;
-    final overdueCount = tickets.where((t) => t.isOverdue).length;
-    final warningActivities = activities
-        .where((a) =>
-            a.status == ActivityStatus.warning ||
-            a.status == ActivityStatus.maintenance)
-        .toList();
-
-    final alerts = <Widget>[
-      if (criticalCount > 0)
-        _AlertCard(
-          icon: Icons.error_outline_rounded,
-          color: context.colors.danger,
-          label:
-              '$criticalCount incident${criticalCount > 1 ? 's' : ''} critique${criticalCount > 1 ? 's' : ''}',
-          onTap: () => context.go('/tickets'),
-        ),
-      if (overdueCount > 0)
-        _AlertCard(
-          icon: Icons.schedule_rounded,
-          color: context.colors.warning,
-          label: '$overdueCount intervention${overdueCount > 1 ? 's' : ''} en retard',
-          onTap: () => context.go('/tickets'),
-        ),
-      if (lowStockCount > 0)
-        _AlertCard(
-          icon: Icons.inventory_2_outlined,
-          color: context.colors.accentSecondary,
-          label: '$lowStockCount stock${lowStockCount > 1 ? 's' : ''} bas',
-          onTap: () => context.go('/plus/inventaire'),
-        ),
-      for (final activity in warningActivities)
-        _AlertCard(
-          icon: activity.status == ActivityStatus.maintenance
-              ? Icons.build_circle_outlined
-              : Icons.warning_amber_rounded,
-          color: activity.status == ActivityStatus.maintenance
-              ? context.colors.info
-              : context.colors.warning,
-          label: '${activity.name} : ${activity.statusTextFrench}',
-          onTap: () => context.go('/activites/${activity.id}'),
-        ),
-    ];
-
-    if (alerts.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: context.colors.success.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: context.colors.success.withValues(alpha: 0.25),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.check_circle_outline_rounded,
-                color: context.colors.success, size: 20),
-            const SizedBox(width: 10),
-            Text(
-              'Tout est sous contrôle — aucune alerte en cours.',
-              style: TextStyle(
-                color: context.colors.success,
-                fontWeight: FontWeight.w700,
-                fontSize: 13.5,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 52,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: alerts.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) => alerts[index],
-      ),
-    );
-  }
-}
-
-class _AlertCard extends StatelessWidget {
-  const _AlertCard({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withValues(alpha: 0.3)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 10),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13.5,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Icon(Icons.chevron_right_rounded, color: color, size: 18),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  @override
-  Widget build(BuildContext context) {
-    final actions = [
-      (
-        Icons.report_problem_rounded,
-        'Signaler',
-        'Incident ou panne',
-        context.colors.danger,
-        () => context.go('/tickets/nouveau'),
-      ),
-      (
-        Icons.qr_code_scanner_rounded,
-        'Scanner',
-        'QR / NFC équipement',
-        context.colors.accentPrimary,
-        () => context.push('/scan'),
-      ),
-      (
-        Icons.event_available_rounded,
-        'Réserver',
-        'Nouvelle réservation',
-        context.colors.info,
-        () => context.go('/plus/reservations/nouvelle'),
-      ),
-      (
-        Icons.inventory_2_rounded,
-        'Stocks',
-        'Ajuster l\'inventaire',
-        context.colors.accentSecondary,
-        () => context.go('/plus/inventaire'),
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 640 ? 4 : 2;
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: columns,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: columns == 4 ? 2.1 : 2.4,
-          children: [
-            for (final (icon, title, subtitle, color, onTap) in actions)
-              Material(
-                color: context.colors.backgroundSecondary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(color: context.colors.border),
-                ),
-                child: InkWell(
-                  onTap: onTap,
-                  borderRadius: BorderRadius.circular(18),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(13),
-                          ),
-                          child: Icon(icon, color: color, size: 22),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: TextStyle(
-                                  color: context.colors.textPrimary,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 14.5,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: context.colors.textMuted,
-                                  fontSize: 11.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
+    return AppPage(
+      title: _greeting(now),
+      subtitle: dateLabel[0].toUpperCase() + dateLabel.substring(1),
+      onRefresh: () async {
+        await Future.wait([
+          ref.read(ticketsProvider.notifier).pullFromOdoo(),
+          ref.read(activitiesProvider.notifier).refreshFromOdoo(),
+          ref.read(inventoryProvider.notifier).refreshFromOdoo(),
+        ]);
+        ref.invalidate(todaysReservationsProvider);
       },
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String title;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+      actions: [
+        IconButton.filledTonal(
+          icon: const Icon(Icons.qr_code_scanner_rounded),
+          tooltip: 'Scanner un QR ou une carte',
+          onPressed: () => context.push('/scan'),
         ),
-        if (actionLabel != null)
-          TextButton(
-            onPressed: onAction,
-            child: Text(actionLabel!),
-          ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _UrgentTicketsSection extends StatelessWidget {
-  const _UrgentTicketsSection({required this.tickets});
-
-  final List<WorkTicket> tickets;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SectionHeader(
-          title: 'À traiter en priorité',
-          actionLabel: 'Tous les tickets',
-          onAction: () => context.go('/tickets'),
-        ),
-        const SizedBox(height: 8),
-        if (tickets.isEmpty)
-          const _EmptyCard(
-            icon: Icons.task_alt_rounded,
-            message: 'Aucune intervention ouverte. Belle journée !',
-          )
-        else
-          for (final ticket in tickets) ...[
-            _TicketCard(ticket: ticket),
-            const SizedBox(height: 10),
-          ],
-      ],
-    );
-  }
-}
-
-class _TicketCard extends StatelessWidget {
-  const _TicketCard({required this.ticket});
-
-  final WorkTicket ticket;
-
-  Color _priorityColor(BuildContext context) {
-    switch (ticket.priority) {
-      case TicketPriority.low:
-        return context.colors.priorityLow;
-      case TicketPriority.medium:
-        return context.colors.priorityMedium;
-      case TicketPriority.high:
-        return context.colors.priorityHigh;
-      case TicketPriority.critical:
-        return context.colors.priorityCritical;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final color = _priorityColor(context);
-    final activityColor = context.colors.getActivityColor(ticket.activityId);
-
-    return Material(
-      color: context.colors.backgroundSecondary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: context.colors.border),
-      ),
-      child: InkWell(
-        onTap: () => context.go('/tickets/${ticket.id}'),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Container(
-                width: 4,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ticket.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.colors.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14.5,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: activityColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            ticket.activityName,
-                            style: TextStyle(
-                              color: activityColor,
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          ticket.priorityTextFrench,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        if (ticket.isOverdue) ...[
-                          const SizedBox(width: 8),
-                          Icon(Icons.schedule_rounded,
-                              size: 13, color: context.colors.danger),
-                          const SizedBox(width: 3),
-                          Text(
-                            'En retard',
-                            style: TextStyle(
-                              color: context.colors.danger,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded,
-                  color: context.colors.textMuted),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _TodayReservationsSection extends ConsumerWidget {
-  const _TodayReservationsSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reservationsAsync = ref.watch(todaysReservationsProvider);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SectionHeader(
-          title: 'Réservations du jour',
-          actionLabel: 'Planning',
-          onAction: () => context.go('/plus/reservations'),
-        ),
-        const SizedBox(height: 8),
-        reservationsAsync.when(
-          data: (items) {
-            final upcoming = items
-                .where((r) => r.status != ReservationStatus.cancelled)
-                .toList();
-            if (upcoming.isEmpty) {
-              return const _EmptyCard(
-                icon: Icons.event_busy_rounded,
-                message: 'Aucune réservation aujourd\'hui.',
-              );
-            }
-            return Column(
-              children: [
-                for (final reservation in upcoming.take(5)) ...[
-                  _ReservationRow(reservation: reservation),
-                  const SizedBox(height: 10),
-                ],
-              ],
-            );
-          },
-          loading: () => const Padding(
-            padding: EdgeInsets.all(24),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-          error: (error, _) => const _EmptyCard(
-            icon: Icons.cloud_off_rounded,
-            message:
-                'Réservations Odoo indisponibles.\nVérifiez la connexion au serveur.',
-          ),
+        IconButton.filledTonal(
+          icon: const Icon(Icons.notifications_none_rounded),
+          tooltip: 'Notifications',
+          onPressed: () => context.push('/notifications'),
         ),
       ],
-    );
-  }
-}
-
-class _ReservationRow extends ConsumerWidget {
-  const _ReservationRow({required this.reservation});
-
-  final Reservation reservation;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(checkinProvider);
-    final notifier = ref.read(checkinProvider.notifier);
-    final checkedIn = notifier.isCheckedIn(reservation);
-    final activityColor =
-        context.colors.getActivityColor(reservation.activityId);
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Row(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Column(
-            children: [
-              Text(
-                DateFormat('HH:mm').format(reservation.startAt),
-                style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14,
-                ),
-              ),
-              Text(
-                DateFormat('HH:mm').format(reservation.endAt),
-                style: TextStyle(
-                  color: context.colors.textMuted,
-                  fontSize: 11.5,
-                ),
-              ),
-            ],
+          const _SyncBanner(),
+          _QuickActions(lowStockCount: lowStock.length),
+          const SizedBox(height: 20),
+          _KpiRow(
+            openTickets: openTickets.length,
+            overdueCount: overdueCount,
+            lowStockCount: lowStock.length,
+            openActivities: openActivities,
+            totalActivities: activities.length,
+            reservations: reservations.valueOrNull,
           ),
-          const SizedBox(width: 12),
-          Container(
-            width: 4,
-            height: 40,
-            decoration: BoxDecoration(
-              color: activityColor,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  reservation.clientName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  reservation.peopleCount > 0
-                      ? '${reservation.activityName} · ${reservation.peopleCount} pers.'
-                      : reservation.activityName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: context.colors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          checkedIn
-              ? Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: context.colors.success.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_rounded,
-                          size: 16, color: context.colors.success),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Arrivé',
-                        style: TextStyle(
-                          color: context.colors.success,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : FilledButton.icon(
-                  key: ValueKey('checkin-${reservation.remoteId}'),
-                  onPressed: () async {
-                    await runCheckIn(context, notifier, reservation);
-                  },
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(0, 40),
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                  ),
-                  icon: const Icon(Icons.how_to_reg_rounded, size: 18),
-                  label: const Text('Check-in'),
-                ),
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _ActivitiesStrip extends StatelessWidget {
-  const _ActivitiesStrip({required this.activities});
-
-  final List<Activity> activities;
-
-  Color _statusColor(BuildContext context, ActivityStatus status) {
-    switch (status) {
-      case ActivityStatus.open:
-        return context.colors.success;
-      case ActivityStatus.closed:
-        return context.colors.danger;
-      case ActivityStatus.warning:
-        return context.colors.warning;
-      case ActivityStatus.maintenance:
-        return context.colors.info;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _SectionHeader(
-          title: 'Mes activités',
-          actionLabel: 'Voir tout',
-          onAction: () => context.go('/activites'),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 108,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: activities.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
-            itemBuilder: (context, index) {
-              final activity = activities[index];
-              final color =
-                  context.colors.getActivityColor(activity.id);
-              final statusColor = _statusColor(context, activity.status);
-              return Container(
-                width: 190,
-                decoration: BoxDecoration(
-                  color: context.colors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: context.colors.border),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    onTap: () => context.go('/activites/${activity.id}'),
-                    child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                activity.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: context.colors.textPrimary,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13.5,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: 9,
-                              height: 9,
-                              decoration: BoxDecoration(
-                                color: statusColor,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          activity.statusTextFrench,
-                          style: TextStyle(
-                            color: statusColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: activity.occupancyPercentage,
-                            minHeight: 6,
-                            backgroundColor: context.colors.surfaceHover,
-                            valueColor: AlwaysStoppedAnimation(color),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${activity.currentOccupancy}/${activity.maxCapacity} présents',
-                          style: TextStyle(
-                            color: context.colors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ),
-                ),
+          const SizedBox(height: 24),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final wide = constraints.maxWidth >= 860;
+              final planning = _PlanningSection(reservations: reservations);
+              final urgent = _UrgentSection(tickets: openTickets);
+              if (!wide) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [planning, const SizedBox(height: 24), urgent],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: planning),
+                  const SizedBox(width: 20),
+                  Expanded(child: urgent),
+                ],
               );
             },
           ),
-        ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-
-class _EmptyCard extends StatelessWidget {
-  const _EmptyCard({required this.icon, required this.message});
-
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.colors.border),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: context.colors.textMuted, size: 26),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: context.colors.textSecondary,
-                fontSize: 13.5,
-              ),
-            ),
-          ),
+          const SizedBox(height: 24),
+          _ActivitiesSection(activities: activities),
+          if (lowStock.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            _LowStockSection(items: lowStock),
+          ],
         ],
       ),
     );
   }
+
+  String _greeting(DateTime now) {
+    if (now.hour < 12) return 'Bonjour';
+    if (now.hour < 18) return 'Bon après-midi';
+    return 'Bonsoir';
+  }
 }
 
-/// Tells staff when the last exchange with Odoo failed, so stale figures are
-/// not mistaken for live ones. Dismissing it only hides the message.
+// ---------------------------------------------------------------------------
+// Sync state
+
 class _SyncBanner extends StatelessWidget {
   const _SyncBanner();
 
@@ -976,34 +132,613 @@ class _SyncBanner extends StatelessWidget {
       builder: (context, issue, _) {
         if (issue == null) return const SizedBox.shrink();
         final colors = context.colors;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
-          decoration: BoxDecoration(
-            color: colors.danger.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colors.danger.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.cloud_off_rounded, color: colors.danger, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Synchronisation Odoo interrompue — $issue\n'
-                  'Les données affichées peuvent être anciennes.',
-                  style: TextStyle(color: colors.textPrimary, fontSize: 13),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: AppPanel(
+            color: colors.warning.withValues(alpha: 0.10),
+            padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
+            child: Row(
+              children: [
+                Icon(Icons.cloud_off_rounded, color: colors.warning),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Synchronisation Odoo interrompue — $issue\n'
+                    'Les données affichées peuvent être anciennes.',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13,
+                      height: 1.35,
+                    ),
+                  ),
                 ),
-              ),
-              IconButton(
-                tooltip: 'Masquer',
-                icon: Icon(Icons.close_rounded, color: colors.textSecondary),
-                onPressed: () => odooSyncIssue.value = null,
-              ),
-            ],
+                IconButton(
+                  tooltip: 'Masquer',
+                  icon: Icon(Icons.close_rounded, color: colors.textSecondary),
+                  onPressed: () => odooSyncIssue.value = null,
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Quick actions: the four most frequent tasks, one tap each
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions({required this.lowStockCount});
+
+  final int lowStockCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final actions = [
+      _QuickAction(
+        icon: Icons.add_alert_rounded,
+        label: 'Signaler',
+        color: colors.danger,
+        onTap: () => context.go('/tickets/nouveau'),
+      ),
+      _QuickAction(
+        icon: Icons.how_to_reg_rounded,
+        label: 'Arrivée',
+        color: colors.accentPrimary,
+        onTap: () => context.go('/planning'),
+      ),
+      _QuickAction(
+        icon: Icons.event_available_rounded,
+        label: 'Réserver',
+        color: colors.pool,
+        onTap: () => context.go('/planning/nouvelle'),
+      ),
+      _QuickAction(
+        icon: Icons.inventory_2_outlined,
+        label: 'Stock',
+        color: colors.accentSecondary,
+        badge: lowStockCount > 0 ? '$lowStockCount' : null,
+        onTap: () => context.go('/plus/inventaire'),
+      ),
+    ];
+    return Row(
+      children: [
+        for (final action in actions) ...[
+          Expanded(child: action),
+          if (action != actions.last) const SizedBox(width: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+    this.badge,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Material(
+      color: colors.backgroundSecondary,
+      borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 88),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusCard),
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(icon, color: color, size: 24),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      right: -6,
+                      top: -6,
+                      child: Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: colors.danger,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          badge!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// KPIs
+
+class _KpiRow extends StatelessWidget {
+  const _KpiRow({
+    required this.openTickets,
+    required this.overdueCount,
+    required this.lowStockCount,
+    required this.openActivities,
+    required this.totalActivities,
+    required this.reservations,
+  });
+
+  final int openTickets;
+  final int overdueCount;
+  final int lowStockCount;
+  final int openActivities;
+  final int totalActivities;
+  final List<Reservation>? reservations;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final arrived = reservations
+            ?.where((r) => r.status == ReservationStatus.checkedIn)
+            .length ??
+        0;
+    final expected = reservations?.length ?? 0;
+
+    final tiles = [
+      AppStatTile(
+        label: 'Tickets ouverts',
+        value: '$openTickets',
+        caption: overdueCount > 0 ? '$overdueCount en retard' : 'Rien en retard',
+        icon: Icons.assignment_outlined,
+        color: overdueCount > 0 ? colors.danger : colors.info,
+        onTap: () => context.go('/tickets'),
+      ),
+      AppStatTile(
+        label: 'Arrivées du jour',
+        value: reservations == null ? '—' : '$arrived/$expected',
+        caption: 'Réservations pointées',
+        icon: Icons.how_to_reg_outlined,
+        color: colors.accentPrimary,
+        onTap: () => context.go('/planning'),
+      ),
+      AppStatTile(
+        label: 'Stock bas',
+        value: '$lowStockCount',
+        caption: lowStockCount == 0 ? 'Tout est au niveau' : 'À réapprovisionner',
+        icon: Icons.inventory_2_outlined,
+        color: lowStockCount > 0 ? colors.warning : colors.success,
+        onTap: () => context.go('/plus/inventaire'),
+      ),
+      AppStatTile(
+        label: 'Activités ouvertes',
+        value: '$openActivities/$totalActivities',
+        caption: 'Statut opérationnel',
+        icon: Icons.sports_tennis_rounded,
+        color: colors.pool,
+        onTap: () => context.go('/activites'),
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 720 ? 4 : 2;
+        const gap = 12.0;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final tile in tiles) SizedBox(width: width, child: tile),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Planning of the day
+
+class _PlanningSection extends ConsumerWidget {
+  const _PlanningSection({required this.reservations});
+
+  final AsyncValue<List<Reservation>> reservations;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = reservations.valueOrNull;
+
+    Widget content;
+    if (reservations.isLoading && list == null) {
+      content = const AppLoadingState(message: 'Chargement du planning…');
+    } else if (reservations.hasError && list == null) {
+      content = AppErrorState(
+        message: _errorText(reservations.error),
+        onRetry: () => ref.invalidate(todaysReservationsProvider),
+      );
+    } else if (list == null || list.isEmpty) {
+      content = AppEmptyState(
+        icon: Icons.event_busy_rounded,
+        title: 'Aucune réservation aujourd’hui',
+        action: FilledButton.icon(
+          onPressed: () => context.go('/planning/nouvelle'),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('Nouvelle réservation'),
+        ),
+      );
+    } else {
+      final upcoming = list
+          .where((r) => r.status != ReservationStatus.cancelled)
+          .toList()
+        ..sort((a, b) => a.startAt.compareTo(b.startAt));
+      content = Column(
+        children: [
+          for (final r in upcoming.take(6))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: ReservationTile(reservation: r),
+            ),
+          if (upcoming.length > 6)
+            TextButton(
+              onPressed: () => context.go('/planning'),
+              child: Text('Voir les ${upcoming.length} réservations'),
+            ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          title: 'Planning du jour',
+          icon: Icons.event_note_rounded,
+          count: list?.length,
+          trailing: TextButton(
+            onPressed: () => context.go('/planning'),
+            child: const Text('Tout voir'),
+          ),
+        ),
+        content,
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tickets needing attention
+
+class _UrgentSection extends StatelessWidget {
+  const _UrgentSection({required this.tickets});
+
+  final List<WorkTicket> tickets;
+
+  @override
+  Widget build(BuildContext context) {
+    final sorted = [...tickets]..sort((a, b) {
+        if (a.isOverdue != b.isOverdue) return a.isOverdue ? -1 : 1;
+        final byPriority = b.priority.index.compareTo(a.priority.index);
+        if (byPriority != 0) return byPriority;
+        return b.dateCreated.compareTo(a.dateCreated);
+      });
+    final urgent = sorted.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          title: 'Tickets à traiter',
+          icon: Icons.priority_high_rounded,
+          count: tickets.length,
+          trailing: TextButton(
+            onPressed: () => context.go('/tickets'),
+            child: const Text('Tout voir'),
+          ),
+        ),
+        if (urgent.isEmpty)
+          const AppEmptyState(
+            icon: Icons.task_alt_rounded,
+            title: 'Aucun ticket ouvert',
+            message: 'Tout est à jour pour le moment.',
+          )
+        else
+          for (final ticket in urgent)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TicketRow(ticket: ticket),
+            ),
+      ],
+    );
+  }
+}
+
+class _TicketRow extends StatelessWidget {
+  const _TicketRow({required this.ticket});
+
+  final WorkTicket ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final priorityColor = switch (ticket.priority) {
+      TicketPriority.critical => colors.priorityCritical,
+      TicketPriority.high => colors.priorityHigh,
+      TicketPriority.medium => colors.priorityMedium,
+      TicketPriority.low => colors.priorityLow,
+    };
+    return AppPanel(
+      accentColor: priorityColor,
+      onTap: () => context.go('/tickets/${ticket.id}'),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ticket.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800, color: colors.textPrimary),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  [
+                    if (ticket.activityName.isNotEmpty) ticket.activityName,
+                    if (ticket.assetName != null) ticket.assetName!,
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          AppPill(
+            label: ticket.isOverdue ? 'En retard' : ticket.priorityTextFrench,
+            color: ticket.isOverdue ? colors.danger : priorityColor,
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Activities
+
+class _ActivitiesSection extends StatelessWidget {
+  const _ActivitiesSection({required this.activities});
+
+  final List<Activity> activities;
+
+  @override
+  Widget build(BuildContext context) {
+    if (activities.isEmpty) {
+      return const AppEmptyState(
+        icon: Icons.sports_rounded,
+        title: 'Aucune activité synchronisée',
+        message: 'Vérifiez la connexion à Odoo puis tirez pour actualiser.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          title: 'Activités',
+          icon: Icons.grid_view_rounded,
+          trailing: TextButton(
+            onPressed: () => context.go('/activites'),
+            child: const Text('Tout voir'),
+          ),
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 860
+                ? 3
+                : constraints.maxWidth >= 520
+                    ? 2
+                    : 1;
+            const gap = 12.0;
+            final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: [
+                for (final activity in activities)
+                  SizedBox(
+                    width: width,
+                    child: _ActivityCard(activity: activity),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _ActivityCard extends StatelessWidget {
+  const _ActivityCard({required this.activity});
+
+  final Activity activity;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final color = resolveActivityColor(context, activity.id);
+    final statusColor = activity.status.resolveColor(context);
+    final ratio = activity.occupancyPercentage.clamp(0.0, 1.0);
+
+    return AppPanel(
+      onTap: () => context.go('/activites/${activity.id}'),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(resolveActivityIcon(activity.iconKey),
+                    color: color, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  activity.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: colors.textPrimary),
+                ),
+              ),
+              AppPill(label: activity.statusTextFrench, color: statusColor),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (activity.maxCapacity > 0) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: ratio,
+                minHeight: 8,
+                color: color,
+                backgroundColor: colors.surface,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '${activity.currentOccupancy}/${activity.maxCapacity} présents',
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary),
+            ),
+          ] else
+            Text(
+              'Occupation non renseignée',
+              style: TextStyle(fontSize: 12, color: colors.textMuted),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Low stock
+
+class _LowStockSection extends StatelessWidget {
+  const _LowStockSection({required this.items});
+
+  final List<InventoryItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          title: 'Stock à réapprovisionner',
+          icon: Icons.warning_amber_rounded,
+          count: items.length,
+        ),
+        AppPanel(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (var i = 0; i < items.length && i < 6; i++) ...[
+                if (i > 0) Divider(height: 1, color: colors.border),
+                ListTile(
+                  minVerticalPadding: 12,
+                  title: Text(items[i].name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary)),
+                  subtitle: Text(items[i].activityName,
+                      style: TextStyle(color: colors.textSecondary)),
+                  trailing: AppPill(
+                    label: '${items[i].currentStock} ${items[i].unitName}'
+                        .trim(),
+                    color: items[i].isOutOfStock
+                        ? colors.danger
+                        : colors.warning,
+                  ),
+                  onTap: () => context.go('/plus/inventaire'),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+String _errorText(Object? error) {
+  if (error is OdooException) return error.message;
+  return 'Vérifiez la connexion au serveur puis réessayez.';
 }

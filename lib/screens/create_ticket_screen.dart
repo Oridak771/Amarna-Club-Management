@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
+import '../models/activity.dart';
+import '../models/asset.dart';
 import '../models/work_ticket.dart';
+import '../providers/activities_provider.dart';
+import '../providers/assets_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_filter_chip.dart';
+import '../ui/activity_ui_adapter.dart';
+import '../widgets/app_layout.dart';
 
+/// « Nouvelle intervention » — report an incident or plan a maintenance task.
+///
+/// Activities and equipment come from the synced Odoo data, so the ticket is
+/// always linked to a real record. The form is short on purpose: type,
+/// activity, equipment, priority, then what happened.
 class CreateTicketScreen extends ConsumerStatefulWidget {
   const CreateTicketScreen({super.key});
 
@@ -18,376 +29,438 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _assetNameController = TextEditingController();
 
-  // Unified types: Anomaly vs Preventive vs Corrective
-  TicketType _selectedType = TicketType.anomaly;
-  String _selectedActivityId = 'pool';
-  String _selectedActivityName = 'Piscine';
-  TicketPriority _selectedPriority = TicketPriority.medium;
+  TicketType _type = TicketType.anomaly;
+  TicketPriority _priority = TicketPriority.medium;
+  String? _activityId;
+  String? _assetId;
+  DateTime? _dueDate;
+  String? _technician;
+  bool _prefillApplied = false;
+  bool _saving = false;
 
-  // Media simulation
-
-  String? _assignedTechnician = 'Karim (Technicien)';
-
-  final List<String> _technicians = [
+  // Technicians known to the tablet; see the ticket detail screen.
+  static const _technicians = [
     'Karim (Technicien)',
-    'Sami (Électricien)',
     'Mourad (Technicien)',
-    'Non assigné',
+    'Sami (Électricien)',
+    'Sophie (Coach Gym)',
   ];
-
-  final Map<String, String> _activities = {
-    'pool': 'Piscine',
-    'horses': 'Équitation',
-    'paintball': 'Paintball',
-    'shooting': 'Stand de Tir',
-    'gym': 'Salle de Gym',
-    'padel': 'Terrains de Padel',
-  };
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
-    _assetNameController.dispose();
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      final assetNameVal = _assetNameController.text.trim();
-      final hasAsset = assetNameVal.isNotEmpty;
+  bool get _isIncident => _type == TicketType.anomaly;
 
-      ref.read(ticketsProvider.notifier).addTicket(
+  /// Applies `extra` passed by the asset screen once, on first build.
+  void _applyPrefill(List<Asset> assets, List<Activity> activities) {
+    if (_prefillApplied) return;
+    _prefillApplied = true;
+    final extra = GoRouterState.of(context).extra;
+    if (extra is! Map) return;
+    final assetId = extra['prefilledAssetId'] as String?;
+    if (assetId == null) return;
+    final asset = assets.where((a) => a.id == assetId).firstOrNull;
+    if (asset != null) {
+      _assetId = asset.id;
+      _activityId = asset.activityId;
+    }
+  }
+
+  Future<void> _submit(List<Asset> assets, List<Activity> activities) async {
+    if (!_formKey.currentState!.validate()) return;
+    final activityId = _activityId;
+    if (activityId == null) return;
+    final activity = activities.where((a) => a.id == activityId).firstOrNull;
+    final asset = _assetId == null
+        ? null
+        : assets.where((a) => a.id == _assetId).firstOrNull;
+
+    setState(() => _saving = true);
+    try {
+      await ref.read(ticketsProvider.notifier).addTicket(
             title: _titleController.text.trim(),
             description: _descriptionController.text.trim(),
-            activityId: _selectedActivityId,
-            activityName: _selectedActivityName,
-            type: _selectedType,
-            priority: _selectedPriority,
-            assetId: hasAsset
-                ? 'asset-${DateTime.now().millisecondsSinceEpoch}'
-                : null,
-            assetName: hasAsset ? assetNameVal : null,
-            assignedTechnician: _selectedType == TicketType.anomaly
-                ? null
-                : (_assignedTechnician == 'Non assigné'
-                    ? null
-                    : _assignedTechnician),
+            activityId: activityId,
+            activityName: activity?.name ?? '',
+            type: _type,
+            priority: _priority,
+            assetId: asset?.id,
+            assetName: asset?.name,
+            dateDue: _isIncident ? null : _dueDate,
+            assignedTechnician: _isIncident ? null : _technician,
           );
-
-      context.pop();
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go('/tickets');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(_selectedType == TicketType.anomaly
-              ? 'Signalement d\'anomalie enregistré ✓'
-              : 'Tâche de maintenance créée ✓'),
-          backgroundColor: _selectedType == TicketType.anomaly
-              ? context.colors.danger
-              : context.colors.success,
+          content: Text(_isIncident
+              ? 'Incident signalé ✓'
+              : 'Intervention planifiée ✓'),
+          backgroundColor:
+              _isIncident ? context.colors.danger : context.colors.success,
         ),
       );
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final showTechnicianAndAsset = _selectedType != TicketType.anomaly;
+    final colors = context.colors;
+    final activities = ref.watch(activitiesProvider);
+    final assets = ref.watch(assetsProvider);
+    _applyPrefill(assets, activities);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nouvelle intervention'),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 1. Ticket Type Switch
-                    Text(
-                      'Nature de l\'intervention',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        AppFilterChip(
-                          label: 'Incident',
-                          isSelected: _selectedType == TicketType.anomaly,
-                          onTap: () => setState(
-                              () => _selectedType = TicketType.anomaly),
-                        ),
-                        const SizedBox(width: 8),
-                        AppFilterChip(
-                          label: 'Maintenance Préventive',
-                          isSelected: _selectedType == TicketType.preventive,
-                          onTap: () => setState(
-                              () => _selectedType = TicketType.preventive),
-                        ),
-                        const SizedBox(width: 8),
-                        AppFilterChip(
-                          label: 'Maintenance Corrective',
-                          isSelected: _selectedType == TicketType.corrective,
-                          onTap: () => setState(
-                              () => _selectedType = TicketType.corrective),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
+    final activityId = _activityId;
+    final activityAssets = activityId == null
+        ? const <Asset>[]
+        : assets.where((a) => a.activityId == activityId).toList();
+    if (_assetId != null &&
+        !activityAssets.any((a) => a.id == _assetId)) {
+      _assetId = null;
+    }
 
-                    // 2. Activity Selector
-                    Text(
-                      'Activité concernée',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    DropdownButtonFormField<String>(
-                      dropdownColor: context.colors.backgroundSecondary,
-                      initialValue: _selectedActivityId,
-                      style: TextStyle(color: context.colors.textPrimary),
-                      decoration: const InputDecoration(
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                      items: _activities.entries.map((entry) {
-                        return DropdownMenuItem<String>(
-                          value: entry.key,
-                          child: Text(entry.value),
-                        );
-                      }).toList(),
-                      onChanged: (val) {
-                        if (val != null) {
-                          setState(() {
-                            _selectedActivityId = val;
-                            _selectedActivityName = _activities[val]!;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 3. Asset selector (conditional/optional)
-                    Text(
-                      'Équipement / Asset (Optionnel)',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _assetNameController,
-                      style: TextStyle(color: context.colors.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'Nom ou Code-barres de l\'équipement',
-                      ),
-                      validator: (value) {
-                        if (showTechnicianAndAsset &&
-                            (value == null || value.trim().isEmpty)) {
-                          return 'Veuillez saisir ou scanner un équipement pour planifier une maintenance';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 4. Title Field
-                    Text(
-                      'Titre / Résumé',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _titleController,
-                      style: TextStyle(color: context.colors.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText: 'Ex: Filtre de pompe obstrué',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Veuillez saisir un titre';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 5. Description Field
-                    Text(
-                      'Description',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _descriptionController,
-                      maxLines: 3,
-                      style: TextStyle(color: context.colors.textPrimary),
-                      decoration: const InputDecoration(
-                        hintText:
-                            'Expliquez en détail le problème ou l\'intervention requise...',
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // 6. Priority Selector (Large Buttons)
-                    Text(
-                      'Niveau de priorité',
-                      style: TextStyle(
-                          color: context.colors.textPrimary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPrioritySelector(),
-                    const SizedBox(height: 20),
-
-                    // 7. Technician Assignment (conditional)
-                    if (showTechnicianAndAsset) ...[
-                      Text(
-                        'Technicien assigné',
-                        style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        dropdownColor: context.colors.backgroundSecondary,
-                        initialValue: _assignedTechnician,
-                        style: TextStyle(color: context.colors.textPrimary),
-                        decoration: const InputDecoration(
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 12),
-                        ),
-                        items: _technicians.map((tech) {
-                          return DropdownMenuItem<String>(
-                            value: tech,
-                            child: Text(tech),
-                          );
-                        }).toList(),
-                        onChanged: (val) {
-                          setState(() {
-                            _assignedTechnician = val;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
-                    // 9. Submit Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _selectedType == TicketType.anomaly
-                              ? context.colors.danger
-                              : context.colors.success,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        onPressed: _submitForm,
-                        child: Text(
-                          _selectedType == TicketType.anomaly
-                              ? 'Signaler l\'incident'
-                              : 'Planifier l\'intervention',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ],
+    return AppPage(
+      title: _isIncident ? 'Signaler un incident' : 'Planifier une intervention',
+      subtitle: _isIncident
+          ? 'Un technicien sera alerté'
+          : 'Maintenance préventive ou corrective',
+      bottomBar: FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: _isIncident ? colors.danger : colors.accentPrimary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size.fromHeight(56),
+        ),
+        onPressed: _saving || activities.isEmpty
+            ? null
+            : () => _submit(assets, activities),
+        icon: _saving
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: Colors.white,
                 ),
+              )
+            : Icon(_isIncident
+                ? Icons.add_alert_rounded
+                : Icons.event_available_rounded),
+        label: Text(_isIncident ? 'Signaler l’incident' : 'Enregistrer'),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const _FieldLabel('Nature'),
+            SegmentedButton<TicketType>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: TicketType.anomaly,
+                  label: Text('Incident'),
+                  icon: Icon(Icons.warning_amber_rounded),
+                ),
+                ButtonSegment(
+                  value: TicketType.preventive,
+                  label: Text('Préventive'),
+                  icon: Icon(Icons.event_repeat_rounded),
+                ),
+                ButtonSegment(
+                  value: TicketType.corrective,
+                  label: Text('Corrective'),
+                  icon: Icon(Icons.build_rounded),
+                ),
+              ],
+              selected: {_type},
+              onSelectionChanged: (value) =>
+                  setState(() => _type = value.first),
+            ),
+            const SizedBox(height: 22),
+            const _FieldLabel('Activité'),
+            if (activities.isEmpty)
+              const AppEmptyState(
+                icon: Icons.sports_rounded,
+                title: 'Aucune activité disponible',
+                message: 'Synchronisez les données depuis l’accueil.',
+              )
+            else
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final activity in activities)
+                    ChoiceChip(
+                      avatar: Icon(
+                        resolveActivityIcon(activity.iconKey),
+                        size: 18,
+                        color: resolveActivityColor(context, activity.id),
+                      ),
+                      label: Text(activity.name),
+                      selected: _activityId == activity.id,
+                      labelStyle: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: _activityId == activity.id
+                            ? colors.accentPrimary
+                            : colors.textPrimary,
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.padded,
+                      onSelected: (_) => setState(() {
+                        _activityId = activity.id;
+                        _assetId = null;
+                      }),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 22),
+            const _FieldLabel('Équipement (facultatif)'),
+            if (activityId == null)
+              Text(
+                'Choisissez d’abord une activité.',
+                style: TextStyle(color: colors.textMuted),
+              )
+            else if (activityAssets.isEmpty)
+              Text(
+                'Aucun équipement enregistré pour cette activité.',
+                style: TextStyle(color: colors.textMuted),
+              )
+            else
+              DropdownButtonFormField<String?>(
+                initialValue: _assetId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.settings_outlined),
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Aucun équipement précis'),
+                  ),
+                  for (final asset in activityAssets)
+                    DropdownMenuItem<String?>(
+                      value: asset.id,
+                      child: Text(
+                        asset.serialNumber.isEmpty
+                            ? asset.name
+                            : '${asset.name} · ${asset.serialNumber}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+                onChanged: (value) => setState(() => _assetId = value),
+              ),
+            const SizedBox(height: 22),
+            const _FieldLabel('Priorité'),
+            _PriorityPicker(
+              value: _priority,
+              onChanged: (value) => setState(() => _priority = value),
+            ),
+            const SizedBox(height: 22),
+            const _FieldLabel('Ce qui se passe'),
+            TextFormField(
+              controller: _titleController,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Titre',
+                hintText: 'Ex. Fuite sur le filtre n°2',
+              ),
+              validator: (value) => (value == null || value.trim().isEmpty)
+                  ? 'Le titre est obligatoire.'
+                  : null,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _descriptionController,
+              minLines: 3,
+              maxLines: 6,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Détails',
+                hintText: 'Ce qui a été observé, depuis quand, action immédiate…',
+                alignLabelWithHint: true,
               ),
             ),
-          ),
+            if (!_isIncident) ...[
+              const SizedBox(height: 22),
+              const _FieldLabel('Planification'),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: _pickDueDate,
+                icon: const Icon(Icons.event_outlined),
+                label: Text(
+                  _dueDate == null
+                      ? 'Choisir une échéance'
+                      : 'Échéance : ${DateFormat('EEEE d MMMM', 'fr_FR').format(_dueDate!)}',
+                ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                initialValue: _technician,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.person_outline_rounded),
+                ),
+                hint: const Text('Technicien (facultatif)'),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Non assigné'),
+                  ),
+                  for (final tech in _technicians)
+                    DropdownMenuItem<String?>(value: tech, child: Text(tech)),
+                ],
+                onChanged: (value) => setState(() => _technician = value),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPrioritySelector() {
+  Future<void> _pickDueDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      locale: const Locale('fr', 'FR'),
+      initialDate: _dueDate ?? now,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: context.colors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+/// Four large priority tiles in a row (2×2 on narrow screens).
+class _PriorityPicker extends StatelessWidget {
+  const _PriorityPicker({required this.value, required this.onChanged});
+
+  final TicketPriority value;
+  final ValueChanged<TicketPriority> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final options = [
+      (TicketPriority.low, 'Faible', colors.priorityLow),
+      (TicketPriority.medium, 'Moyen', colors.priorityMedium),
+      (TicketPriority.high, 'Élevé', colors.priorityHigh),
+      (TicketPriority.critical, 'Critique', colors.priorityCritical),
+    ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final double width = (constraints.maxWidth - 24) / 4;
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: TicketPriority.values.map((prio) {
-            final isSelected = _selectedPriority == prio;
-            Color prioColor;
-            String text;
-
-            switch (prio) {
-              case TicketPriority.low:
-                prioColor = context.colors.priorityLow;
-                text = 'Faible';
-                break;
-              case TicketPriority.medium:
-                prioColor = context.colors.priorityMedium;
-                text = 'Moyen';
-                break;
-              case TicketPriority.high:
-                prioColor = context.colors.priorityHigh;
-                text = 'Élevé';
-                break;
-              case TicketPriority.critical:
-                prioColor = context.colors.priorityCritical;
-                text = 'Critique';
-                break;
-            }
-
-            return GestureDetector(
-              onTap: () => setState(() => _selectedPriority = prio),
-              child: Container(
+        final columns = constraints.maxWidth >= 560 ? 4 : 2;
+        const gap = 10.0;
+        final width = (constraints.maxWidth - gap * (columns - 1)) / columns;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final (priority, label, color) in options)
+              SizedBox(
                 width: width,
-                height: 50,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? prioColor.withValues(alpha: 0.25)
-                      : context.colors.backgroundSecondary,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isSelected ? prioColor : context.colors.border,
-                    width: isSelected ? 2.0 : 1.0,
-                  ),
-                ),
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: isSelected ? prioColor : context.colors.textSecondary,
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 13,
-                  ),
+                child: _PriorityTile(
+                  label: label,
+                  color: color,
+                  selected: value == priority,
+                  onTap: () => onChanged(priority),
                 ),
               ),
-            );
-          }).toList(),
+          ],
         );
       },
     );
   }
+}
 
+class _PriorityTile extends StatelessWidget {
+  const _PriorityTile({
+    required this.label,
+    required this.color,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Material(
+      color: selected ? color.withValues(alpha: 0.14) : colors.backgroundSecondary,
+      borderRadius: BorderRadius.circular(AppTheme.radiusField),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusField),
+        onTap: onTap,
+        child: Container(
+          height: 60,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusField),
+            border: Border.all(
+              color: selected ? color : colors.border,
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: selected ? color : colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

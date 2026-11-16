@@ -25,8 +25,9 @@ class OdooSubscriptionService {
     'start_date',
     'expiration_date',
     'subscription_status',
-    'payment_state',
+    'billing_state',
     'amount_total',
+    'amount_due',
   ];
 
   Future<List<Subscription>> fetchSubscriptions({String query = ''}) async {

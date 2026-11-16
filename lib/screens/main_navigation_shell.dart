@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../theme/app_theme.dart';
+
 class MainNavigationShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -18,13 +20,13 @@ class MainNavigationShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: DecoratedBox(
         decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Theme.of(context).dividerColor),
-          ),
+          color: colors.backgroundSecondary,
+          border: Border(top: BorderSide(color: colors.border)),
         ),
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
@@ -36,9 +38,14 @@ class MainNavigationShell extends StatelessWidget {
               label: 'Accueil',
             ),
             NavigationDestination(
+              icon: Icon(Icons.event_note_outlined),
+              selectedIcon: Icon(Icons.event_note_rounded),
+              label: 'Planning',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.grid_view_outlined),
               selectedIcon: Icon(Icons.grid_view_rounded),
-              label: 'Activites',
+              label: 'Activités',
             ),
             NavigationDestination(
               icon: Icon(Icons.assignment_outlined),

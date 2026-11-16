@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../models/inventory_item.dart';
 import '../providers/inventory_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_filter_chip.dart';
+import '../widgets/app_layout.dart';
+import '../widgets/inventory_stepper.dart';
 
+/// « Inventaire » — consumables of every activity, with quick stock steppers.
+///
+/// Search by name, narrow by activity (the list is built from the synced
+/// data), or show only what needs restocking.
 class GlobalInventoryScreen extends ConsumerStatefulWidget {
   const GlobalInventoryScreen({super.key});
 
@@ -14,371 +22,143 @@ class GlobalInventoryScreen extends ConsumerStatefulWidget {
 }
 
 class _GlobalInventoryScreenState extends ConsumerState<GlobalInventoryScreen> {
-  String _searchQuery = '';
-  String _selectedActivityId = 'all';
+  String _query = '';
+  String? _activityId; // null = every activity
+  bool _lowOnly = false;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final inventory = ref.watch(inventoryProvider);
 
-    // List of unique activities for filtering
-    final activities = [
-      {'id': 'all', 'name': 'Tout'},
-      {'id': 'pool', 'name': 'Piscine'},
-      {'id': 'horses', 'name': 'Équitation'},
-      {'id': 'paintball', 'name': 'Paintball'},
-      {'id': 'shooting', 'name': 'Stand de Tir'},
-      {'id': 'gym', 'name': 'Gym'},
-      {'id': 'padel', 'name': 'Padel'},
-    ];
+    // One chip per activity that actually has consumables.
+    final activities = <String, String>{};
+    for (final item in inventory) {
+      if (item.activityId.isEmpty) continue;
+      activities.putIfAbsent(
+        item.activityId,
+        () => item.activityName.isEmpty ? item.activityId : item.activityName,
+      );
+    }
+    final activityEntries = activities.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
 
-    // Filter and search
-    final filteredItems = inventory.where((item) {
-      final matchesSearch =
-          item.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesActivity = _selectedActivityId == 'all' ||
-          item.activityId == _selectedActivityId;
-      return matchesSearch && matchesActivity;
-    }).toList();
+    final lowCount = inventory.where((i) => i.isLowStock).length;
+    final query = _query.trim().toLowerCase();
+    final visible = inventory.where((item) {
+      if (_activityId != null && item.activityId != _activityId) return false;
+      if (_lowOnly && !item.isLowStock) return false;
+      if (query.isNotEmpty && !item.name.toLowerCase().contains(query)) {
+        return false;
+      }
+      return true;
+    }).toList()
+      ..sort((a, b) {
+        // Empty and low items first, so restocking is what the eye meets.
+        final byRisk = _risk(a).compareTo(_risk(b));
+        return byRisk != 0 ? byRisk : a.name.compareTo(b.name);
+      });
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventaire Global'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+    return AppPage(
+      title: 'Inventaire',
+      subtitle: lowCount == 0
+          ? '${inventory.length} consommables · stock suffisant'
+          : '${inventory.length} consommables · $lowCount à réapprovisionner',
+      onRefresh: () => ref.read(inventoryProvider.notifier).refreshFromOdoo(),
+      leading: IconButton(
+        tooltip: 'Retour',
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () =>
+            context.canPop() ? context.pop() : context.go('/accueil'),
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Search Bar
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: TextField(
-              style: TextStyle(color: context.colors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Rechercher un consommable...',
-                hintStyle: TextStyle(color: context.colors.textMuted),
-                prefixIcon:
-                    Icon(Icons.search, color: context.colors.textSecondary),
-                filled: true,
-                fillColor: context.colors.backgroundSecondary,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.colors.border),
+          TextField(
+            onChanged: (value) => setState(() => _query = value),
+            textInputAction: TextInputAction.search,
+            decoration: const InputDecoration(
+              hintText: 'Rechercher un consommable',
+              prefixIcon: Icon(Icons.search_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 46,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                AppFilterChip(
+                  label: 'Toutes les activités',
+                  isSelected: _activityId == null,
+                  count: inventory.length,
+                  onTap: () => setState(() => _activityId = null),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: context.colors.accentPrimary),
+                const SizedBox(width: 8),
+                for (final entry in activityEntries) ...[
+                  AppFilterChip(
+                    label: entry.value,
+                    isSelected: _activityId == entry.key,
+                    count: inventory
+                        .where((i) => i.activityId == entry.key)
+                        .length,
+                    onTap: () => setState(() => _activityId = entry.key),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilterChip(
+              avatar: Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: _lowOnly ? colors.warning : colors.textSecondary,
+              ),
+              label: Text('Stock bas uniquement ($lowCount)'),
+              selected: _lowOnly,
+              onSelected: (value) => setState(() => _lowOnly = value),
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: _lowOnly ? colors.warning : colors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (inventory.isEmpty)
+            const AppEmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'Aucun consommable synchronisé',
+              message: 'Tirez vers le bas pour actualiser depuis Odoo.',
+            )
+          else if (visible.isEmpty)
+            const AppEmptyState(
+              icon: Icons.search_off_rounded,
+              title: 'Aucun résultat',
+              message: 'Essayez un autre mot ou retirez les filtres.',
+            )
+          else
+            for (final InventoryItem item in visible)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: InventoryStepper(
+                  item: item,
+                  onChanged: (delta) => ref
+                      .read(inventoryProvider.notifier)
+                      .adjustStock(item.id, delta),
                 ),
               ),
-              onChanged: (val) {
-                setState(() {
-                  _searchQuery = val;
-                });
-              },
-            ),
-          ),
-
-          // 2. Horizontal Activity Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: activities.map((act) {
-                final isSelected = _selectedActivityId == act['id'];
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: ChoiceChip(
-                    label: Text(act['name']!),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedActivityId = selected ? act['id']! : 'all';
-                      });
-                    },
-                    backgroundColor: context.colors.backgroundSecondary,
-                    selectedColor: context.colors.accentPrimary,
-                    labelStyle: TextStyle(
-                      color:
-                          isSelected ? Colors.white : context.colors.textSecondary,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color:
-                            isSelected ? Colors.transparent : context.colors.border,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-
-          // 3. Main List/Grid View (Responsive design)
-          Expanded(
-            child: filteredItems.isEmpty
-                ? _buildEmptyState()
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      final double screenWidth = constraints.maxWidth;
-                      final int crossAxisCount = screenWidth > 600 ? 2 : 1;
-
-                      if (crossAxisCount > 1) {
-                        // Tablet/Desktop Grid
-                        return GridView.builder(
-                          padding: const EdgeInsets.all(16),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            mainAxisExtent: 140,
-                          ),
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) {
-                            return _buildInventoryCard(filteredItems[index]);
-                          },
-                        );
-                      } else {
-                        // Mobile List
-                        return ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: filteredItems.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (context, index) {
-                            return _buildInventoryCard(filteredItems[index]);
-                          },
-                        );
-                      }
-                    },
-                  ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inventory_2_outlined,
-                size: 64, color: context.colors.textMuted),
-            const SizedBox(height: 16),
-            Text(
-              'Aucun article trouvé',
-              style: TextStyle(
-                  color: context.colors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Essayez de modifier votre recherche ou le filtre d\'activité.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: context.colors.textSecondary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInventoryCard(InventoryItem item) {
-    final isLowStock = item.isLowStock;
-    final isOutOfStock = item.isOutOfStock;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isOutOfStock
-              ? context.colors.danger.withValues(alpha: 0.6)
-              : isLowStock
-                  ? context.colors.warning.withValues(alpha: 0.6)
-                  : context.colors.border,
-          width: 1.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Left Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Activity Pill Tag
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getActivityColor(item.activityId)
-                        .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    item.activityName,
-                    style: TextStyle(
-                      color: _getActivityColor(item.activityId),
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                // Item Name
-                Text(
-                  item.name,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 6),
-
-                // Stock Level Text
-                Row(
-                  children: [
-                    Text(
-                      'Stock : ${item.currentStock} ${item.unitName}',
-                      style: TextStyle(
-                        color: isOutOfStock
-                            ? context.colors.danger
-                            : isLowStock
-                                ? context.colors.warning
-                                : context.colors.textSecondary,
-                        fontSize: 13,
-                        fontWeight:
-                            isLowStock ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                    if (isOutOfStock) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '⚠️ ÉPUISÉ',
-                        style: TextStyle(
-                            color: context.colors.danger,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ] else if (isLowStock) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '⚠️ SEUIL BAS',
-                        style: TextStyle(
-                            color: context.colors.warning,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-
-          // Right Content: Quantitative Stepper (48x48px touch targets)
-          Container(
-            decoration: BoxDecoration(
-              color: context.colors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: context.colors.border),
-            ),
-            child: Row(
-              children: [
-                // Decrement Button
-                Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(12),
-                      bottomLeft: Radius.circular(12),
-                    ),
-                    onTap: item.currentStock > 0
-                        ? () {
-                            ref
-                                .read(inventoryProvider.notifier)
-                                .adjustStock(item.id, -1);
-                          }
-                        : null,
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Icon(
-                        Icons.remove,
-                        color: context.colors.textPrimary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                // Divider
-                Container(width: 1, height: 28, color: context.colors.border),
-                // Quantifier label
-                Container(
-                  constraints: const BoxConstraints(minWidth: 40),
-                  alignment: Alignment.center,
-                  child: Text(
-                    '${item.currentStock}',
-                    style: TextStyle(
-                      color: context.colors.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                // Divider
-                Container(width: 1, height: 28, color: context.colors.border),
-                // Increment Button
-                Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    borderRadius: const BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
-                    ),
-                    onTap: () {
-                      ref
-                          .read(inventoryProvider.notifier)
-                          .adjustStock(item.id, 1);
-                    },
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Icon(
-                        Icons.add,
-                        color: context.colors.textPrimary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getActivityColor(String activityId) {
-    return context.colors.getActivityColor(activityId);
+  static int _risk(InventoryItem item) {
+    if (item.isOutOfStock) return 0;
+    if (item.isLowStock) return 1;
+    return 2;
   }
 }

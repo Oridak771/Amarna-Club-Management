@@ -3,27 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import 'package:amarna_club/models/activity.dart';
-import 'package:amarna_club/providers/activities_provider.dart';
-import 'package:amarna_club/providers/tickets_provider.dart';
-import 'package:amarna_club/providers/inventory_provider.dart';
-import 'package:amarna_club/providers/assets_provider.dart';
-import 'package:amarna_club/theme/app_theme.dart';
-import 'package:amarna_club/ui/activity_ui_adapter.dart';
-import 'package:amarna_club/ui/asset_ui_adapter.dart';
-import 'package:amarna_club/ui/ticket_ui_adapter.dart';
-import 'package:amarna_club/widgets/activity_panels.dart';
-import 'package:amarna_club/widgets/inventory_stepper.dart';
-import 'package:amarna_club/widgets/priority_indicator.dart';
-import 'package:amarna_club/widgets/status_badge.dart';
+import '../models/activity.dart';
+import '../models/asset.dart';
+import '../models/inventory_item.dart';
+import '../models/work_ticket.dart';
+import '../providers/activities_provider.dart';
+import '../providers/assets_provider.dart';
+import '../providers/inventory_provider.dart';
+import '../providers/tickets_provider.dart';
+import '../theme/app_theme.dart';
+import '../ui/activity_ui_adapter.dart';
+import '../ui/asset_ui_adapter.dart';
+import '../ui/ticket_ui_adapter.dart';
+import '../widgets/app_layout.dart';
+import '../widgets/inventory_stepper.dart';
 
+/// Detail of one activity: live status and occupancy, then four tabs with its
+/// inventory, equipment and interventions.
 class ActivityDetailScreen extends ConsumerWidget {
-  final String id;
   const ActivityDetailScreen({super.key, required this.id});
+
+  final String id;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
     final activities = ref.watch(activitiesProvider);
     final activity = activities.firstWhere(
       (a) => a.id == id,
@@ -33,406 +36,538 @@ class ActivityDetailScreen extends ConsumerWidget {
         iconKey: 'help',
         status: ActivityStatus.closed,
         currentOccupancy: 0,
-        maxCapacity: 100,
-        assignedStaff: 'Non assigné',
-        closureStart: null,
-        closureEnd: null,
+        maxCapacity: 0,
+        assignedStaff: '',
       ),
     );
-    final color = colors.getActivityColor(activity.id);
+    final known = activities.any((a) => a.id == id);
+    final color = resolveActivityColor(context, activity.id);
 
     return DefaultTabController(
       length: 4,
-      child: Scaffold(
-        body: NestedScrollView(
-          headerSliverBuilder: (context, innerBoxIsScrolled) => [
-            _buildHeader(context, activity, color),
-            SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: AppPage(
+        title: activity.name,
+        subtitle: known ? activity.statusTextFrench : 'Activité introuvable',
+        scrollable: true,
+        padding: EdgeInsets.zero,
+        maxWidth: 1100,
+        actions: [
+          if (known) _StatusMenu(activity: activity),
+          IconButton(
+            tooltip: 'Scanner QR',
+            icon: const Icon(Icons.qr_code_scanner_rounded),
+            onPressed: () => context.push('/scan'),
+          ),
+        ],
+        bottom: const TabBar(
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
+          tabs: [
+            Tab(text: 'Vue d’ensemble'),
+            Tab(text: 'Inventaire'),
+            Tab(text: 'Équipements'),
+            Tab(text: 'Interventions'),
+          ],
+        ),
+        body: !known
+            ? const AppErrorState(
+                title: 'Activité introuvable',
+                message:
+                    'Cette activité n’est pas dans les données synchronisées.',
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                    child: _buildStatusRow(context, ref, activity),
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    child: _Header(activity: activity, color: color),
                   ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    height: 52,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: _buildQuickActions(context, activity.id),
+                  Expanded(
+                    child: TabBarView(
+                      children: [
+                        _OverviewTab(activity: activity),
+                        _InventoryTab(activityId: activity.id),
+                        _EquipmentTab(activityId: activity.id),
+                        _InterventionsTab(activityId: activity.id),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  TabBar(
-                    isScrollable: true,
-                    tabAlignment: TabAlignment.start,
-                    indicatorColor: color,
-                    labelColor: colors.textPrimary,
-                    unselectedLabelColor: colors.textSecondary,
-                    tabs: const [
-                      Tab(text: "Vue d'ensemble"),
-                      Tab(text: 'Inventaire'),
-                      Tab(text: 'Équipement'),
-                      Tab(text: 'Interventions'),
-                    ],
                   ),
                 ],
               ),
-            ),
-          ],
-          body: TabBarView(
-            children: [
-              _buildOverviewTab(context, ref, activity, color),
-              _buildInventoryTab(context, ref, activity.id),
-              _buildEquipmentTab(context, ref, activity.id),
-              _buildTicketsTab(context, ref, activity.id),
-            ],
-          ),
-        ),
       ),
     );
   }
+}
 
-  // ── Header ─────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Header: occupancy control and the activity's own module
 
-  SliverAppBar _buildHeader(
-      BuildContext context, Activity activity, Color color) {
+class _Header extends ConsumerWidget {
+  const _Header({required this.activity, required this.color});
+
+  final Activity activity;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    return SliverAppBar(
-      expandedHeight: 150,
-      pinned: true,
-      backgroundColor: colors.backgroundPrimary,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => context.pop(),
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.qr_code_scanner),
-          tooltip: 'Scanner QR',
-          onPressed: () => context.push('/scan'),
-        ),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding:
-            const EdgeInsets.only(left: 56, bottom: 14, right: 56),
-        title: Text(
-          activity.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontSize: 19,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    color.withValues(alpha: 0.28),
-                    colors.backgroundPrimary,
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              right: -20,
-              top: 10,
-              child: Icon(
-                resolveActivityIcon(activity.iconKey),
-                size: 140,
-                color: color.withValues(alpha: 0.14),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Status + occupancy row ─────────────────────────────────
-
-  Widget _buildStatusRow(
-      BuildContext context, WidgetRef ref, Activity activity) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        StatusBadge(status: activity.status),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Row(
-            children: [
-              Icon(Icons.person_outline_rounded,
-                  size: 15, color: colors.textMuted),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  activity.assignedStaff,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style:
-                      TextStyle(color: colors.textSecondary, fontSize: 12.5),
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuButton<ActivityStatus>(
-          tooltip: 'Changer le statut',
-          icon: Icon(Icons.swap_horiz_rounded, color: colors.textSecondary),
-          onSelected: (status) {
-            ref
-                .read(activitiesProvider.notifier)
-                .updateStatus(activity.id, status);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Statut mis à jour ✓')),
-            );
-          },
-          itemBuilder: (context) => [
-            for (final status in ActivityStatus.values)
-              PopupMenuItem(
-                value: status,
-                child: Row(
-                  children: [
-                    if (status == activity.status)
-                      const Icon(Icons.check_rounded, size: 18)
-                    else
-                      const SizedBox(width: 18),
-                    const SizedBox(width: 8),
-                    Text(switch (status) {
-                      ActivityStatus.open => 'Ouvrir',
-                      ActivityStatus.warning => 'Mettre en alerte',
-                      ActivityStatus.maintenance => 'En maintenance',
-                      ActivityStatus.closed => 'Fermer',
-                    }),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  // ── Quick actions ──────────────────────────────────────────
-
-  List<Widget> _buildQuickActions(BuildContext context, String activityId) {
-    final colors = context.colors;
-
-    final (moduleIcon, moduleLabel, moduleRoute) = switch (activityId) {
-      'pool' => (
-          Icons.speed_rounded,
-          'Qualité de l\'eau',
-          '/activites/pool/pool-gauges'
-        ),
-      'horses' => (
-          Icons.bedroom_baby_outlined,
-          'Écurie',
-          '/activites/horses/horses'
-        ),
-      'shooting' => (
-          Icons.gps_fixed_rounded,
-          'Armurerie',
-          '/activites/shooting/weapon-list'
-        ),
-      'padel' => (
-          Icons.sports_tennis_rounded,
-          'Terrains',
-          '/activites/padel/padel-courts'
-        ),
-      'paintball' => (
-          Icons.adjust_rounded,
-          'Terrain',
-          '/activites/paintball/paintball-field'
-        ),
-      'gym' => (
-          Icons.fitness_center_rounded,
-          'Machines',
-          '/activites/gym/gym-equipment'
-        ),
-      _ => (null, null, null),
-    };
-
-    Widget chip(IconData icon, String label, Color color, VoidCallback onTap) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 10),
-        child: ActionChip(
-          avatar: Icon(icon, size: 18, color: color),
-          label: Text(label),
-          labelStyle: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
-          side: BorderSide(color: color.withValues(alpha: 0.4)),
-          backgroundColor: color.withValues(alpha: 0.07),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          onPressed: onTap,
-        ),
-      );
-    }
-
-    return [
-      if (moduleRoute != null)
-        chip(moduleIcon!, moduleLabel!, colors.getActivityColor(activityId),
-            () => context.push(moduleRoute)),
-      chip(Icons.report_problem_rounded, 'Signaler', colors.danger,
-          () => context.go('/tickets/nouveau')),
-      chip(Icons.event_available_rounded, 'Réservations', colors.info,
-          () => context.go('/plus/reservations')),
-    ];
-  }
-
-  // ── Tab 1 : Vue d'ensemble ─────────────────────────────────
-
-  Widget _buildOverviewTab(
-      BuildContext context, WidgetRef ref, Activity activity, Color color) {
-    final colors = context.colors;
+    final module = _moduleFor(activity.id);
     final isOpen = activity.status == ActivityStatus.open ||
         activity.status == ActivityStatus.warning;
+    final max = activity.maxCapacity;
+
+    return AppPanel(
+      accentColor: color,
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Présents',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      max > 0
+                          ? '${activity.currentOccupancy} / $max'
+                          : '${activity.currentOccupancy}',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _RoundButton(
+                icon: Icons.remove_rounded,
+                tooltip: 'Retirer une personne',
+                onTap: activity.currentOccupancy > 0
+                    ? () => ref
+                        .read(activitiesProvider.notifier)
+                        .updateOccupancy(
+                            activity.id, activity.currentOccupancy - 1)
+                    : null,
+              ),
+              const SizedBox(width: 10),
+              _RoundButton(
+                icon: Icons.add_rounded,
+                tooltip: 'Ajouter une personne',
+                filled: true,
+                color: color,
+                onTap: isOpen && (max == 0 || activity.currentOccupancy < max)
+                    ? () => ref
+                        .read(activitiesProvider.notifier)
+                        .updateOccupancy(
+                            activity.id, activity.currentOccupancy + 1)
+                    : null,
+              ),
+            ],
+          ),
+          if (max > 0) ...[
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: activity.occupancyPercentage.clamp(0.0, 1.0),
+                minHeight: 8,
+                color: color,
+                backgroundColor: colors.surface,
+              ),
+            ),
+          ],
+          if (module != null) ...[
+            const SizedBox(height: 14),
+            FilledButton.tonalIcon(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                foregroundColor: color,
+                backgroundColor: color.withValues(alpha: 0.12),
+              ),
+              onPressed: () => context.push(module.route),
+              icon: Icon(module.icon),
+              label: Text(module.label),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RoundButton extends StatelessWidget {
+  const _RoundButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.filled = false,
+    this.color,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onTap;
+  final bool filled;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final accent = color ?? colors.accentPrimary;
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: enabled
+            ? (filled ? accent : colors.surface)
+            : colors.surface.withValues(alpha: 0.5),
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: 56,
+            height: 56,
+            child: Icon(
+              icon,
+              size: 28,
+              color: !enabled
+                  ? colors.textMuted
+                  : filled
+                      ? Colors.white
+                      : colors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ModuleLink {
+  const _ModuleLink(this.icon, this.label, this.route);
+
+  final IconData icon;
+  final String label;
+  final String route;
+}
+
+_ModuleLink? _moduleFor(String activityId) {
+  switch (activityId) {
+    case 'pool':
+      return const _ModuleLink(
+          Icons.speed_rounded, 'Relevés de qualité de l’eau', '/activites/pool/pool-gauges');
+    case 'horses':
+      return const _ModuleLink(
+          Icons.pets_outlined, 'Écurie : chevaux et soins', '/activites/horses/horses');
+    case 'shooting':
+      return const _ModuleLink(
+          Icons.gps_fixed_rounded, 'Armurerie et nettoyage', '/activites/shooting/weapon-list');
+    case 'padel':
+      return const _ModuleLink(
+          Icons.sports_tennis_rounded, 'Terrains et réservations', '/activites/padel/padel-courts');
+    case 'paintball':
+      return const _ModuleLink(
+          Icons.adjust_rounded, 'Terrain et sessions', '/activites/paintball/paintball-field');
+    case 'gym':
+      return const _ModuleLink(
+          Icons.fitness_center_rounded, 'Machines de la salle', '/activites/gym/gym-equipment');
+    default:
+      return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Status menu in the app bar
+
+class _StatusMenu extends ConsumerWidget {
+  const _StatusMenu({required this.activity});
+
+  final Activity activity;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<ActivityStatus>(
+      tooltip: 'Changer le statut',
+      icon: const Icon(Icons.swap_vert_circle_outlined),
+      onSelected: (status) async {
+        await ref
+            .read(activitiesProvider.notifier)
+            .updateStatus(activity.id, status);
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Statut mis à jour ✓')),
+        );
+      },
+      itemBuilder: (context) => [
+        for (final status in ActivityStatus.values)
+          PopupMenuItem(
+            value: status,
+            height: 48,
+            child: Row(
+              children: [
+                Icon(
+                  status == activity.status
+                      ? Icons.radio_button_checked_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  size: 18,
+                  color: status.resolveColor(context),
+                ),
+                const SizedBox(width: 10),
+                Text(switch (status) {
+                  ActivityStatus.open => 'Ouverte',
+                  ActivityStatus.warning => 'Attention',
+                  ActivityStatus.maintenance => 'En maintenance',
+                  ActivityStatus.closed => 'Fermée',
+                }),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tab: overview
+
+class _OverviewTab extends ConsumerWidget {
+  const _OverviewTab({required this.activity});
+
+  final Activity activity;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final tickets = ref.watch(ticketsProvider)
+        .where((t) => t.activityId == activity.id)
+        .toList();
+    final open = tickets.where((t) => t.status != TicketStatus.resolved).toList();
+    final dateFormat = DateFormat('dd/MM/yyyy · HH:mm');
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       children: [
-        // Occupancy control
-        Container(
+        AppPanel(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colors.backgroundSecondary,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.border),
-          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text('Occupation en temps réel',
-                        style: Theme.of(context).textTheme.titleMedium),
-                  ),
-                  Text(
-                    '${(activity.occupancyPercentage * 100).toInt()}%',
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
+              _InfoRow(
+                icon: Icons.badge_outlined,
+                label: 'Personnel en service',
+                value: activity.assignedStaff.isEmpty
+                    ? 'Non renseigné'
+                    : activity.assignedStaff,
+              ),
+              if (activity.closureStart != null) ...[
+                Divider(height: 24, color: colors.border),
+                _InfoRow(
+                  icon: Icons.event_busy_outlined,
+                  label: 'Fermeture depuis',
+                  value: dateFormat.format(activity.closureStart!.toLocal()),
+                  valueColor: colors.warning,
+                ),
+                if (activity.closureEnd != null) ...[
+                  const SizedBox(height: 14),
+                  _InfoRow(
+                    icon: Icons.event_available_outlined,
+                    label: 'Réouverture prévue',
+                    value: dateFormat.format(activity.closureEnd!.toLocal()),
                   ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: LinearProgressIndicator(
-                  value: activity.occupancyPercentage,
-                  minHeight: 8,
-                  backgroundColor: colors.surfaceHover,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    activity.occupancyPercentage > 0.85
-                        ? colors.warning
-                        : color,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  _OccupancyButton(
-                    icon: Icons.remove_rounded,
-                    enabled: isOpen && activity.currentOccupancy > 0,
-                    onTap: () => ref
-                        .read(activitiesProvider.notifier)
-                        .updateOccupancy(
-                            activity.id, activity.currentOccupancy - 1),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        '${activity.currentOccupancy} / ${activity.maxCapacity}',
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                  ),
-                  _OccupancyButton(
-                    icon: Icons.add_rounded,
-                    enabled: isOpen &&
-                        activity.currentOccupancy < activity.maxCapacity,
-                    onTap: () => ref
-                        .read(activitiesProvider.notifier)
-                        .updateOccupancy(
-                            activity.id, activity.currentOccupancy + 1),
-                  ),
-                ],
-              ),
-              if (!isOpen) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Activité ${activity.statusTextFrench.toLowerCase()} — comptage désactivé.',
-                  style: TextStyle(color: colors.textMuted, fontSize: 12),
-                ),
               ],
             ],
           ),
         ),
-        const SizedBox(height: 20),
-
-        // Live reservations from Odoo
-        ActivityReservationsPanel(
-          activityId: activity.id,
-          activityName: activity.name,
+        const SizedBox(height: 16),
+        SectionTitle(
+          title: 'Interventions ouvertes',
+          count: open.length,
+          icon: Icons.assignment_outlined,
         ),
-        const SizedBox(height: 20),
-
-        ActivityTicketsPanel(activityId: activity.id),
-        const SizedBox(height: 20),
+        if (open.isEmpty)
+          const AppEmptyState(
+            icon: Icons.task_alt_rounded,
+            title: 'Aucune intervention ouverte',
+            message: 'Cette activité est à jour.',
+          )
+        else
+          for (final ticket in open.take(3))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: AppPanel(
+                accentColor: ticket.isOverdue
+                    ? colors.danger
+                    : ticket.priority.resolveColor(context),
+                onTap: () => context.push('/tickets/${ticket.id}'),
+                padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        ticket.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: colors.danger,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(52),
+          ),
+          onPressed: () => context.go('/tickets/nouveau'),
+          icon: const Icon(Icons.add_alert_rounded),
+          label: const Text('Signaler un incident'),
+        ),
+        const SizedBox(height: 10),
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+          ),
+          onPressed: () => context.go('/planning'),
+          icon: const Icon(Icons.event_note_rounded),
+          label: const Text('Voir le planning'),
+        ),
       ],
     );
   }
+}
 
-  // ── Tab 2 : Inventaire ─────────────────────────────────────
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
-  Widget _buildInventoryTab(
-      BuildContext context, WidgetRef ref, String activityId) {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: colors.textSecondary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: valueColor ?? colors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tab: inventory
+
+class _InventoryTab extends ConsumerWidget {
+  const _InventoryTab({required this.activityId});
+
+  final String activityId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = ref
         .watch(inventoryProvider)
         .where((item) => item.activityId == activityId)
         .toList();
 
     if (items.isEmpty) {
-      return _emptyState(context, Icons.inventory_2_outlined,
-          'Aucun consommable enregistré pour cette activité.');
+      return const AppEmptyState(
+        icon: Icons.inventory_2_outlined,
+        title: 'Aucun consommable pour cette activité',
+        message: 'Les consommables apparaissent ici après synchronisation.',
+      );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) => InventoryStepper(
-        item: items[index],
-        onChanged: (delta) => ref
-            .read(inventoryProvider.notifier)
-            .adjustStock(items[index].id, delta),
-      ),
+    final low = items.where((i) => i.isLowStock).length;
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+      children: [
+        if (low > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: AppPill(
+              label: '$low article${low > 1 ? 's' : ''} à réapprovisionner',
+              color: context.colors.warning,
+              icon: Icons.warning_amber_rounded,
+            ),
+          ),
+        for (final InventoryItem item in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: InventoryStepper(
+              item: item,
+              onChanged: (delta) => ref
+                  .read(inventoryProvider.notifier)
+                  .adjustStock(item.id, delta),
+            ),
+          ),
+      ],
     );
   }
+}
 
-  // ── Tab 3 : Équipement ─────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Tab: equipment
 
-  Widget _buildEquipmentTab(
-      BuildContext context, WidgetRef ref, String activityId) {
+class _EquipmentTab extends ConsumerWidget {
+  const _EquipmentTab({required this.activityId});
+
+  final String activityId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final assets = ref
         .watch(assetsProvider)
@@ -440,243 +575,158 @@ class ActivityDetailScreen extends ConsumerWidget {
         .toList();
 
     if (assets.isEmpty) {
-      return _emptyState(context, Icons.construction,
-          'Aucun équipement enregistré pour cette activité.');
+      return const AppEmptyState(
+        icon: Icons.build_circle_outlined,
+        title: 'Aucun équipement enregistré',
+        message: 'Les équipements de cette activité apparaissent ici.',
+      );
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
       itemCount: assets.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final asset = assets[index];
-        return Material(
-          color: colors.backgroundSecondary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(color: colors.border),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () => context.push('/asset/${asset.id}'),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          asset.name,
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 14.5,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'S/N : ${asset.serialNumber} · ${asset.category}',
-                          style: TextStyle(
-                              color: colors.textSecondary, fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: asset.status
-                          .resolveColor(context)
-                          .withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      asset.statusTextFrench,
-                      style: TextStyle(
-                        color: asset.status.resolveColor(context),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  Icon(Icons.chevron_right,
-                      color: colors.textMuted, size: 20),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // ── Tab 4 : Interventions ──────────────────────────────────
-
-  Widget _buildTicketsTab(
-      BuildContext context, WidgetRef ref, String activityId) {
-    final colors = context.colors;
-    final tickets = ref
-        .watch(ticketsProvider)
-        .where((t) => t.activityId == activityId)
-        .toList();
-
-    if (tickets.isEmpty) {
-      return _emptyState(context, Icons.assignment_outlined,
-          'Aucune intervention pour cette activité.');
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: tickets.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
-        final ticket = tickets[index];
-        return GestureDetector(
-          onTap: () => context.go('/tickets/${ticket.id}'),
-          child: PriorityIndicator(
-            priority: ticket.priority,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          ticket.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+        final Asset asset = assets[index];
+        final statusColor = asset.status.resolveColor(context);
+        return AppPanel(
+          onTap: () => context.push('/asset/${asset.id}'),
+          padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      asset.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        ticket.statusTextFrench,
-                        style: TextStyle(
-                          color: ticket.status
-                              .resolveColor(context, type: ticket.type),
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        if (asset.category.isNotEmpty) asset.category,
+                        if (asset.serialNumber.isNotEmpty)
+                          'n° ${asset.serialNumber}',
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textSecondary,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: ticket.type
-                              .resolveColor(context)
-                              .withValues(alpha: 0.14),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          ticket.typeTextFrench,
-                          style: TextStyle(
-                            color: ticket.type.resolveColor(context),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      if (ticket.dateDue != null) ...[
-                        const SizedBox(width: 10),
-                        Icon(
-                          Icons.calendar_today_outlined,
-                          size: 12,
-                          color: ticket.isOverdue
-                              ? colors.danger
-                              : colors.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat('dd/MM/yyyy').format(ticket.dateDue!),
-                          style: TextStyle(
-                            color: ticket.isOverdue
-                                ? colors.danger
-                                : colors.textMuted,
-                            fontSize: 11,
-                            fontWeight: ticket.isOverdue
-                                ? FontWeight.w800
-                                : FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              AppPill(label: asset.statusTextFrench, color: statusColor),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+            ],
           ),
         );
       },
-    );
-  }
-
-  Widget _emptyState(BuildContext context, IconData icon, String message) {
-    final colors = context.colors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 44, color: colors.textMuted),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textSecondary, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
 
-class _OccupancyButton extends StatelessWidget {
-  const _OccupancyButton({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
-  });
+// ---------------------------------------------------------------------------
+// Tab: interventions
 
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onTap;
+class _InterventionsTab extends ConsumerWidget {
+  const _InterventionsTab({required this.activityId});
+
+  final String activityId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final tickets = ref
+        .watch(ticketsProvider)
+        .where((t) => t.activityId == activityId)
+        .toList()
+      ..sort((a, b) => b.dateCreated.compareTo(a.dateCreated));
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+      children: [
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            foregroundColor: colors.danger,
+          ),
+          onPressed: () => context.go('/tickets/nouveau'),
+          icon: const Icon(Icons.add_alert_rounded),
+          label: const Text('Signaler dans cette activité'),
+        ),
+        const SizedBox(height: 14),
+        if (tickets.isEmpty)
+          const AppEmptyState(
+            icon: Icons.task_alt_rounded,
+            title: 'Aucune intervention',
+            message: 'Rien à signaler pour cette activité.',
+          )
+        else
+          for (final ticket in tickets)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _TicketRow(ticket: ticket),
+            ),
+      ],
+    );
+  }
+}
+
+class _TicketRow extends StatelessWidget {
+  const _TicketRow({required this.ticket});
+
+  final WorkTicket ticket;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    return Material(
-      color: enabled
-          ? colors.accentPrimary.withValues(alpha: 0.1)
-          : colors.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: enabled ? onTap : null,
-        child: SizedBox(
-          width: 56,
-          height: 56,
-          child: Icon(
-            icon,
-            size: 28,
-            color: enabled ? colors.accentPrimary : colors.textMuted,
+    final resolved = ticket.status == TicketStatus.resolved;
+    return AppPanel(
+      onTap: () => context.push('/tickets/${ticket.id}'),
+      padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ticket.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: resolved ? colors.textSecondary : colors.textPrimary,
+                    decoration: resolved ? TextDecoration.lineThrough : null,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  ticket.statusTextFrench,
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+          AppPill(
+            label: ticket.priorityTextFrench,
+            color: ticket.priority.resolveColor(context),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.chevron_right_rounded, color: colors.textMuted),
+        ],
       ),
     );
   }
