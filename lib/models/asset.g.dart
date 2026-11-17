@@ -37,39 +37,49 @@ const AssetSchema = CollectionSchema(
       name: r'imageUrl',
       type: IsarType.string,
     ),
-    r'lastMaintenance': PropertySchema(
+    r'inUseSince': PropertySchema(
       id: 4,
+      name: r'inUseSince',
+      type: IsarType.dateTime,
+    ),
+    r'isWeapon': PropertySchema(
+      id: 5,
+      name: r'isWeapon',
+      type: IsarType.bool,
+    ),
+    r'lastMaintenance': PropertySchema(
+      id: 6,
       name: r'lastMaintenance',
       type: IsarType.dateTime,
     ),
     r'name': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'name',
       type: IsarType.string,
     ),
     r'nextMaintenance': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'nextMaintenance',
       type: IsarType.dateTime,
     ),
     r'serialNumber': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'serialNumber',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'status',
       type: IsarType.byte,
       enumMap: _AssetstatusEnumValueMap,
     ),
     r'statusTextFrench': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'statusTextFrench',
       type: IsarType.string,
     ),
     r'technicalSpecsJson': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'technicalSpecsJson',
       type: IsarType.string,
     )
@@ -139,13 +149,15 @@ void _assetSerialize(
   writer.writeString(offsets[1], object.category);
   writer.writeString(offsets[2], object.id);
   writer.writeString(offsets[3], object.imageUrl);
-  writer.writeDateTime(offsets[4], object.lastMaintenance);
-  writer.writeString(offsets[5], object.name);
-  writer.writeDateTime(offsets[6], object.nextMaintenance);
-  writer.writeString(offsets[7], object.serialNumber);
-  writer.writeByte(offsets[8], object.status.index);
-  writer.writeString(offsets[9], object.statusTextFrench);
-  writer.writeString(offsets[10], object.technicalSpecsJson);
+  writer.writeDateTime(offsets[4], object.inUseSince);
+  writer.writeBool(offsets[5], object.isWeapon);
+  writer.writeDateTime(offsets[6], object.lastMaintenance);
+  writer.writeString(offsets[7], object.name);
+  writer.writeDateTime(offsets[8], object.nextMaintenance);
+  writer.writeString(offsets[9], object.serialNumber);
+  writer.writeByte(offsets[10], object.status.index);
+  writer.writeString(offsets[11], object.statusTextFrench);
+  writer.writeString(offsets[12], object.technicalSpecsJson);
 }
 
 Asset _assetDeserialize(
@@ -159,14 +171,16 @@ Asset _assetDeserialize(
     category: reader.readString(offsets[1]),
     id: reader.readString(offsets[2]),
     imageUrl: reader.readStringOrNull(offsets[3]),
+    inUseSince: reader.readDateTimeOrNull(offsets[4]),
+    isWeapon: reader.readBoolOrNull(offsets[5]) ?? false,
     isarId: id,
-    lastMaintenance: reader.readDateTimeOrNull(offsets[4]),
-    name: reader.readString(offsets[5]),
-    nextMaintenance: reader.readDateTimeOrNull(offsets[6]),
-    serialNumber: reader.readString(offsets[7]),
-    status: _AssetstatusValueEnumMap[reader.readByteOrNull(offsets[8])] ??
+    lastMaintenance: reader.readDateTimeOrNull(offsets[6]),
+    name: reader.readString(offsets[7]),
+    nextMaintenance: reader.readDateTimeOrNull(offsets[8]),
+    serialNumber: reader.readString(offsets[9]),
+    status: _AssetstatusValueEnumMap[reader.readByteOrNull(offsets[10])] ??
         AssetStatus.available,
-    technicalSpecsJson: reader.readStringOrNull(offsets[10]),
+    technicalSpecsJson: reader.readStringOrNull(offsets[12]),
   );
   return object;
 }
@@ -189,17 +203,21 @@ P _assetDeserializeProp<P>(
     case 4:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset) ?? false) as P;
     case 6:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
-      return (_AssetstatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          AssetStatus.available) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 9:
       return (reader.readString(offset)) as P;
     case 10:
+      return (_AssetstatusValueEnumMap[reader.readByteOrNull(offset)] ??
+          AssetStatus.available) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -934,6 +952,85 @@ extension AssetQueryFilter on QueryBuilder<Asset, Asset, QFilterCondition> {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'imageUrl',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'inUseSince',
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'inUseSince',
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'inUseSince',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'inUseSince',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'inUseSince',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> inUseSinceBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'inUseSince',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterFilterCondition> isWeaponEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isWeapon',
+        value: value,
       ));
     });
   }
@@ -1775,6 +1872,30 @@ extension AssetQuerySortBy on QueryBuilder<Asset, Asset, QSortBy> {
     });
   }
 
+  QueryBuilder<Asset, Asset, QAfterSortBy> sortByInUseSince() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'inUseSince', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> sortByInUseSinceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'inUseSince', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> sortByIsWeapon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWeapon', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> sortByIsWeaponDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWeapon', Sort.desc);
+    });
+  }
+
   QueryBuilder<Asset, Asset, QAfterSortBy> sortByLastMaintenance() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastMaintenance', Sort.asc);
@@ -1909,6 +2030,30 @@ extension AssetQuerySortThenBy on QueryBuilder<Asset, Asset, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Asset, Asset, QAfterSortBy> thenByInUseSince() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'inUseSince', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> thenByInUseSinceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'inUseSince', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> thenByIsWeapon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWeapon', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QAfterSortBy> thenByIsWeaponDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isWeapon', Sort.desc);
+    });
+  }
+
   QueryBuilder<Asset, Asset, QAfterSortBy> thenByIsarId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isarId', Sort.asc);
@@ -2035,6 +2180,18 @@ extension AssetQueryWhereDistinct on QueryBuilder<Asset, Asset, QDistinct> {
     });
   }
 
+  QueryBuilder<Asset, Asset, QDistinct> distinctByInUseSince() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'inUseSince');
+    });
+  }
+
+  QueryBuilder<Asset, Asset, QDistinct> distinctByIsWeapon() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isWeapon');
+    });
+  }
+
   QueryBuilder<Asset, Asset, QDistinct> distinctByLastMaintenance() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastMaintenance');
@@ -2112,6 +2269,18 @@ extension AssetQueryProperty on QueryBuilder<Asset, Asset, QQueryProperty> {
   QueryBuilder<Asset, String?, QQueryOperations> imageUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'imageUrl');
+    });
+  }
+
+  QueryBuilder<Asset, DateTime?, QQueryOperations> inUseSinceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'inUseSince');
+    });
+  }
+
+  QueryBuilder<Asset, bool, QQueryOperations> isWeaponProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isWeapon');
     });
   }
 

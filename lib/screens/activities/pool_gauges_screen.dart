@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/club_config.dart';
+import '../../providers/club_config_provider.dart';
 import '../../services/odoo_club_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
@@ -10,7 +12,8 @@ import '../../widgets/app_layout.dart';
 import '../../widgets/gauge_card.dart';
 import '../../services/odoo_jsonrpc_service.dart';
 
-/// Water quality reading with per-parameter safe ranges.
+/// Water quality reading. Safe ranges and score penalties come from the
+/// club's pool settings, passed in by the caller.
 class _Reading {
   final double temperature;
   final double chlorine;
@@ -26,53 +29,61 @@ class _Reading {
     required this.recordedAt,
   });
 
-  bool get temperatureOk => temperature >= 26 && temperature <= 30;
-  bool get chlorineOk => chlorine >= 1.0 && chlorine <= 3.0;
-  bool get phOk => ph >= 7.2 && ph <= 7.6;
-  bool get turbidityOk => turbidity <= 1.0;
+  bool temperatureOk(PoolRules rules) => rules.temperature.contains(temperature);
+  bool chlorineOk(PoolRules rules) => rules.chlorine.contains(chlorine);
+  bool phOk(PoolRules rules) => rules.ph.contains(ph);
+  bool turbidityOk(PoolRules rules) => turbidity <= rules.turbidityMax;
 
-  int get issueCount =>
-      [temperatureOk, chlorineOk, phOk, turbidityOk].where((ok) => !ok).length;
+  int issueCount(PoolRules rules) => [
+        temperatureOk(rules),
+        chlorineOk(rules),
+        phOk(rules),
+        turbidityOk(rules),
+      ].where((ok) => !ok).length;
 
-  double get globalScore {
+  double globalScore(PoolRules rules) {
     double score = 100;
-    if (!temperatureOk) score -= 20;
-    if (!chlorineOk) score -= 30;
-    if (!phOk) score -= 30;
-    if (!turbidityOk) score -= 20;
-    return score.clamp(0, 100);
+    if (!temperatureOk(rules)) score -= rules.weightTemperature;
+    if (!chlorineOk(rules)) score -= rules.weightChlorine;
+    if (!phOk(rules)) score -= rules.weightPh;
+    if (!turbidityOk(rules)) score -= rules.weightTurbidity;
+    return score.clamp(0, 100).toDouble();
   }
 }
 
 class PoolGaugesScreen extends ConsumerStatefulWidget {
-  const PoolGaugesScreen({super.key});
+  const PoolGaugesScreen({super.key, required this.activityId});
+
+  /// Activity code from the route (`/activites/:id/...`).
+  final String activityId;
+
 
   @override
   ConsumerState<PoolGaugesScreen> createState() => _PoolGaugesScreenState();
 }
 
 class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
-  _Reading _current = _Reading(
-    temperature: 28.5,
-    chlorine: 1.2,
-    ph: 7.4,
-    turbidity: 0.5,
-    recordedAt: DateTime.now().subtract(const Duration(minutes: 35)),
-  );
+  /// Latest reading stored in Odoo; null until one exists.
+  _Reading? _current;
 
-  // Draft values while composing a new reading.
-  late double _temperature = _current.temperature;
-  late double _chlorine = _current.chlorine;
-  late double _ph = _current.ph;
-  late double _turbidity = _current.turbidity;
+  // Draft values while composing a new reading, starting in the safe ranges.
+  late double _temperature;
+  late double _chlorine;
+  late double _ph;
+  late double _turbidity;
 
   @override
   void initState() {
     super.initState();
+    final rules = ref.read(clubConfigProvider).requireValue.pool;
+    _temperature = rules.temperature.midpoint;
+    _chlorine = rules.chlorine.midpoint;
+    _ph = rules.ph.midpoint;
+    _turbidity = rules.turbidityMax / 2;
     _loadLatestFromOdoo();
   }
 
-  /// Replaces the local demo reading with the latest one stored in Odoo.
+  /// Loads the latest reading stored in Odoo.
   Future<void> _loadLatestFromOdoo() async {
     final club = ref.read(odooClubServiceProvider);
     if (!club.isConfigured) return;
@@ -87,10 +98,6 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
           turbidity: latest.turbidity,
           recordedAt: latest.recordedAt,
         );
-        _temperature = _current.temperature;
-        _chlorine = _current.chlorine;
-        _ph = _current.ph;
-        _turbidity = _current.turbidity;
       });
     } catch (error) {
       reportSyncIssue('Relevés piscine (lecture)', error);
@@ -113,16 +120,15 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
   }
 
   void _saveReading() {
-    setState(() {
-      _current = _Reading(
-        temperature: _temperature,
-        chlorine: _chlorine,
-        ph: _ph,
-        turbidity: _turbidity,
-        recordedAt: DateTime.now(),
-      );
-    });
-    _pushReadingToOdoo(_current);
+    final reading = _Reading(
+      temperature: _temperature,
+      chlorine: _chlorine,
+      ph: _ph,
+      turbidity: _turbidity,
+      recordedAt: DateTime.now(),
+    );
+    setState(() => _current = reading);
+    _pushReadingToOdoo(reading);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Relevé enregistré ✓')),
     );
@@ -131,10 +137,8 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final conform = _current.issueCount == 0;
-    final statusColor = conform
-        ? colors.success
-        : (_current.issueCount >= 2 ? colors.danger : colors.warning);
+    final rules = ref.watch(clubConfigProvider).requireValue.pool;
+    final reading = _current;
 
     return AppPage(
       title: 'Piscine',
@@ -149,129 +153,14 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Conformity summary
-          AppPanel(
-            color: statusColor.withValues(alpha: 0.09),
-            child: Row(
-              children: [
-                Icon(
-                  conform
-                      ? Icons.verified_rounded
-                      : Icons.warning_amber_rounded,
-                  color: statusColor,
-                  size: 30,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        conform
-                            ? 'Eau conforme aux normes'
-                            : '${_current.issueCount} paramètre${_current.issueCount > 1 ? 's' : ''} hors norme',
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Dernier relevé : ${DateFormat('HH:mm').format(_current.recordedAt)}',
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!conform) ...[
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.danger,
-                      side: BorderSide(
-                          color: colors.danger.withValues(alpha: 0.5)),
-                      minimumSize: const Size(0, 48),
-                    ),
-                    onPressed: () => context.go('/tickets/nouveau'),
-                    icon: const Icon(Icons.report_problem_rounded, size: 18),
-                    label: const Text('Signaler'),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Hero gauge
-          Center(
-            child: GaugeCard(
-              title: 'Qualité globale',
-              value: _current.globalScore,
-              minVal: 0,
-              maxVal: 100,
-              unit: '/ 100',
-              safeMin: 80,
-              safeMax: 100,
-              isHero: true,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Parameter gauges
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
-              return GridView.count(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  GaugeCard(
-                    title: 'Température',
-                    value: _current.temperature,
-                    minVal: 10,
-                    maxVal: 40,
-                    unit: '°C',
-                    safeMin: 26,
-                    safeMax: 30,
-                  ),
-                  GaugeCard(
-                    title: 'Chlore',
-                    value: _current.chlorine,
-                    minVal: 0,
-                    maxVal: 5,
-                    unit: 'ppm',
-                    safeMin: 1.0,
-                    safeMax: 3.0,
-                  ),
-                  GaugeCard(
-                    title: 'pH',
-                    value: _current.ph,
-                    minVal: 0,
-                    maxVal: 14,
-                    unit: '',
-                    safeMin: 7.2,
-                    safeMax: 7.6,
-                  ),
-                  GaugeCard(
-                    title: 'Turbidité',
-                    value: _current.turbidity,
-                    minVal: 0,
-                    maxVal: 5,
-                    unit: 'NTU',
-                    safeMin: 0,
-                    safeMax: 1.0,
-                  ),
-                ],
-              );
-            },
-          ),
+          if (reading == null)
+            const AppEmptyState(
+              icon: Icons.science_outlined,
+              title: 'Aucun relevé pour le moment',
+              message: 'Saisissez un premier relevé ci-dessous.',
+            )
+          else
+            _buildSummary(context, reading, rules, colors),
           const SizedBox(height: 24),
 
           // New reading composer
@@ -296,9 +185,144 @@ class _PoolGaugesScreenState extends ConsumerState<PoolGaugesScreen> {
           ),
           const SizedBox(height: 24),
 
-          const ActivityTicketsPanel(activityId: 'pool'),
+          ActivityTicketsPanel(activityId: widget.activityId),
         ],
       ),
+    );
+  }
+
+  Widget _buildSummary(BuildContext context, _Reading reading, PoolRules rules,
+      AppSemanticColors colors) {
+    final issues = reading.issueCount(rules);
+    final conform = issues == 0;
+    final statusColor = conform
+        ? colors.success
+        : (issues >= 2 ? colors.danger : colors.warning);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Conformity summary
+        AppPanel(
+          color: statusColor.withValues(alpha: 0.09),
+          child: Row(
+            children: [
+              Icon(
+                conform ? Icons.verified_rounded : Icons.warning_amber_rounded,
+                color: statusColor,
+                size: 30,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      conform
+                          ? 'Eau conforme aux normes'
+                          : '$issues paramètre${issues > 1 ? 's' : ''} hors norme',
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Dernier relevé : ${DateFormat('HH:mm').format(reading.recordedAt)}',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!conform) ...[
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.danger,
+                    side: BorderSide(color: colors.danger.withValues(alpha: 0.5)),
+                    minimumSize: const Size(0, 48),
+                  ),
+                  onPressed: () => context.go('/tickets/nouveau'),
+                  icon: const Icon(Icons.report_problem_rounded, size: 18),
+                  label: const Text('Signaler'),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Hero gauge
+        Center(
+          child: GaugeCard(
+            title: 'Qualité globale',
+            value: reading.globalScore(rules),
+            minVal: 0,
+            maxVal: 100,
+            unit: '/ 100',
+            safeMin: 80,
+            safeMax: 100,
+            isHero: true,
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Parameter gauges, safe bands from the club settings
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth > 600 ? 4 : 2;
+            return GridView.count(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                GaugeCard(
+                  title: 'Température',
+                  value: reading.temperature,
+                  minVal: 10,
+                  maxVal: 40,
+                  unit: '°C',
+                  safeMin: rules.temperature.min,
+                  safeMax: rules.temperature.max,
+                ),
+                GaugeCard(
+                  title: 'Chlore',
+                  value: reading.chlorine,
+                  minVal: 0,
+                  maxVal: 5,
+                  unit: 'ppm',
+                  safeMin: rules.chlorine.min,
+                  safeMax: rules.chlorine.max,
+                ),
+                GaugeCard(
+                  title: 'pH',
+                  value: reading.ph,
+                  minVal: 0,
+                  maxVal: 14,
+                  unit: '',
+                  safeMin: rules.ph.min,
+                  safeMax: rules.ph.max,
+                ),
+                GaugeCard(
+                  title: 'Turbidité',
+                  value: reading.turbidity,
+                  minVal: 0,
+                  maxVal: 5,
+                  unit: 'NTU',
+                  safeMin: 0,
+                  safeMax: rules.turbidityMax,
+                ),
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 

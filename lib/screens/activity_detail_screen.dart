@@ -111,7 +111,7 @@ class _Header extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
-    final module = _moduleFor(activity.id);
+    final module = _moduleFor(activity);
     final isOpen = activity.status == ActivityStatus.open ||
         activity.status == ActivityStatus.warning;
     final max = activity.maxCapacity;
@@ -264,29 +264,26 @@ class _ModuleLink {
   final String route;
 }
 
-_ModuleLink? _moduleFor(String activityId) {
-  switch (activityId) {
-    case 'pool':
-      return const _ModuleLink(
-          Icons.speed_rounded, 'Relevés de qualité de l’eau', '/activites/pool/pool-gauges');
-    case 'horses':
-      return const _ModuleLink(
-          Icons.pets_outlined, 'Écurie : chevaux et soins', '/activites/horses/horses');
-    case 'shooting':
-      return const _ModuleLink(
-          Icons.gps_fixed_rounded, 'Armurerie et nettoyage', '/activites/shooting/weapon-list');
-    case 'padel':
-      return const _ModuleLink(
-          Icons.sports_tennis_rounded, 'Terrains et réservations', '/activites/padel/padel-courts');
-    case 'paintball':
-      return const _ModuleLink(
-          Icons.adjust_rounded, 'Terrain et sessions', '/activites/paintball/paintball-field');
-    case 'gym':
-      return const _ModuleLink(
-          Icons.fitness_center_rounded, 'Machines de la salle', '/activites/gym/gym-equipment');
-    default:
-      return null;
-  }
+/// Route slug and icon of each dedicated screen. Which screen an activity
+/// opens, and the text of the shortcut, are set by the admin in Odoo
+/// (activity > Application tablette).
+const _screens = <String, ({String slug, IconData icon})>{
+  'pool': (slug: 'pool-gauges', icon: Icons.speed_rounded),
+  'horses': (slug: 'horses', icon: Icons.pets_outlined),
+  'armory': (slug: 'weapon-list', icon: Icons.gps_fixed_rounded),
+  'padel': (slug: 'padel-courts', icon: Icons.sports_tennis_rounded),
+  'paintball': (slug: 'paintball-field', icon: Icons.adjust_rounded),
+  'gym': (slug: 'gym-equipment', icon: Icons.fitness_center_rounded),
+};
+
+_ModuleLink? _moduleFor(Activity activity) {
+  final screen = _screens[activity.screenKey];
+  if (screen == null) return null;
+  return _ModuleLink(
+    screen.icon,
+    activity.screenLabel.isEmpty ? activity.name : activity.screenLabel,
+    '/activites/${activity.id}/${screen.slug}',
+  );
 }
 
 // ---------------------------------------------------------------------------

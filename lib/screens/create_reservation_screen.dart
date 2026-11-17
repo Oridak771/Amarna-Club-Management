@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../providers/club_config_provider.dart';
 import '../providers/reservations_provider.dart';
+import '../ui/activity_ui_adapter.dart';
 import '../providers/activities_provider.dart';
 import '../models/activity.dart';
 import '../models/reservation.dart';
@@ -28,34 +30,15 @@ class _CreateReservationScreenState
 
   String? _selectedActivity;
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 10, minute: 0);
+  // Defaults come from the club settings (Configuration > Horaires et réservations).
+  late TimeOfDay _startTime;
+  late TimeOfDay _endTime;
   final TextEditingController _clientNameCtrl = TextEditingController();
-  int _peopleCount = 2;
+  late int _peopleCount;
   ReservationStatus _status = ReservationStatus.confirmed;
   final TextEditingController _notesCtrl = TextEditingController();
   bool _isSaving = false;
 
-  static final _activities = [
-    const _ActivityOption(id: 'pool', label: 'Piscine', icon: Icons.pool),
-    const _ActivityOption(id: 'horses', label: 'Equitation', icon: Icons.pets),
-    const _ActivityOption(
-      id: 'shooting',
-      label: 'Stand de Tir',
-      icon: Icons.gps_fixed,
-    ),
-    const _ActivityOption(
-      id: 'padel',
-      label: 'Terrains de Padel',
-      icon: Icons.sports_tennis,
-    ),
-    const _ActivityOption(id: 'paintball', label: 'Paintball', icon: Icons.adjust),
-    const _ActivityOption(
-      id: 'gym',
-      label: 'Salle de Sport',
-      icon: Icons.fitness_center,
-    ),
-  ];
 
   // A new booking is either confirmed or pending; cancelling is done on the
   // reservation itself.
@@ -63,6 +46,21 @@ class _CreateReservationScreenState
 
   static String _statusLabel(ReservationStatus status) =>
       status == ReservationStatus.pending ? 'En attente' : 'Confirmée';
+
+  @override
+  void initState() {
+    super.initState();
+    final config = ref.read(clubConfigProvider).requireValue;
+    _startTime = _timeFromHours(config.club.defaultStartHour);
+    _endTime = _timeFromHours(config.club.defaultEndHour);
+    _peopleCount = config.reservations.defaultPeopleCount;
+  }
+
+  /// Decimal hours from the settings (9.5 = 9h30) as a clock time.
+  static TimeOfDay _timeFromHours(double hours) {
+    final minutes = (hours * 60).round().clamp(0, 24 * 60 - 1);
+    return TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+  }
 
   @override
   void dispose() {
@@ -76,7 +74,8 @@ class _CreateReservationScreenState
       context: context,
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now().add(Duration(
+          days: ref.read(clubConfigProvider).requireValue.reservations.horizonDays)),
     );
     if (picked != null) {
       setState(() => _selectedDate = picked);
@@ -120,7 +119,14 @@ class _CreateReservationScreenState
     }
 
     final activity =
-        _activities.firstWhere((item) => item.id == _selectedActivity);
+        ref.read(activitiesProvider).firstWhere((item) => item.id == _selectedActivity);
+    if (activity.maxCapacity > 0 && _peopleCount > activity.maxCapacity) {
+      _showSnack(
+        'Capacité dépassée : ${activity.maxCapacity} personnes maximum.',
+        context.colors.warning,
+      );
+      return;
+    }
     final startAt = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -173,7 +179,7 @@ class _CreateReservationScreenState
     try {
       await ref.read(odooReservationServiceProvider).createReservation(
             activityId: activity.id,
-            activityName: activity.label,
+            activityName: activity.name,
             clientName: _clientNameCtrl.text.trim(),
             peopleCount: _peopleCount,
             status: _status,
@@ -220,6 +226,7 @@ class _CreateReservationScreenState
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final activities = ref.watch(activitiesProvider);
     return AppPage(
       title: 'Nouvelle réservation',
       subtitle: 'Créneau, client et nombre de personnes',
@@ -256,13 +263,13 @@ class _CreateReservationScreenState
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: _activities.map((act) {
+              children: activities.map((act) {
                 final color = _activityColor(act.id);
                 final isSelected = _selectedActivity == act.id;
                 return Semantics(
                   button: true,
                   selected: isSelected,
-                  label: act.label,
+                  label: act.name,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
                     decoration: BoxDecoration(
@@ -289,13 +296,13 @@ class _CreateReservationScreenState
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                act.icon,
+                                resolveActivityIcon(act.iconKey),
                                 size: 20,
                                 color: isSelected ? color : colors.textMuted,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                act.label,
+                                act.name,
                                 style: TextStyle(
                                   color: isSelected
                                       ? color
@@ -669,14 +676,3 @@ class _CounterButton extends StatelessWidget {
   }
 }
 
-class _ActivityOption {
-  final String id;
-  final String label;
-  final IconData icon;
-
-  const _ActivityOption({
-    required this.id,
-    required this.label,
-    required this.icon,
-  });
-}

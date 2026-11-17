@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/app_environment.dart';
 import '../models/activity.dart';
 import '../models/asset.dart';
+import '../models/safety_checkpoint.dart';
 import '../models/inventory_item.dart';
 import '../models/work_ticket.dart';
 import '../providers/horses_provider.dart';
@@ -61,6 +62,8 @@ class OdooClubService {
         'current_occupancy',
         'max_capacity',
         'assigned_staff',
+        'mobile_screen',
+        'mobile_screen_label',
         'closure_start',
         'closure_end',
       ],
@@ -79,6 +82,8 @@ class OdooClubService {
               currentOccupancy: _toInt(row['current_occupancy']),
               maxCapacity: _toInt(row['max_capacity']),
               assignedStaff: _str(row['assigned_staff']),
+              screenKey: _str(row['mobile_screen']),
+              screenLabel: _str(row['mobile_screen_label']),
               closureStart: fromOdooDateTime(row['closure_start']),
               closureEnd: fromOdooDateTime(row['closure_end']),
             ))
@@ -110,6 +115,8 @@ class OdooClubService {
         'status',
         'last_maintenance',
         'next_maintenance',
+        'in_use_since',
+        'is_weapon',
         'image_url',
         'specs_json',
       ],
@@ -128,6 +135,8 @@ class OdooClubService {
                   AssetStatus.values, row['status'], AssetStatus.available),
               lastMaintenance: fromOdooDateTime(row['last_maintenance']),
               nextMaintenance: fromOdooDateTime(row['next_maintenance']),
+              inUseSince: fromOdooDateTime(row['in_use_since']),
+              isWeapon: row['is_weapon'] == true,
               imageUrl:
                   _str(row['image_url']).isEmpty ? null : _str(row['image_url']),
               technicalSpecsJson: _str(row['specs_json']).isEmpty
@@ -145,6 +154,36 @@ class OdooClubService {
   Future<void> pushAssetCleaned(String code) {
     return _writeByCode('amarna.club.asset', code,
         {'last_maintenance': toOdooDateTime(DateTime.now())});
+  }
+
+  // ------------------------------------------------------------ Checkpoints
+
+  /// Control points of an activity, in the order the admin set.
+  Future<List<SafetyCheckpoint>> fetchCheckpoints(String activityCode) async {
+    final rows = await _odoo.searchRead(
+      model: 'amarna.club.checkpoint',
+      domain: [
+        ['mobile_activity_code', '=', activityCode],
+      ],
+      fields: const ['name', 'is_ok', 'blocks_session'],
+      order: 'sequence asc, id asc',
+    );
+    return rows
+        .map((row) => SafetyCheckpoint(
+              id: (row['id'] as num).toInt(),
+              name: _str(row['name']),
+              isOk: row['is_ok'] == true,
+              blocksSession: row['blocks_session'] == true,
+            ))
+        .toList();
+  }
+
+  Future<void> pushCheckpoint(int id, bool isOk) async {
+    await _odoo.write(
+      model: 'amarna.club.checkpoint',
+      id: id,
+      values: {'is_ok': isOk},
+    );
   }
 
   // -------------------------------------------------------------- Inventory

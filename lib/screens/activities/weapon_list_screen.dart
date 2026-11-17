@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/asset.dart';
 import '../../models/work_ticket.dart';
 import '../../providers/assets_provider.dart';
+import '../../providers/club_config_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
 import '../../widgets/app_layout.dart';
@@ -14,19 +15,24 @@ class Weapon {
   final String serialNumber;
   final String model;
   final String status; // 'Disponible', 'En utilisation', 'Maintenance'
-  final DateTime lastCleaned;
+  /// Null when Odoo has no maintenance date for the weapon.
+  final DateTime? lastCleaned;
 
   Weapon({
     required this.id,
     required this.serialNumber,
     required this.model,
     required this.status,
-    required this.lastCleaned,
+    this.lastCleaned,
   });
 }
 
 class WeaponListScreen extends ConsumerStatefulWidget {
-  const WeaponListScreen({super.key});
+  const WeaponListScreen({super.key, required this.activityId});
+
+  /// Activity code from the route (`/activites/:id/...`).
+  final String activityId;
+
 
   @override
   ConsumerState<WeaponListScreen> createState() => _WeaponListScreenState();
@@ -41,9 +47,16 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
       serialNumber: asset.serialNumber,
       model: asset.name,
       status: asset.statusTextFrench,
-      lastCleaned: asset.lastMaintenance ??
-          DateTime.now().subtract(const Duration(days: 30)),
+      lastCleaned: asset.lastMaintenance,
     );
+  }
+
+  /// A weapon needs cleaning when it was never recorded as cleaned, or when
+  /// the last cleaning is older than the club's interval (settings).
+  bool _needsCleaning(Weapon weapon) {
+    final days = ref.watch(clubConfigProvider).requireValue.armory.weaponCleaningDays;
+    final last = weapon.lastCleaned;
+    return last == null || DateTime.now().difference(last).inDays > days;
   }
 
   void _cleanWeapon(int index) {
@@ -61,9 +74,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
   Widget build(BuildContext context) {
     final assets = ref.watch(assetsProvider);
     final weaponAssets = assets
-        .where((a) =>
-            a.activityId == 'shooting' &&
-            a.category.toLowerCase().contains('arme'))
+        .where((a) => a.activityId == widget.activityId && a.isWeapon)
         .toList();
     weapons = weaponAssets.map(_weaponFromAsset).toList();
     final available = weapons.where((w) => w.status == 'Disponible').length;
@@ -96,7 +107,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
               const SizedBox(height: 10),
             ],
           const SizedBox(height: 14),
-          const ActivityTicketsPanel(activityId: 'shooting'),
+          ActivityTicketsPanel(activityId: widget.activityId),
         ],
       ),
     );
@@ -105,9 +116,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
   Widget _buildArmoryHeader() {
     final colors = context.colors;
     final available = weapons.where((w) => w.status == 'Disponible').length;
-    final needCleaning = weapons
-        .where((w) => DateTime.now().difference(w.lastCleaned).inDays > 7)
-        .length;
+    final needCleaning = weapons.where(_needsCleaning).length;
 
     return AppPanel(
       color: colors.shooting.withValues(alpha: 0.08),
@@ -167,8 +176,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
       priority = TicketPriority.critical;
     }
 
-    final bool needsCleaning =
-        DateTime.now().difference(weapon.lastCleaned).inDays > 7;
+    final bool needsCleaning = _needsCleaning(weapon);
     if (needsCleaning && priority == TicketPriority.low) {
       priority = TicketPriority.high; // bump priority if it needs cleaning
     }
@@ -218,7 +226,7 @@ class _WeaponListScreenState extends ConsumerState<WeaponListScreen> {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Dernier nettoyage : ${DateFormat('dd/MM/yyyy').format(weapon.lastCleaned)}',
+                          'Dernier nettoyage : ${weapon.lastCleaned == null ? 'jamais enregistré' : DateFormat('dd/MM/yyyy').format(weapon.lastCleaned!)}',
                           style: TextStyle(
                             color: needsCleaning
                                 ? colors.danger

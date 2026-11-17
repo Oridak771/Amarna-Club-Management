@@ -57,14 +57,24 @@ const ActivitySchema = CollectionSchema(
       name: r'name',
       type: IsarType.string,
     ),
-    r'status': PropertySchema(
+    r'screenKey': PropertySchema(
       id: 8,
+      name: r'screenKey',
+      type: IsarType.string,
+    ),
+    r'screenLabel': PropertySchema(
+      id: 9,
+      name: r'screenLabel',
+      type: IsarType.string,
+    ),
+    r'status': PropertySchema(
+      id: 10,
       name: r'status',
       type: IsarType.byte,
       enumMap: _ActivitystatusEnumValueMap,
     ),
     r'statusTextFrench': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'statusTextFrench',
       type: IsarType.string,
     )
@@ -107,6 +117,8 @@ int _activityEstimateSize(
   bytesCount += 3 + object.iconKey.length * 3;
   bytesCount += 3 + object.id.length * 3;
   bytesCount += 3 + object.name.length * 3;
+  bytesCount += 3 + object.screenKey.length * 3;
+  bytesCount += 3 + object.screenLabel.length * 3;
   bytesCount += 3 + object.statusTextFrench.length * 3;
   return bytesCount;
 }
@@ -125,8 +137,10 @@ void _activitySerialize(
   writer.writeString(offsets[5], object.id);
   writer.writeLong(offsets[6], object.maxCapacity);
   writer.writeString(offsets[7], object.name);
-  writer.writeByte(offsets[8], object.status.index);
-  writer.writeString(offsets[9], object.statusTextFrench);
+  writer.writeString(offsets[8], object.screenKey);
+  writer.writeString(offsets[9], object.screenLabel);
+  writer.writeByte(offsets[10], object.status.index);
+  writer.writeString(offsets[11], object.statusTextFrench);
 }
 
 Activity _activityDeserialize(
@@ -145,7 +159,9 @@ Activity _activityDeserialize(
     isarId: id,
     maxCapacity: reader.readLong(offsets[6]),
     name: reader.readString(offsets[7]),
-    status: _ActivitystatusValueEnumMap[reader.readByteOrNull(offsets[8])] ??
+    screenKey: reader.readStringOrNull(offsets[8]) ?? '',
+    screenLabel: reader.readStringOrNull(offsets[9]) ?? '',
+    status: _ActivitystatusValueEnumMap[reader.readByteOrNull(offsets[10])] ??
         ActivityStatus.open,
   );
   return object;
@@ -175,9 +191,13 @@ P _activityDeserializeProp<P>(
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readStringOrNull(offset) ?? '') as P;
+    case 9:
+      return (reader.readStringOrNull(offset) ?? '') as P;
+    case 10:
       return (_ActivitystatusValueEnumMap[reader.readByteOrNull(offset)] ??
           ActivityStatus.open) as P;
-    case 9:
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1213,6 +1233,269 @@ extension ActivityQueryFilter
     });
   }
 
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'screenKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'screenKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'screenKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenKeyIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'screenKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      screenKeyIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'screenKey',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      screenLabelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'screenLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'screenLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'screenLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition> screenLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'screenLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterFilterCondition>
+      screenLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'screenLabel',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Activity, Activity, QAfterFilterCondition> statusEqualTo(
       ActivityStatus value) {
     return QueryBuilder.apply(this, (query) {
@@ -1506,6 +1789,30 @@ extension ActivityQuerySortBy on QueryBuilder<Activity, Activity, QSortBy> {
     });
   }
 
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByScreenKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByScreenKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByScreenLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> sortByScreenLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<Activity, Activity, QAfterSortBy> sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -1641,6 +1948,30 @@ extension ActivityQuerySortThenBy
     });
   }
 
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByScreenKey() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenKey', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByScreenKeyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByScreenLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QAfterSortBy> thenByScreenLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'screenLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<Activity, Activity, QAfterSortBy> thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -1721,6 +2052,20 @@ extension ActivityQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Activity, Activity, QDistinct> distinctByScreenKey(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'screenKey', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Activity, Activity, QDistinct> distinctByScreenLabel(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'screenLabel', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Activity, Activity, QDistinct> distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
@@ -1789,6 +2134,18 @@ extension ActivityQueryProperty
   QueryBuilder<Activity, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<Activity, String, QQueryOperations> screenKeyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'screenKey');
+    });
+  }
+
+  QueryBuilder<Activity, String, QQueryOperations> screenLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'screenLabel');
     });
   }
 

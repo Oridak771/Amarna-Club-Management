@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/club_config.dart';
 import '../services/odoo_club_service.dart';
 import '../services/odoo_jsonrpc_service.dart';
 
@@ -82,12 +83,13 @@ class Horse {
     );
   }
 
-  /// Farrier work is recommended every ~6 weeks.
-  bool get farrierDue => DateTime.now().difference(lastFarrier).inDays > 42;
+  /// Farrier work is due once the club's interval (settings) has passed.
+  bool farrierDue(HorseRules rules) =>
+      DateTime.now().difference(lastFarrier).inDays > rules.farrierIntervalDays;
 
-  /// Deworming every ~3 months.
-  bool get dewormingDue =>
-      DateTime.now().difference(lastDeworming).inDays > 90;
+  /// Deworming is due once the club's interval (settings) has passed.
+  bool dewormingDue(HorseRules rules) =>
+      DateTime.now().difference(lastDeworming).inDays > rules.dewormingIntervalDays;
 }
 
 class HorsesNotifier extends StateNotifier<List<Horse>> {

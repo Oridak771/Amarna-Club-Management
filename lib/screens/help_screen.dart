@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../widgets/app_layout.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HelpScreen extends StatelessWidget {
+import '../providers/club_config_provider.dart';
+import '../widgets/app_layout.dart';
+import '../theme/app_theme.dart';
+
+class HelpScreen extends ConsumerWidget {
   const HelpScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
+    final support = ref.watch(clubConfigProvider).requireValue.support;
     final faqs = [
       _FAQ(
         question: 'Mes données sont-elles synchronisées avec Odoo ?',
@@ -71,7 +76,7 @@ class HelpScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels de 8h à 20h.',
+                  'Notre équipe de support technique est disponible pour résoudre vos problèmes opérationnels${support.hours.isEmpty ? '' : ' ${support.hours}'}.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: colors.textSecondary,
@@ -90,11 +95,11 @@ class HelpScreen extends StatelessWidget {
                           minimumSize: const Size(0, 52),
                         ),
                         icon: const Icon(Icons.phone_rounded),
-                        label: const Text('Appeler',
+                        label: const Text('Copier le numéro',
                             style: TextStyle(fontWeight: FontWeight.w800)),
-                        onPressed: () {
-                          // Action simulation
-                        },
+                        onPressed: support.phone.isEmpty
+                            ? null
+                            : () => _copy(context, support.phone, 'Numéro copié'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -106,11 +111,11 @@ class HelpScreen extends StatelessWidget {
                           minimumSize: const Size(0, 52),
                         ),
                         icon: const Icon(Icons.mail_outline_rounded),
-                        label: const Text('E-mail',
+                        label: const Text("Copier l'e-mail",
                             style: TextStyle(fontWeight: FontWeight.w800)),
-                        onPressed: () {
-                          // Action simulation
-                        },
+                        onPressed: support.email.isEmpty
+                            ? null
+                            : () => _copy(context, support.email, 'Adresse copiée'),
                       ),
                     ),
                   ],
@@ -175,4 +180,13 @@ class _FAQ {
   final String answer;
 
   _FAQ({required this.question, required this.answer});
+}
+
+/// Copies a contact to the clipboard, since the tablet cannot place a call or open a mail app.
+Future<void> _copy(BuildContext context, String value, String message) async {
+  await Clipboard.setData(ClipboardData(text: value));
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('$message : $value')),
+  );
 }

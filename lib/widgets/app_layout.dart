@@ -77,8 +77,11 @@ class AppPage extends StatelessWidget {
                   border: Border(top: BorderSide(color: colors.border)),
                 ),
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                // heightFactor keeps the bar as tall as its button: without it
+                // the Align fills the whole screen and squeezes the body.
                 child: Align(
                   alignment: Alignment.topCenter,
+                  heightFactor: 1.0,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(maxWidth: maxWidth),
                     child: bottomBar,

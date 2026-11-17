@@ -6,6 +6,7 @@ import 'routes.dart';
 import 'theme/app_theme.dart';
 import 'services/database_service.dart';
 import 'providers/theme_mode_provider.dart';
+import 'widgets/club_config_gate.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,6 +41,8 @@ class AmarnaClubApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
+      builder: (context, child) =>
+          ClubConfigGate(child: child ?? const SizedBox.shrink()),
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [
         Locale('fr', 'FR'),

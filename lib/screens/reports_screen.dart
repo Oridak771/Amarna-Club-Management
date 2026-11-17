@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/activity.dart';
 import '../models/work_ticket.dart';
 import '../providers/activities_provider.dart';
+import '../providers/club_config_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../providers/inventory_provider.dart';
 import '../theme/app_theme.dart';
@@ -17,7 +19,7 @@ class ReportsScreen extends ConsumerStatefulWidget {
 }
 
 class _ReportsScreenState extends ConsumerState<ReportsScreen> {
-  String _selectedPeriod = '30'; // days
+  int? _selectedPeriod; // days; null = the club's default period
   String _selectedActivity = 'all';
 
   @override
@@ -26,11 +28,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final activities = ref.watch(activitiesProvider);
     final tickets = ref.watch(ticketsProvider);
     final inventoryItems = ref.watch(inventoryProvider);
+    final reportRules = ref.watch(clubConfigProvider).requireValue.reports;
+    final periodDays = _selectedPeriod ?? reportRules.defaultDays;
+    final since = DateTime.now().subtract(Duration(days: periodDays));
 
     // Filter by activity if not 'all'
     final filteredTickets = tickets
         .where((t) =>
-            _selectedActivity == 'all' || t.activityId == _selectedActivity)
+            t.dateCreated.isAfter(since) &&
+            (_selectedActivity == 'all' || t.activityId == _selectedActivity))
         .toList();
     final filteredInventory = inventoryItems
         .where((item) =>
@@ -63,11 +69,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         IconButton.filledTonal(
           tooltip: 'Exporter',
           icon: const Icon(Icons.ios_share_rounded),
-          onPressed: () {
+          onPressed: () async {
+            final summary = [
+              'Rapport Amarna Club — $periodDays derniers jours',
+              'Anomalies résolues : $resolvedAnomalies / $totalAnomalies',
+              'Maintenance complétée : $completedMaintenance / $totalMaintenance',
+              'Articles sous le seuil de stock : $lowStockCount',
+            ].join('\n');
+            await Clipboard.setData(ClipboardData(text: summary));
+            if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content:
-                      Text('Rapport exporté en format PDF avec succès.')),
+                  content: Text('Résumé du rapport copié dans le presse-papiers.')),
             );
           },
         ),
@@ -80,21 +93,22 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             builder: (context, constraints) {
               final periodField = _filterField(
                 colors,
-                DropdownButton<String>(
+                DropdownButton<int>(
                   dropdownColor: colors.backgroundSecondary,
                   isExpanded: true,
-                  value: _selectedPeriod,
+                  value: periodDays,
                   style: TextStyle(
                       color: colors.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.w700),
-                  items: const [
-                    DropdownMenuItem(value: '7', child: Text('7 derniers jours')),
-                    DropdownMenuItem(
-                        value: '30', child: Text('30 derniers jours')),
-                    DropdownMenuItem(
-                        value: '90', child: Text('3 derniers mois')),
-                    DropdownMenuItem(value: '365', child: Text('Cette année')),
+                  items: [
+                    for (final days in reportRules.periodDays)
+                      DropdownMenuItem(
+                        value: days,
+                        child: Text(days == 1
+                            ? 'Dernier jour'
+                            : '$days derniers jours'),
+                      ),
                   ],
                   onChanged: (val) {
                     if (val != null) {

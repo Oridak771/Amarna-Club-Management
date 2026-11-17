@@ -8,6 +8,7 @@ import '../models/asset.dart';
 import '../models/work_ticket.dart';
 import '../providers/activities_provider.dart';
 import '../providers/assets_provider.dart';
+import '../providers/club_config_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 import '../ui/activity_ui_adapter.dart';
@@ -39,13 +40,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
   bool _prefillApplied = false;
   bool _saving = false;
 
-  // Technicians known to the tablet; see the ticket detail screen.
-  static const _technicians = [
-    'Karim (Technicien)',
-    'Mourad (Technicien)',
-    'Sami (Électricien)',
-    'Sophie (Coach Gym)',
-  ];
+  // Staff from Odoo (Configuration > Personnel du club).
+  List<String> get _staff =>
+      ref.watch(assignableStaffProvider).valueOrNull ?? const [];
+
+  // Due date proposed when none is picked: the club's delay setting.
+  DateTime get _defaultDueDate => DateTime.now().add(Duration(
+      days: ref.read(clubConfigProvider).requireValue.tickets.dueDays));
 
   @override
   void dispose() {
@@ -91,7 +92,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
             priority: _priority,
             assetId: asset?.id,
             assetName: asset?.name,
-            dateDue: _isIncident ? null : _dueDate,
+            dateDue: _isIncident ? null : (_dueDate ?? _defaultDueDate),
             assignedTechnician: _isIncident ? null : _technician,
           );
       if (!mounted) return;
@@ -320,7 +321,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     value: null,
                     child: Text('Non assigné'),
                   ),
-                  for (final tech in _technicians)
+                  for (final tech in _staff)
                     DropdownMenuItem<String?>(value: tech, child: Text(tech)),
                 ],
                 onChanged: (value) => setState(() => _technician = value),

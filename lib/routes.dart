@@ -152,11 +152,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     routes: [
                       GoRoute(
                         path: 'pool-gauges',
-                        builder: (context, state) => const PoolGaugesScreen(),
+                        builder: (context, state) =>
+                            PoolGaugesScreen(activityId: state.pathParameters['id'] ?? ''),
                       ),
                       GoRoute(
                         path: 'horses',
-                        builder: (context, state) => const HorseGridScreen(),
+                        builder: (context, state) =>
+                            HorseGridScreen(activityId: state.pathParameters['id'] ?? ''),
                         routes: [
                           GoRoute(
                             path: ':horseId',
@@ -170,20 +172,23 @@ final routerProvider = Provider<GoRouter>((ref) {
                       ),
                       GoRoute(
                         path: 'weapon-list',
-                        builder: (context, state) => const WeaponListScreen(),
+                        builder: (context, state) =>
+                            WeaponListScreen(activityId: state.pathParameters['id'] ?? ''),
                       ),
                       GoRoute(
                         path: 'paintball-field',
                         builder: (context, state) =>
-                            const PaintballFieldScreen(),
+                            PaintballFieldScreen(activityId: state.pathParameters['id'] ?? ''),
                       ),
                       GoRoute(
                         path: 'gym-equipment',
-                        builder: (context, state) => const GymEquipmentScreen(),
+                        builder: (context, state) =>
+                            GymEquipmentScreen(activityId: state.pathParameters['id'] ?? ''),
                       ),
                       GoRoute(
                         path: 'padel-courts',
-                        builder: (context, state) => const PadelCourtsScreen(),
+                        builder: (context, state) =>
+                            PadelCourtsScreen(activityId: state.pathParameters['id'] ?? ''),
                       ),
                     ],
                   ),

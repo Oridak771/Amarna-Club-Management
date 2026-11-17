@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
+import '../providers/club_config_provider.dart';
 import '../providers/theme_mode_provider.dart';
 import '../theme/app_theme.dart';
+import '../ui/activity_ui_adapter.dart';
 import '../widgets/app_layout.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -25,7 +27,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final user = authState.userDetails ?? const <String, dynamic>{};
     final displayName = _displayName(user);
     final login = _login(user);
-    final role = _roleLabel(user);
+    final staff = ref.watch(staffProfileProvider).valueOrNull;
+    final role = (staff != null && staff.role.isNotEmpty) ? staff.role : _roleLabel(user);
     final initials = _buildInitials(displayName);
 
     return AppPage(
@@ -82,33 +85,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                Divider(color: colors.border, height: 1),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Activités affectées',
-                    style: TextStyle(
-                      color: colors.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                if (staff != null && staff.activities.isNotEmpty) ...[
+                  Divider(color: colors.border, height: 1),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Activités affectées',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      AppPill(label: 'Piscine', color: colors.pool),
-                      AppPill(label: 'Équitation', color: colors.horses),
-                      AppPill(label: 'Padel', color: colors.padel),
-                      AppPill(label: 'Stand de Tir', color: colors.shooting),
-                    ],
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final activity in staff.activities)
+                          AppPill(
+                            label: activity.name,
+                            color: resolveActivityColor(context, activity.code),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

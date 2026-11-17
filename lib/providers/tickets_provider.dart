@@ -142,10 +142,8 @@ class TicketsNotifier extends StateNotifier<List<WorkTicket>> {
       priority: priority,
       status: TicketStatus.open,
       dateCreated: DateTime.now(),
-      dateDue: dateDue ??
-          (type != TicketType.anomaly
-              ? DateTime.now().add(const Duration(days: 3))
-              : null),
+      // The due date is chosen by the caller, from the club's delay setting.
+      dateDue: dateDue,
       assignedTechnician: assignedTechnician,
       photoPaths: photoPaths,
       events: [

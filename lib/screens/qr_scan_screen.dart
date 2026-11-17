@@ -192,59 +192,6 @@ class _QRScanScreenState extends State<QRScanScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // NFC Simulation area
-                  InkWell(
-                    onTap: () {
-                      // Simulate NFC Tap
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Simulation NFC : Badge détecté (ASSET-001)'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                      _navigateToAsset('ASSET-001');
-                    },
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        color: context.colors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: context.colors.border),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.contactless,
-                              color: context.colors.accentSecondary, size: 28),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Approchez un badge NFC',
-                                style: TextStyle(
-                                  color: context.colors.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              Text(
-                                'Ou appuyez ici pour simuler',
-                                style: TextStyle(
-                                  color: context.colors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
                   // Saisie manuelle toggle
                   if (!_showManualInput)
                     SizedBox(
@@ -279,7 +226,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                                 style: TextStyle(
                                     color: context.colors.textPrimary),
                                 decoration: InputDecoration(
-                                  hintText: 'Ex: ASSET-001, horse_01...',
+                                  hintText: "Code de l'équipement ou du cheval",
                                   hintStyle: TextStyle(
                                       color: context.colors.textMuted),
                                   filled: true,

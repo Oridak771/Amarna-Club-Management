@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/club_config.dart';
+import '../../providers/club_config_provider.dart';
 import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/activity_panels.dart';
@@ -11,7 +13,11 @@ import '../../widgets/app_layout.dart';
 
 /// « Écurie » — every horse with availability, care alerts and fatigue.
 class HorseGridScreen extends ConsumerStatefulWidget {
-  const HorseGridScreen({super.key});
+  const HorseGridScreen({super.key, required this.activityId});
+
+  /// Activity code from the route (`/activites/:id/...`).
+  final String activityId;
+
 
   @override
   ConsumerState<HorseGridScreen> createState() => _HorseGridScreenState();
@@ -24,6 +30,7 @@ class _HorseGridScreenState extends ConsumerState<HorseGridScreen> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final allHorses = ref.watch(horsesProvider);
+    final rules = ref.watch(clubConfigProvider).requireValue.horses;
     final horses = _filter == null
         ? allHorses
         : allHorses.where((h) => h.status == _filter).toList();
@@ -31,7 +38,7 @@ class _HorseGridScreenState extends ConsumerState<HorseGridScreen> {
     final availableCount =
         allHorses.where((h) => h.status == HorseStatus.available).length;
     final careAlerts = allHorses
-        .where((h) => h.farrierDue || h.dewormingDue || h.vetNote != null)
+        .where((h) => h.farrierDue(rules) || h.dewormingDue(rules) || h.vetNote != null)
         .length;
 
     return AppPage(
@@ -125,7 +132,7 @@ class _HorseGridScreenState extends ConsumerState<HorseGridScreen> {
                     for (final horse in horses)
                       SizedBox(
                         width: width,
-                        child: _HorseCard(horse: horse),
+                        child: _HorseCard(horse: horse, rules: rules),
                       ),
                   ],
                 );
@@ -133,12 +140,11 @@ class _HorseGridScreenState extends ConsumerState<HorseGridScreen> {
             ),
           const SizedBox(height: 24),
 
-          const ActivityReservationsPanel(
-            activityId: 'horses',
-            activityName: 'Équitation',
+          ActivityReservationsPanel(
+            activityId: widget.activityId,
           ),
           const SizedBox(height: 20),
-          const ActivityTicketsPanel(activityId: 'horses'),
+          ActivityTicketsPanel(activityId: widget.activityId),
         ],
       ),
     );
@@ -146,9 +152,10 @@ class _HorseGridScreenState extends ConsumerState<HorseGridScreen> {
 }
 
 class _HorseCard extends StatelessWidget {
-  const _HorseCard({required this.horse});
+  const _HorseCard({required this.horse, required this.rules});
 
   final Horse horse;
+  final HorseRules rules;
 
   @override
   Widget build(BuildContext context) {
@@ -158,7 +165,7 @@ class _HorseCard extends StatelessWidget {
       HorseStatus.resting => colors.warning,
       HorseStatus.injured => colors.danger,
     };
-    final needsCare = horse.farrierDue || horse.dewormingDue;
+    final needsCare = horse.farrierDue(rules) || horse.dewormingDue(rules);
 
     return AppPanel(
       onTap: () => context.push('/activites/horses/horses/${horse.id}'),
@@ -180,7 +187,7 @@ class _HorseCard extends StatelessWidget {
                     top: 8,
                     right: 8,
                     child: Tooltip(
-                      message: horse.farrierDue
+                      message: horse.farrierDue(rules)
                           ? 'Maréchal-ferrant à prévoir'
                           : 'Vermifuge à prévoir',
                       child: Container(
@@ -252,7 +259,7 @@ class _HorseCard extends StatelessWidget {
                     value: horse.fatigue,
                     backgroundColor: colors.surfaceHover,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      horse.fatigue > 0.7 ? colors.danger : colors.horses,
+                      horse.fatigue > rules.fatigueAlert ? colors.danger : colors.horses,
                     ),
                     minHeight: 6,
                   ),

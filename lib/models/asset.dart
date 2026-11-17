@@ -30,6 +30,12 @@ class Asset {
   final String? imageUrl;
   final String? technicalSpecsJson;
 
+  /// Set by Odoo when the asset goes `inUse` (e.g. a padel court session).
+  final DateTime? inUseSince;
+
+  /// Armory item, flagged by the admin in Odoo.
+  final bool isWeapon;
+
   Asset({
     this.isarId = Isar.autoIncrement,
     required this.id,
@@ -41,11 +47,36 @@ class Asset {
     this.lastMaintenance,
     this.nextMaintenance,
     this.imageUrl,
+    this.inUseSince,
+    this.isWeapon = false,
     Map<String, String>? technicalSpecs,
     String? technicalSpecsJson,
   })  : _technicalSpecs = technicalSpecs,
         technicalSpecsJson = technicalSpecsJson ??
             (technicalSpecs != null ? jsonEncode(technicalSpecs) : null);
+
+  Asset copyWith({
+    AssetStatus? status,
+    DateTime? lastMaintenance,
+    DateTime? inUseSince,
+    bool clearInUseSince = false,
+  }) {
+    return Asset(
+      isarId: isarId,
+      id: id,
+      serialNumber: serialNumber,
+      name: name,
+      category: category,
+      activityId: activityId,
+      status: status ?? this.status,
+      lastMaintenance: lastMaintenance ?? this.lastMaintenance,
+      nextMaintenance: nextMaintenance,
+      imageUrl: imageUrl,
+      technicalSpecsJson: technicalSpecsJson,
+      inUseSince: clearInUseSince ? null : (inUseSince ?? this.inUseSince),
+      isWeapon: isWeapon,
+    );
+  }
 
   @ignore
   final Map<String, String>? _technicalSpecs;

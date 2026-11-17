@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../models/club_config.dart';
+import '../../providers/club_config_provider.dart';
 import '../../providers/horses_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/app_layout.dart';
@@ -15,6 +17,7 @@ class HorseProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final horse = ref.watch(horseByIdProvider(id));
+    final rules = ref.watch(clubConfigProvider).requireValue.horses;
 
     if (horse == null) {
       return const AppPage(
@@ -48,9 +51,9 @@ class HorseProfileScreen extends ConsumerWidget {
             _buildVetNote(context, horse),
           ],
           const SizedBox(height: 14),
-          _buildHealthCard(context, horse),
+          _buildHealthCard(context, horse, rules),
           const SizedBox(height: 14),
-          _buildCareCard(context, horse),
+          _buildCareCard(context, horse, rules),
           const SizedBox(height: 14),
           _buildFeedingCard(context, horse),
           const SizedBox(height: 14),
@@ -215,7 +218,7 @@ class HorseProfileScreen extends ConsumerWidget {
 
   // ── Health indicators ──────────────────────────────────────
 
-  Widget _buildHealthCard(BuildContext context, Horse horse) {
+  Widget _buildHealthCard(BuildContext context, Horse horse, HorseRules rules) {
     final colors = context.colors;
     return AppPanel(
       child: Column(
@@ -226,20 +229,22 @@ class HorseProfileScreen extends ConsumerWidget {
             icon: Icons.favorite_outline_rounded,
           ),
           _gauge(context, 'Fatigue', horse.fatigue,
-              horse.fatigue > 0.7 ? colors.danger : colors.horses,
-              invertLabel: true),
+              horse.fatigue > rules.fatigueAlert ? colors.danger : colors.horses,
+              invertLabel: true,
+              alertAt: rules.fatigueAlert,
+              restedAt: rules.fatigueRested),
         ],
       ),
     );
   }
 
   Widget _gauge(BuildContext context, String label, double value, Color color,
-      {bool invertLabel = false}) {
+      {bool invertLabel = false, double alertAt = 1.0, double restedAt = 0.0}) {
     final colors = context.colors;
     final display = invertLabel
-        ? (value <= 0.3
+        ? (value <= restedAt
             ? 'Reposé'
-            : value <= 0.7
+            : value <= alertAt
                 ? 'Modérée'
                 : 'Élevée — repos conseillé')
         : '${(value * 100).toInt()}%';
@@ -272,7 +277,7 @@ class HorseProfileScreen extends ConsumerWidget {
 
   // ── Care record ────────────────────────────────────────────
 
-  Widget _buildCareCard(BuildContext context, Horse horse) {
+  Widget _buildCareCard(BuildContext context, Horse horse, HorseRules rules) {
     final colors = context.colors;
     final dateFormat = DateFormat('dd/MM/yyyy');
 
@@ -325,7 +330,7 @@ class HorseProfileScreen extends ConsumerWidget {
             Icons.build_outlined,
             'Maréchal-ferrant',
             dateFormat.format(horse.lastFarrier),
-            alert: horse.farrierDue,
+            alert: horse.farrierDue(rules),
           ),
           row(
             Icons.vaccines_outlined,
@@ -336,12 +341,12 @@ class HorseProfileScreen extends ConsumerWidget {
             Icons.medication_outlined,
             'Dernier vermifuge',
             dateFormat.format(horse.lastDeworming),
-            alert: horse.dewormingDue,
+            alert: horse.dewormingDue(rules),
           ),
-          if (horse.farrierDue || horse.dewormingDue) ...[
+          if (horse.farrierDue(rules) || horse.dewormingDue(rules)) ...[
             const SizedBox(height: 6),
             Text(
-              horse.farrierDue
+              horse.farrierDue(rules)
                   ? 'Ferrage recommandé toutes les 6 semaines — à planifier.'
                   : 'Vermifuge recommandé tous les 3 mois — à planifier.',
               style: TextStyle(

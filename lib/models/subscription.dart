@@ -46,11 +46,11 @@ class Subscription {
   /// Current period is free or fully paid (access is granted).
   bool get isPaid => paymentState == 'paid' || paymentState == 'free';
 
-  /// Expiring within the next 7 days (and not already expired).
-  bool get isExpiringSoon {
+  /// Expiring within [warningDays] (club setting) and not already expired.
+  bool isExpiringSoon(int warningDays) {
     if (expirationDate == null || isExpired) return false;
     return expirationDate!
-        .isBefore(DateTime.now().add(const Duration(days: 7)));
+        .isBefore(DateTime.now().add(Duration(days: warningDays)));
   }
 
   String get statusLabelFrench {

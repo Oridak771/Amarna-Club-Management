@@ -24,6 +24,12 @@ class Activity {
   final int currentOccupancy;
   final int maxCapacity;
   final String assignedStaff;
+
+  /// Dedicated screen chosen by the admin in Odoo (`pool`, `horses`,
+  /// `armory`, `padel`, `paintball`, `gym`), empty when there is none.
+  final String screenKey;
+  final String screenLabel;
+
   /// Optional planned offline interval from Odoo.
   final DateTime? closureStart;
   final DateTime? closureEnd;
@@ -37,9 +43,28 @@ class Activity {
     required this.currentOccupancy,
     required this.maxCapacity,
     required this.assignedStaff,
+    this.screenKey = '',
+    this.screenLabel = '',
     this.closureStart,
     this.closureEnd,
   });
+
+  Activity copyWith({ActivityStatus? status, int? currentOccupancy}) {
+    return Activity(
+      isarId: isarId,
+      id: id,
+      name: name,
+      iconKey: iconKey,
+      status: status ?? this.status,
+      currentOccupancy: currentOccupancy ?? this.currentOccupancy,
+      maxCapacity: maxCapacity,
+      assignedStaff: assignedStaff,
+      screenKey: screenKey,
+      screenLabel: screenLabel,
+      closureStart: closureStart,
+      closureEnd: closureEnd,
+    );
+  }
 
   @ignore
   double get occupancyPercentage =>

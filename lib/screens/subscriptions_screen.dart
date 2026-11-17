@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../config/app_environment.dart';
 import '../models/subscription.dart';
+import '../providers/club_config_provider.dart';
 import '../providers/subscriptions_provider.dart';
 import '../services/odoo_subscription_service.dart';
 import '../theme/app_theme.dart';
@@ -228,6 +229,8 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final s = widget.subscription;
+    final expiryWarningDays =
+        ref.watch(clubConfigProvider).requireValue.subscriptions.expiryWarningDays;
 
     final statusColor = s.isExpired
         ? colors.danger
@@ -308,7 +311,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                       : '—',
                   s.isExpired
                       ? colors.danger
-                      : s.isExpiringSoon
+                      : s.isExpiringSoon(expiryWarningDays)
                           ? colors.warning
                           : colors.textPrimary,
                 ),
@@ -324,7 +327,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
               ),
             ],
           ),
-          if (s.isExpiringSoon || s.remainingSessions <= 0) ...[
+          if (s.isExpiringSoon(expiryWarningDays) || s.remainingSessions <= 0) ...[
             const SizedBox(height: 12),
             Container(
               padding:

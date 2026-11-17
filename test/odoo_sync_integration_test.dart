@@ -17,12 +17,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:amarna_club/config/app_environment.dart';
 import 'package:amarna_club/models/activity.dart';
+import 'package:amarna_club/models/asset.dart';
 import 'package:amarna_club/models/reservation.dart';
 import 'package:amarna_club/models/work_ticket.dart';
+import 'package:amarna_club/services/odoo_club_config_service.dart';
 import 'package:amarna_club/services/odoo_club_service.dart';
 import 'package:amarna_club/services/odoo_datetime.dart';
 import 'package:amarna_club/services/odoo_jsonrpc_service.dart';
 import 'package:amarna_club/services/odoo_reservation_service.dart';
+import 'package:amarna_club/services/odoo_staff_service.dart';
 import 'package:amarna_club/services/ticket_sync_service.dart';
 
 const _login = String.fromEnvironment('AMARNA_TEST_LOGIN');
@@ -253,6 +256,97 @@ void main() {
         final latest = await club.fetchLatestPoolReading();
         expect(latest, isNotNull);
         expect(latest!.temperature, closeTo(28, 0.001));
+      });
+
+      test('the club settings load and parse', () async {
+        final config = await OdooClubConfigService(rpc).fetchConfig();
+        expect(config.reports.periodDays, isNotEmpty);
+        expect(config.reports.periodDays, contains(config.reports.defaultDays));
+        expect(config.horses.fatigueRested,
+            lessThanOrEqualTo(config.horses.fatigueAlert));
+        expect(config.pool.chlorine.min, lessThanOrEqualTo(config.pool.chlorine.max));
+      });
+
+      test('an activity exposes its dedicated screen', () async {
+        final activities = await club.fetchActivities();
+        expect(activities.where((a) => a.screenKey.isNotEmpty), isNotEmpty);
+      });
+
+      test('a control point is listed and its state is written back', () async {
+        final activities = await club.fetchActivities();
+        final code = activities.first.id;
+        final found = await rpc.searchRead(
+          model: 'amarna.club.activity',
+          domain: [
+            ['code', '=', code],
+          ],
+          fields: const ['id'],
+          limit: 1,
+        );
+        final id = await rpc.create(
+          model: 'amarna.club.checkpoint',
+          values: {
+            'name': 'Point test ${DateTime.now().microsecondsSinceEpoch}',
+            'activity_id': (found.first['id'] as num).toInt(),
+          },
+        );
+        final before =
+            (await club.fetchCheckpoints(code)).firstWhere((p) => p.id == id);
+        expect(before.isOk, isTrue);
+        expect(before.blocksSession, isTrue);
+
+        await club.pushCheckpoint(id, false);
+        final after =
+            (await club.fetchCheckpoints(code)).firstWhere((p) => p.id == id);
+        expect(after.isOk, isFalse);
+      });
+
+      test('an asset going in use gets its start time from Odoo', () async {
+        final code = 'asset-test-${DateTime.now().microsecondsSinceEpoch}';
+        await rpc.create(
+          model: 'amarna.club.asset',
+          values: {
+            'name': 'Terrain test',
+            'code': code,
+            'mobile_activity_code': 'padel',
+            'status': 'available',
+          },
+        );
+        await club.pushAssetStatus(code, AssetStatus.inUse);
+        final busy = (await club.fetchAssets()).firstWhere((a) => a.id == code);
+        expect(busy.inUseSince, isNotNull);
+
+        await club.pushAssetStatus(code, AssetStatus.available);
+        final free = (await club.fetchAssets()).firstWhere((a) => a.id == code);
+        expect(free.inUseSince, isNull);
+      });
+
+      test('the profile shows the staff card linked to the account', () async {
+        final info = await rpc.validateSession();
+        final uid = (info?['uid'] as num).toInt();
+        final staffId = await rpc.create(
+          model: 'amarna.club.staff',
+          values: {
+            'name': 'Profil test',
+            'role': 'technician',
+            'user_id': uid,
+          },
+        );
+        try {
+          final profile = await OdooStaffService(rpc).fetchMyProfile();
+          expect(profile, isNotNull);
+          expect(profile!.name, 'Profil test');
+          expect(profile.role, isNotEmpty);
+        } finally {
+          await rpc.callKw(
+            model: 'amarna.club.staff',
+            method: 'unlink',
+            args: [
+              [staffId],
+            ],
+          );
+        }
+        expect(await OdooStaffService(rpc).fetchMyProfile(), isNull);
       });
     },
     skip: (AppEnvironment.isOdooConfigured && _login.isNotEmpty && _password.isNotEmpty)

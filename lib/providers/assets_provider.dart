@@ -58,19 +58,7 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
   Future<void> markAssetCleaned(String assetId) async {
     final asset = await _repo.getById(assetId);
     if (asset == null) return;
-    await _repo.put(Asset(
-      isarId: asset.isarId,
-      id: asset.id,
-      serialNumber: asset.serialNumber,
-      name: asset.name,
-      category: asset.category,
-      activityId: asset.activityId,
-      status: asset.status,
-      lastMaintenance: DateTime.now(),
-      nextMaintenance: asset.nextMaintenance,
-      imageUrl: asset.imageUrl,
-      technicalSpecsJson: asset.technicalSpecsJson,
-    ));
+    await _repo.put(asset.copyWith(lastMaintenance: DateTime.now()));
     await _loadAssets();
     if (!_club.isConfigured) return;
     try {
@@ -80,20 +68,15 @@ class AssetsNotifier extends StateNotifier<List<Asset>> {
     }
   }
 
+  /// Mirrors what Odoo does: `inUseSince` is stamped when an asset goes in
+  /// use and cleared when it leaves that status.
   Asset _copyWithStatus(Asset asset, AssetStatus status) {
-    return Asset(
-      isarId: asset.isarId,
-      id: asset.id,
-      serialNumber: asset.serialNumber,
-      name: asset.name,
-      category: asset.category,
-      activityId: asset.activityId,
-      status: status,
-      lastMaintenance: asset.lastMaintenance,
-      nextMaintenance: asset.nextMaintenance,
-      imageUrl: asset.imageUrl,
-      technicalSpecsJson: asset.technicalSpecsJson,
-    );
+    if (status == AssetStatus.inUse) {
+      return asset.status == AssetStatus.inUse
+          ? asset
+          : asset.copyWith(status: status, inUseSince: DateTime.now());
+    }
+    return asset.copyWith(status: status, clearInUseSince: true);
   }
 }
 

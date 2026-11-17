@@ -115,19 +115,13 @@ class ActivityReservationsPanel extends ConsumerWidget {
   const ActivityReservationsPanel({
     super.key,
     required this.activityId,
-    required this.activityName,
   });
 
+  /// Activity code (the same key as Odoo's `mobile_activity_code`).
   final String activityId;
-  final String activityName;
 
-  bool _matches(Reservation r) {
-    final id = activityId.toLowerCase();
-    final name = activityName.toLowerCase();
-    return r.activityId.toLowerCase() == id ||
-        r.activityName.toLowerCase().contains(name) ||
-        name.contains(r.activityName.toLowerCase());
-  }
+  bool _matches(Reservation r) =>
+      r.activityId.toLowerCase() == activityId.toLowerCase();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../models/work_ticket.dart';
+import '../providers/club_config_provider.dart';
 import '../providers/tickets_provider.dart';
 import '../theme/app_theme.dart';
 import '../ui/ticket_ui_adapter.dart';
@@ -24,15 +25,6 @@ class TicketDetailScreen extends ConsumerStatefulWidget {
 
 class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
   final _commentController = TextEditingController();
-
-  // Technicians known to the tablet. Odoo has the users, but the app does not
-  // read them yet (see the report: res.users needs a read endpoint).
-  static const _technicians = [
-    'Karim (Technicien)',
-    'Mourad (Technicien)',
-    'Sami (Électricien)',
-    'Sophie (Coach Gym)',
-  ];
 
   @override
   void dispose() {
@@ -103,7 +95,12 @@ class _TicketDetailScreenState extends ConsumerState<TicketDetailScreen> {
                   child: _Header(ticket: ticket),
                 ),
                 const SizedBox(height: 14),
-                AppPanel(child: _Details(ticket: ticket, technicians: _technicians)),
+                AppPanel(
+                  child: _Details(
+                    ticket: ticket,
+                    technicians: ref.watch(assignableStaffProvider).valueOrNull ?? const [],
+                  ),
+                ),
                 if (ticket.photoPaths.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   _PhotosPanel(paths: ticket.photoPaths),

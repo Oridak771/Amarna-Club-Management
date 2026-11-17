@@ -55,19 +55,11 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
   Future<void> updateOccupancy(String activityId, int newOccupancy) async {
     final activity = await _repo.getById(activityId);
     if (activity == null) return;
-    final clamped = newOccupancy.clamp(0, activity.maxCapacity);
-    final updated = Activity(
-      isarId: activity.isarId,
-      id: activity.id,
-      name: activity.name,
-      iconKey: activity.iconKey,
-      status: activity.status,
-      currentOccupancy: clamped,
-      maxCapacity: activity.maxCapacity,
-      assignedStaff: activity.assignedStaff,
-      closureStart: activity.closureStart,
-      closureEnd: activity.closureEnd,
-    );
+    // Capacity 0 means "no limit" in Odoo, as in the reservation check-in.
+    final clamped = activity.maxCapacity > 0
+        ? newOccupancy.clamp(0, activity.maxCapacity)
+        : (newOccupancy < 0 ? 0 : newOccupancy);
+    final updated = activity.copyWith(currentOccupancy: clamped);
     await _repo.put(updated);
     await _loadActivities();
     _pushOccupancy(activity.id, clamped);
@@ -89,6 +81,8 @@ class ActivitiesNotifier extends StateNotifier<List<Activity>> {
       currentOccupancy: occupancy,
       maxCapacity: activity.maxCapacity,
       assignedStaff: activity.assignedStaff,
+      screenKey: activity.screenKey,
+      screenLabel: activity.screenLabel,
       closureStart: newStatus == ActivityStatus.open
           ? null
           : (activity.closureStart ?? DateTime.now()),

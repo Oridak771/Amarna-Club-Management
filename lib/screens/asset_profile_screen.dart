@@ -80,26 +80,14 @@ class AssetProfileScreen extends ConsumerWidget {
       ));
     }
 
-    // Add generic historical events if list is empty
-    if (events.isEmpty) {
-      if (asset.lastMaintenance != null) {
-        events.add(TimelineEvent(
-          date: asset.lastMaintenance!,
-          title: 'Dernière maintenance effectuée',
-          description:
-              'Maintenance préventive de routine approuvée et finalisée.',
-          type: TimelineEventType.maintenance,
-          statusLabel: 'Terminé',
-          color: colors.success,
-        ));
-      }
+    // Only what Odoo recorded: the last maintenance date, when no ticket exists.
+    if (events.isEmpty && asset.lastMaintenance != null) {
       events.add(TimelineEvent(
-        date: DateTime.now().subtract(const Duration(days: 60)),
-        title: 'Mise en service de l\'équipement',
-        description:
-            'Installation initiale et configuration des paramètres de fonctionnement.',
-        type: TimelineEventType.system,
-        statusLabel: 'Actif',
+        date: asset.lastMaintenance!,
+        title: 'Dernière maintenance enregistrée',
+        description: 'Date de maintenance enregistrée dans Odoo.',
+        type: TimelineEventType.maintenance,
+        statusLabel: 'Enregistrée',
         color: colors.success,
       ));
     }
