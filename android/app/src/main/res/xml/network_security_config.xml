@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Release builds talk to Odoo over HTTPS only. -->
+<!-- Release builds talk to Odoo over HTTPS only, except the club server on the
+     local network, which runs on plain HTTP. -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
             <certificates src="system" />
         </trust-anchors>
     </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.20.10.49</domain>
+    </domain-config>
 </network-security-config>

@@ -1,4 +1,4 @@
 {
-  "AMARNA_ODOO_BASE_URL": "http://10.0.2.2:8066",
-  "AMARNA_ODOO_DB": "odoo_test"
+  "AMARNA_ODOO_BASE_URL": "http://10.20.10.49:8069",
+  "AMARNA_ODOO_DB": "hasnaoui_amarna"
 }

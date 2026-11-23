@@ -26,8 +26,9 @@ Le backend (modèles et règles métier) se trouve dans le dépôt Odoo :
 
 ## Configuration
 
-La tablette ne contient **aucun secret**. Elle reçoit seulement l'adresse du
-serveur Odoo, au moment de la compilation ou du lancement :
+La tablette ne contient **aucun secret**. Par défaut elle se connecte au serveur
+du club (`http://10.20.10.49:8069`, base `hasnaoui_amarna`). Pour viser un autre
+serveur, passez son adresse au moment de la compilation ou du lancement :
 
 ```bash
 cp config/dart_define.example.json config/dart_define.local.json   # puis adapter
