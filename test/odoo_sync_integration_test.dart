@@ -236,6 +236,12 @@ void main() {
         expect(found.startAt, day);
         expect(found.status, ReservationStatus.pending);
 
+        // A priced booking cannot check in until it is paid (Odoo refuses). The
+        // test is about the status round trip, so make this booking free.
+        await rpc.write(
+            model: 'amarna.club.reservation',
+            id: remoteId,
+            values: {'amount_untaxed': 0});
         await reservations.updateReservationStatus(
             remoteId, ReservationStatus.checkedIn);
         final after = await reservations.fetchReservationsForDay(day);
@@ -324,6 +330,13 @@ void main() {
       test('the profile shows the staff card linked to the account', () async {
         final info = await rpc.validateSession();
         final uid = (info?['uid'] as num).toInt();
+        final service = OdooStaffService(rpc);
+        final existing = await service.fetchMyProfile();
+        if (existing != null) {
+          // The database already links this account to a staff card.
+          expect(existing.name, isNotEmpty);
+          return;
+        }
         final staffId = await rpc.create(
           model: 'amarna.club.staff',
           values: {
@@ -333,7 +346,7 @@ void main() {
           },
         );
         try {
-          final profile = await OdooStaffService(rpc).fetchMyProfile();
+          final profile = await service.fetchMyProfile();
           expect(profile, isNotNull);
           expect(profile!.name, 'Profil test');
           expect(profile.role, isNotEmpty);
@@ -346,7 +359,7 @@ void main() {
             ],
           );
         }
-        expect(await OdooStaffService(rpc).fetchMyProfile(), isNull);
+        expect(await service.fetchMyProfile(), isNull);
       });
     },
     skip: (AppEnvironment.isOdooConfigured && _login.isNotEmpty && _password.isNotEmpty)

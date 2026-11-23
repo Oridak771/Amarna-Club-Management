@@ -62,7 +62,10 @@ Future<void> runCheckIn(
     ));
   } on OdooException catch (error) {
     messenger.showSnackBar(SnackBar(
-      content: Text('Check-in refusé : ${error.message}'),
+      // Odoo's refusals already start with "Arrivée refusée"; do not say it twice.
+      content: Text(error.message.startsWith('Arrivée refusée')
+          ? error.message
+          : 'Check-in refusé : ${error.message}'),
       backgroundColor: errorColor,
     ));
   }

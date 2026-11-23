@@ -7,6 +7,9 @@ class Subscription {
   final String activityName;
   final String planName;
   final int remainingSessions;
+
+  /// Plan without a session limit (Odoo `is_unlimited`): the counter is meaningless.
+  final bool isUnlimited;
   final DateTime? startDate;
   final DateTime? expirationDate;
   /// Odoo `subscription_status`: draft, active, unpaid, expired, cancelled.
@@ -25,6 +28,7 @@ class Subscription {
     required this.activityName,
     required this.planName,
     required this.remainingSessions,
+    this.isUnlimited = false,
     required this.startDate,
     required this.expirationDate,
     required this.status,
@@ -109,6 +113,7 @@ class Subscription {
       activityName: _m2oName(row['activity_id'], fallback: 'Toutes activités'),
       planName: _m2oName(row['plan_id'], fallback: '—'),
       remainingSessions: (row['remaining_sessions'] as num?)?.toInt() ?? 0,
+      isUnlimited: row['is_unlimited'] == true,
       startDate: _date(row['start_date']),
       expirationDate: _date(row['expiration_date']),
       status: _text(row['subscription_status']),

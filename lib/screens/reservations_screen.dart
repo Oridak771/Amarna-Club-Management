@@ -40,6 +40,8 @@ class _ReservationsScreenState extends ConsumerState<ReservationsScreen> {
     final isToday = _sameDay(_selectedDate, _today);
 
     return AppPage(
+      // Room under the last row so the floating button never hides its action.
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 104),
       title: 'Planning',
       subtitle: dayLabel[0].toUpperCase() + dayLabel.substring(1),
       onRefresh: () async {

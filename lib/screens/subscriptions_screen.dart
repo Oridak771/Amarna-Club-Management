@@ -297,8 +297,10 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                   context,
                   Icons.confirmation_number_outlined,
                   'Séances restantes',
-                  '${s.remainingSessions}',
-                  s.remainingSessions <= 0 ? colors.danger : colors.textPrimary,
+                  s.isUnlimited ? 'Illimité' : '${s.remainingSessions}',
+                  (!s.isUnlimited && s.remainingSessions <= 0)
+                      ? colors.danger
+                      : colors.textPrimary,
                 ),
               ),
               Expanded(
@@ -327,7 +329,8 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
               ),
             ],
           ),
-          if (s.isExpiringSoon(expiryWarningDays) || s.remainingSessions <= 0) ...[
+          if (s.isExpiringSoon(expiryWarningDays) ||
+              (!s.isUnlimited && s.remainingSessions <= 0)) ...[
             const SizedBox(height: 12),
             Container(
               padding:
@@ -343,7 +346,7 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      s.remainingSessions <= 0
+                      (!s.isUnlimited && s.remainingSessions <= 0)
                           ? 'Séances épuisées — renouvellement conseillé.'
                           : 'Abonnement bientôt expiré.',
                       style: TextStyle(
@@ -364,7 +367,8 @@ class _SubscriptionCardState extends ConsumerState<_SubscriptionCard> {
             children: [
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: (_busy || s.remainingSessions <= 0)
+                  // An unlimited plan has no counter to decrement.
+                  onPressed: (_busy || s.isUnlimited || s.remainingSessions <= 0)
                       ? null
                       : _consumeSession,
                   style: FilledButton.styleFrom(

@@ -22,6 +22,7 @@ class OdooSubscriptionService {
     'activity_id',
     'plan_id',
     'remaining_sessions',
+    'is_unlimited',
     'start_date',
     'expiration_date',
     'subscription_status',
